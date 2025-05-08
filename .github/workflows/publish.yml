@@ -1,0 +1,67 @@
+name: Publish Package to NPM and GitHub Packages
+
+on:
+  release:
+    types: [created] # Triggers when a new GitHub Release is published
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Required for GitHub Packages
+      # id-token: write # Potentially for npmjs.com if using trusted publishing (more advanced)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Optional: Run build script if you have one for the package itself (not docs)
+      # - name: Build package
+      #   run: npm run build
+
+      # Optional: Run tests
+      # - name: Test package
+      #   run: npm test
+
+      # --- Publish to GitHub Packages ---
+      - name: Publish to GitHub Packages
+        run: npm publish --scope=@mgks # npm will use publishConfig from package.json if set
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN has 'packages: write' permission
+
+      # --- Publish to NPM Registry (npmjs.com) ---
+      - name: Set up Node.js for npmjs.com
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org/' # Point to public NPM registry
+
+      # If your package.json's "name" is "@mgks/docmd" and you want "docmd" on npmjs:
+      # This is a common workaround.
+      - name: Adjust package.json for npmjs.com (publish as unscoped)
+        if: success() # Only run if previous steps succeed
+        run: |
+          # Read current version
+          VERSION=$(node -p "require('./package.json').version")
+          # Create a temporary package.json for unscoped publishing
+          jq --arg newName "docmd" --arg newVersion "$VERSION" '.name = $newName | .version = $newVersion | del(.publishConfig)' package.json > package_npmjs.json
+          mv package_npmjs.json package.json
+          echo "Updated package.json for npmjs.com publishing:"
+          cat package.json
+        # Ensure jq is installed for this step (usually available on ubuntu-latest)
+        # Or use a Node.js script for this manipulation if jq isn't ideal
+
+      - name: Publish to NPM Registry (npmjs.com)
+        if: success() # Only run if previous steps succeed
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Secret stored in GitHub repository settings

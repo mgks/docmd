@@ -1,0 +1,45 @@
+name: deploy docmd
+
+on:
+  push:
+    branches: [main] # Your default branch
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ⚙️
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22' # Use Node.js 22
+          cache: 'npm'
+
+      - name: Install Dependencies 📦
+        run: npm ci # Use ci for cleaner installs in CI
+
+      - name: Build docmd's Own Docs 🛠️
+        run: node ./bin/docmd.js build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site
+
+      - name: Deploy to GitHub Pages 🚀
+        id: deployment
+        uses: actions/deploy-pages@v4

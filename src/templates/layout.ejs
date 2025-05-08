@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> | <%= siteTitle %></title>
+    <% if (description) { %><meta name="description" content="<%= description %>"><% } %>
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/main.css">
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/highlight-<%= defaultTheme === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
+    <!-- Add more themes if you plan to switch highlight themes with light/dark mode -->
+</head>
+<body data-theme="<%= defaultTheme %>">
+    <aside class="sidebar">
+        <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
+        <%- navigationHtml %>
+    </aside>
+    <div class="main-content-wrapper">
+        <header class="page-header">
+            <h1><%= pageTitle %></h1>
+        </header>
+        <main class="content-area">
+            <%- content %>
+        </main>
+    </div>
+    <script src="<%= relativePathToRoot %>assets/js/theme-toggle.js"></script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "name": "docmd",
+  "version": "0.1.0",
+  "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
+  "main": "src/index.js",
+  "bin": {
+    "docmd": "./bin/docmd.js"
+  },
+  "scripts": {
+    "start": "node ./bin/docmd.js dev",
+    "build": "node ./bin/docmd.js build",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgks/docmd.git"
+  },
+  "keywords": [
+    "markdown",
+    "static-site-generator",
+    "documentation",
+    "ssg",
+    "docs",
+    "generator"
+  ],
+  "author": "Ghazi <hello@mgks.dev>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mgks/docmd/issues"
+  },
+  "homepage": "https://github.com/mgks/docmd#readme",
+  "dependencies": {
+    "22": "^0.0.0",
+    "chokidar": "^3.6.0",
+    "commander": "^12.0.0",
+    "ejs": "^3.1.9",
+    "express": "^4.19.2",
+    "fs-extra": "^11.2.0",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.11.1",
+    "markdown-it": "^14.1.0",
+    "markdown-it-container": "^4.0.0",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "prettier": "^3.2.5"
+  }
+}

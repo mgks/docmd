@@ -1,0 +1,30 @@
+<%# EJS partial for navigation. Expects `navItems` (from config.navigation) and `currentPagePath` %>
+<%# and `relativePathToRoot` variables %>
+<nav>
+  <ul>
+    <% navItems.forEach(item => { %>
+      <% const itemPath = item.path.startsWith('/') ? item.path.slice(1) : item.path; %>
+      <% const fullItemPath = itemPath === '' ? 'index.html' : (itemPath.endsWith('.html') ? itemPath : itemPath + '.html'); %>
+      <% const isActive = currentPagePath === fullItemPath || (currentPagePath === 'index.html' && item.path === '/'); %>
+      <li>
+        <a href="<%= relativePathToRoot %><%= fullItemPath %>" class="<%= isActive ? 'active' : '' %>">
+          <%= item.title %>
+        </a>
+        <% if (item.children && item.children.length > 0) { %>
+          <ul>
+            <% item.children.forEach(child => { %>
+              <% const childPath = child.path.startsWith('/') ? child.path.slice(1) : child.path; %>
+              <% const fullChildPath = childPath.endsWith('.html') ? childPath : childPath + '.html'; %>
+              <% const isChildActive = currentPagePath === fullChildPath; %>
+              <li>
+                <a href="<%= relativePathToRoot %><%= fullChildPath %>" class="<%= isChildActive ? 'active' : '' %>">
+                  <%= child.title %>
+                </a>
+              </li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </li>
+    <% }); %>
+  </ul>
+</nav>
