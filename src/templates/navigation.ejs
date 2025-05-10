@@ -1,30 +1,107 @@
-<%# EJS partial for navigation. Expects `navItems` (from config.navigation) and `currentPagePath` %>
-<%# and `relativePathToRoot` variables %>
-<nav>
+<%# src/templates/navigation.ejs %>
+
+<%# renderIcon is passed from html-generator.js %>
+
+<% 
+// Debug function - uncomment to troubleshoot paths
+function debugNavPaths(item, itemPath, currentPath, isActive, isParentActive) {
+  console.log('\nDEBUG NAV ITEM:');
+  console.log(`Title: ${item.title}`);
+  console.log(`Path: ${item.path}`);
+  console.log(`Computed item path: ${itemPath}`);
+  console.log(`Current page path: ${currentPath}`);
+  console.log(`Is directly active: ${isActive}`);
+  console.log(`Is parent active: ${isParentActive}`);
+}
+
+function renderNavItems(items, currentLevelPagePath, rootPath) { %>
   <ul>
-    <% navItems.forEach(item => { %>
-      <% const itemPath = item.path.startsWith('/') ? item.path.slice(1) : item.path; %>
-      <% const fullItemPath = itemPath === '' ? 'index.html' : (itemPath.endsWith('.html') ? itemPath : itemPath + '.html'); %>
-      <% const isActive = currentPagePath === fullItemPath || (currentPagePath === 'index.html' && item.path === '/'); %>
-      <li>
-        <a href="<%= relativePathToRoot %><%= fullItemPath %>" class="<%= isActive ? 'active' : '' %>">
-          <%= item.title %>
+    <% items.forEach(item => { %>
+      <%
+        let itemHref = '#'; // Default for non-linking parents or error
+        let isCurrentPageActive = false;
+        let isActivePage = false; // For the direct page itself
+        const isExternal = item.external === true;
+        const targetBlank = isExternal ? 'target="_blank" rel="noopener noreferrer"' : '';
+        let iconHtml = '';
+        let externalLinkIconHtml = '';
+
+        if (item.icon) {
+          // Use custom class for nav icons for specific styling
+          iconHtml = renderIcon(item.icon, { class: 'nav-item-icon' });
+        }
+
+        if (isExternal) {
+          itemHref = item.path; // Full URL for external links
+          // Use a Lucide icon like 'arrow-up-right' or 'external-link'
+          externalLinkIconHtml = renderIcon('arrow-up-right', { class: 'nav-external-icon', width: '0.8em', height: '0.8em' });
+        } else {
+          // Path normalization for internal links
+          let cleanPath = item.path.startsWith('/') ? item.path : '/' + item.path; // Ensure leading slash
+
+          // Handle paths with pretty URLs
+          if (cleanPath === '/') {
+            // Root path goes to index.html
+            itemHref = rootPath + 'index.html';
+          } else {
+            // Remove any trailing slash for consistency
+            const pathWithoutTrailingSlash = cleanPath.endsWith('/') ? cleanPath.slice(0, -1) : cleanPath;
+            
+            // For all other paths, link to the directory (pretty URL)
+            // Remove leading slash and ensure clean path
+            const cleanedPath = pathWithoutTrailingSlash.substring(1);
+            itemHref = rootPath + cleanedPath + '/';
+          }
+
+          // SIMPLIFIED ACTIVE STATE LOGIC - START
+          // 1. Prepare the paths for comparison
+          // The item path in the format used in the navigation config
+          const normalizedItemPath = cleanPath.substring(1) || '';
+          
+          // Special handling for root path
+          if (cleanPath === '/') {
+            isActivePage = currentLevelPagePath === 'index.html';
+            isCurrentPageActive = isActivePage;
+          } 
+          // Parent folder with index.md
+          else if (cleanPath.endsWith('/')) {
+            // Direct match for folder/index.html pages
+            const folderPath = cleanPath.substring(1, cleanPath.length - 1); // Remove leading / and trailing /
+            isActivePage = currentLevelPagePath === folderPath + '/';
+            isCurrentPageActive = isActivePage;
+            
+            // Check if any children are active 
+            // If current path starts with this item's path, it's a parent of the active page
+            if (!isActivePage && currentLevelPagePath.startsWith(normalizedItemPath)) {
+              isCurrentPageActive = true;
+            }
+          } 
+          // Regular page
+          else {
+            const pagePath = cleanPath.substring(1) + '/';
+            isActivePage = currentLevelPagePath === pagePath;
+            isCurrentPageActive = isActivePage;
+          }
+          // SIMPLIFIED ACTIVE STATE LOGIC - END
+        }
+      %>
+      <li class="<%= isCurrentPageActive ? 'active-parent' : '' %>">
+        <a href="<%= itemHref %>"
+           class="<%= isActivePage ? 'active' : '' %>"
+           <%- targetBlank %>>
+          <% if (iconHtml) { %><%- iconHtml %><% } %>
+          <span><%- item.title %></span> <%# Wrap title in span for styling if needed %>
+          <% if (externalLinkIconHtml) { %><%- externalLinkIconHtml %><% } %>
         </a>
+
         <% if (item.children && item.children.length > 0) { %>
-          <ul>
-            <% item.children.forEach(child => { %>
-              <% const childPath = child.path.startsWith('/') ? child.path.slice(1) : child.path; %>
-              <% const fullChildPath = childPath.endsWith('.html') ? childPath : childPath + '.html'; %>
-              <% const isChildActive = currentPagePath === fullChildPath; %>
-              <li>
-                <a href="<%= relativePathToRoot %><%= fullChildPath %>" class="<%= isChildActive ? 'active' : '' %>">
-                  <%= child.title %>
-                </a>
-              </li>
-            <% }); %>
-          </ul>
+          <%- renderNavItems(item.children, currentLevelPagePath, rootPath) %>
         <% } %>
       </li>
     <% }); %>
   </ul>
+<% } %>
+
+<nav class="sidebar-nav">
+  <%- renderNavItems(navItems, currentPagePath, relativePathToRoot) %>
 </nav>

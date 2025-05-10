@@ -1,0 +1,34 @@
+<%# src/templates/toc.ejs %>
+<% 
+// If direct headings aren't available, we'll try to extract them from the content
+let tocHeadings = [];
+if (headings && headings.length > 0) {
+  // Use provided headings if available
+  tocHeadings = headings.filter(h => h.level >= 2 && h.level <= 4);
+} else if (content) {
+  // Basic regex to extract headings from HTML content
+  const headingRegex = /<h([2-4])[^>]*?id="([^"]*)"[^>]*?>([\s\S]*?)<\/h\1>/g;
+  let match;
+  while ((match = headingRegex.exec(content)) !== null) {
+    const level = parseInt(match[1], 10);
+    const id = match[2];
+    // Remove any HTML tags inside the heading text
+    const text = match[3].replace(/<\/?[^>]+(>|$)/g, '');
+    tocHeadings.push({ id, level, text });
+  }
+}
+
+// Only show TOC if there are enough headings
+if (tocHeadings.length > 1) { 
+%>
+  <div class="toc-container">
+    <h2 class="toc-title">On This Page</h2>
+    <ul class="toc-list">
+      <% tocHeadings.forEach(heading => { %>
+        <li class="toc-item toc-level-<%= heading.level %>">
+          <a href="#<%= heading.id %>" class="toc-link"><%= heading.text %></a>
+        </li>
+      <% }); %>
+    </ul>
+  </div>
+<% } %> 

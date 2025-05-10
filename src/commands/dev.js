@@ -85,11 +85,10 @@ async function startDevServer(configPathOption) {
   let staticMiddleware = express.static(paths.outputDir);
   app.use((req, res, next) => staticMiddleware(req, res, next));
 
-
   // Initial build
   console.log('🚀 Performing initial build for dev server...');
   try {
-    await buildSite(configPathOption); // Use the original config path option
+    await buildSite(configPathOption, { isDev: true }); // Use the original config path option
     console.log('✅ Initial build complete.');
   } catch (error) {
       console.error('❌ Initial build failed:', error.message, error.stack);
@@ -144,7 +143,7 @@ async function startDevServer(configPathOption) {
         paths = newPaths; // Update paths for next build reference
       }
 
-      await buildSite(configPathOption); // Re-build using the potentially updated config path
+      await buildSite(configPathOption, { isDev: true }); // Re-build using the potentially updated config path
       broadcastReload();
       console.log('✅ Rebuild complete. Browser should refresh.');
     } catch (error) {

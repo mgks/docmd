@@ -1,10 +1,25 @@
+// src/commands/build.js
 const fs = require('fs-extra');
 const path = require('path');
 const { loadConfig } = require('../core/config-loader');
 const { processMarkdownFile } = require('../core/file-processor');
 const { generateHtmlPage, generateNavigationHtml } = require('../core/html-generator');
+const { renderIcon, clearWarnedIcons } = require('../core/icon-renderer'); // Update import
+const { generateSitemap } = require('../plugins/sitemap'); // Import our sitemap plugin
 
-async function buildSite(configPath) {
+// Debug function to log navigation information
+function logNavigationPaths(pagePath, navPath, normalizedPath) {
+  console.log(`\nPage: ${pagePath}`);
+  console.log(`Navigation Path: ${navPath}`);
+  console.log(`Normalized Path: ${normalizedPath}`);
+}
+
+// Add a global or scoped flag to track if the warning has been shown in the current dev session
+let highlightWarningShown = false;
+
+async function buildSite(configPath, options = { isDev: false }) {
+  clearWarnedIcons(); // Clear warnings at the start of every build
+
   const config = await loadConfig(configPath);
   const CWD = process.cwd();
   const SRC_DIR = path.resolve(CWD, config.srcDir);
@@ -14,80 +29,260 @@ async function buildSite(configPath) {
     throw new Error(`Source directory not found: ${SRC_DIR}`);
   }
 
-  // Clean output directory
   await fs.emptyDir(OUTPUT_DIR);
-  console.log(`🧹 Cleaned output directory: ${OUTPUT_DIR}`);
+  if (!options.isDev) {
+    console.log(`🧹 Cleaned output directory: ${OUTPUT_DIR}`);
+  }
 
-  // Copy static assets
   const assetsSrcDir = path.join(__dirname, '..', 'assets');
   const assetsDestDir = path.join(OUTPUT_DIR, 'assets');
   if (await fs.pathExists(assetsSrcDir)) {
     await fs.copy(assetsSrcDir, assetsDestDir);
-    console.log(`📂 Copied assets to ${assetsDestDir}`);
+    if (!options.isDev) {
+        console.log(`📂 Copied assets to ${assetsDestDir}`);
+    }
   } else {
     console.warn(`⚠️  Assets source directory not found: ${assetsSrcDir}`);
   }
-  // Copy highlight.js themes from node_modules (or include directly in assets)
-  // For simplicity now, assume they are in src/assets/css
+
+  // Check for Highlight.js themes
   const lightThemePath = path.join(__dirname, '..', 'assets', 'css', 'highlight-light.css');
   const darkThemePath = path.join(__dirname, '..', 'assets', 'css', 'highlight-dark.css');
 
-  if (!await fs.pathExists(lightThemePath) || !await fs.pathExists(darkThemePath)) {
-      console.warn(`⚠️ Highlight.js themes not found in assets. Please add:
-      - ${lightThemePath} (e.g., from 'node_modules/highlight.js/styles/atom-one-light.css')
-      - ${darkThemePath} (e.g., from 'node_modules/highlight.js/styles/atom-one-dark.css')`);
+  const themesMissing = !await fs.pathExists(lightThemePath) || !await fs.pathExists(darkThemePath);
+
+  if (themesMissing) {
+    // For 'docmd build', always show.
+    // For 'docmd dev', show only once per session if not already shown.
+    if (!options.isDev || (options.isDev && !highlightWarningShown)) {
+      console.warn(`⚠️ Highlight.js themes not found in assets. Please ensure these files exist:
+      - ${lightThemePath}
+      - ${darkThemePath}
+    Syntax highlighting may not work correctly.`);
+      if (options.isDev) {
+        highlightWarningShown = true; // Mark as shown for this dev session
+      }
+    }
   }
 
 
-  // Find all markdown files
   const markdownFiles = await findMarkdownFiles(SRC_DIR);
   if (markdownFiles.length === 0) {
       console.warn(`⚠️ No Markdown files found in ${SRC_DIR}. Nothing to build.`);
       return;
   }
-  console.log(`📄 Found ${markdownFiles.length} markdown files.`);
+  if (!options.isDev) {
+    console.log(`📄 Found ${markdownFiles.length} markdown files.`);
+  }
+
+  // Array to collect information about all processed pages for sitemap
+  const processedPages = [];
+  
+  // Extract a flattened navigation array for prev/next links
+  const flatNavigation = [];
+  
+  // Helper function to create a normalized path for navigation matching
+  function createNormalizedPath(item) {
+    if (!item.path) return null;
+    return item.path.startsWith('/') ? item.path : '/' + item.path;
+  }
+  
+  function extractNavigationItems(items, parentPath = '') {
+    if (!items || !Array.isArray(items)) return;
+    
+    for (const item of items) {
+      if (item.external) continue; // Skip external links
+      
+      // Only include items with paths (not section headers without links)
+      if (item.path) {
+        // Normalize path - ensure leading slash
+        let normalizedPath = createNormalizedPath(item);
+        
+        // For parent items with children, ensure path ends with / (folders)
+        // This helps with matching in the navigation template
+        if (item.children && item.children.length > 0) {
+          // If path from config doesn't end with slash, add it
+          if (!item.path.endsWith('/') && !normalizedPath.endsWith('/')) {
+            normalizedPath += '/';
+          }
+        }
+        
+        flatNavigation.push({
+          title: item.title,
+          path: normalizedPath,
+          fullPath: item.path, // Original path as defined in config
+          isParent: item.children && item.children.length > 0 // Mark if it's a parent with children
+        });
+      }
+      
+      // Process children (depth first to maintain document outline order)
+      if (item.children && Array.isArray(item.children)) {
+        extractNavigationItems(item.children, item.path || parentPath);
+      }
+    }
+  }
+  
+  // Extract navigation items into flat array
+  extractNavigationItems(config.navigation);
 
   for (const mdFilePath of markdownFiles) {
     const relativeMdPath = path.relative(SRC_DIR, mdFilePath);
-    let outputHtmlPath = relativeMdPath.replace(/\.md$/, '.html');
-    if (path.basename(outputHtmlPath) === 'index.html' && path.dirname(outputHtmlPath) === '.') {
-        // Root index.md -> site/index.html
-    } else if (path.basename(outputHtmlPath) === 'index.html') {
-        // folder/index.md -> site/folder/index.html
+    
+    // Pretty URL handling - properly handle index.md files in subfolders
+    let outputHtmlPath;
+    const fileName = path.basename(relativeMdPath);
+    const isIndexFile = fileName === 'index.md';
+    
+    if (isIndexFile) {
+      // For any index.md file (in root or subfolder), convert to index.html in the same folder
+      const dirPath = path.dirname(relativeMdPath);
+      outputHtmlPath = path.join(dirPath, 'index.html');
     } else {
-        // folder/file.md -> site/folder/file.html
+      // For non-index files, create a folder with index.html
+      outputHtmlPath = relativeMdPath.replace(/\.md$/, '/index.html');
     }
+
     const finalOutputHtmlPath = path.join(OUTPUT_DIR, outputHtmlPath);
 
-    const depth = outputHtmlPath.split(path.sep).length -1;
+    const depth = outputHtmlPath.split(path.sep).length - 1;
     const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
 
-    const { frontmatter, htmlContent } = await processMarkdownFile(mdFilePath);
+    const { frontmatter, htmlContent, headings } = await processMarkdownFile(mdFilePath);
+    
+    // Get the URL path for navigation
+    let currentPagePathForNav;
+    let normalizedPath;
+    
+    if (isIndexFile) {
+      // For index.md files, the nav path should be the directory itself with trailing slash
+      const dirPath = path.dirname(relativeMdPath);
+      if (dirPath === '.') {
+        // Root index.md
+        currentPagePathForNav = 'index.html';
+        normalizedPath = '/';
+      } else {
+        // Subfolder index.md - simple format: directory-name/
+        currentPagePathForNav = dirPath + '/'; 
+        normalizedPath = '/' + dirPath;
+      }
+    } else {
+      // For non-index files, the path should be the file name with trailing slash
+      const pathWithoutExt = relativeMdPath.replace(/\.md$/, '');
+      currentPagePathForNav = pathWithoutExt + '/';
+      normalizedPath = '/' + pathWithoutExt;
+    }
+    
+    // Convert Windows backslashes to forward slashes for web paths
+    currentPagePathForNav = currentPagePathForNav.replace(/\\/g, '/');
 
-    const currentPagePathForNav = outputHtmlPath.replace(/\\/g, '/'); // Normalize for nav comparison
+    // Log navigation paths for debugging
+    // Uncomment this line when debugging:
+    // logNavigationPaths(mdFilePath, currentPagePathForNav, normalizedPath);
 
     const navigationHtml = await generateNavigationHtml(
-        config.navigation,
-        currentPagePathForNav,
-        relativePathToRoot
+      config.navigation,
+      currentPagePathForNav,
+      relativePathToRoot,
+      config
     );
 
-    const pageHtml = await generateHtmlPage({
+    // Find current page in navigation for prev/next links
+    let prevPage = null;
+    let nextPage = null;
+    let currentPageIndex = -1;
+    
+    // Find the current page in flatNavigation
+    currentPageIndex = flatNavigation.findIndex(item => {
+      // Direct path match
+      if (item.path === normalizedPath) {
+        return true;
+      }
+      
+      // Special handling for parent folders
+      if (isIndexFile && item.path.endsWith('/')) {
+        // Remove trailing slash for comparison
+        const itemPathWithoutSlash = item.path.slice(0, -1);
+        return itemPathWithoutSlash === normalizedPath;
+      }
+      
+      return false;
+    });
+
+    if (currentPageIndex >= 0) {
+      // Get previous and next pages if they exist
+      if (currentPageIndex > 0) {
+        prevPage = flatNavigation[currentPageIndex - 1];
+      }
+      
+      if (currentPageIndex < flatNavigation.length - 1) {
+        nextPage = flatNavigation[currentPageIndex + 1];
+      }
+    }
+    
+    // Convert page paths to proper URLs for links
+    if (prevPage) {
+      // Format the previous page URL, avoiding double slashes
+      if (prevPage.path === '/') {
+        prevPage.url = relativePathToRoot + 'index.html';
+      } else {
+        // Remove leading slash and ensure clean path
+        const cleanPath = prevPage.path.substring(1).replace(/\/+$/, '');
+        prevPage.url = relativePathToRoot + cleanPath + '/';
+      }
+    }
+    
+    if (nextPage) {
+      // Format the next page URL, avoiding double slashes
+      if (nextPage.path === '/') {
+        nextPage.url = relativePathToRoot + 'index.html';
+      } else {
+        // Remove leading slash and ensure clean path
+        const cleanPath = nextPage.path.substring(1).replace(/\/+$/, '');
+        nextPage.url = relativePathToRoot + cleanPath + '/';
+      }
+    }
+
+    const pageDataForTemplate = {
       content: htmlContent,
       pageTitle: frontmatter.title || 'Untitled',
-      description: frontmatter.description,
       siteTitle: config.siteTitle,
       navigationHtml,
-      defaultTheme: config.theme.defaultTheme,
       relativePathToRoot: relativePathToRoot,
-    });
+      config: config, // Pass full config
+      frontmatter: frontmatter,
+      outputPath: outputHtmlPath, // Relative path from outputDir root
+      prettyUrl: true, // Flag to indicate we're using pretty URLs
+      prevPage: prevPage, // Previous page in navigation
+      nextPage: nextPage, // Next page in navigation
+      currentPagePath: normalizedPath, // Pass the normalized path for active state detection
+      headings: headings || [], // Pass headings for TOC
+    };
+
+    const pageHtml = await generateHtmlPage(pageDataForTemplate);
 
     await fs.ensureDir(path.dirname(finalOutputHtmlPath));
     await fs.writeFile(finalOutputHtmlPath, pageHtml);
-    console.log(`✅ Generated: ${path.relative(CWD, finalOutputHtmlPath)}`);
+
+    // Add to processed pages for sitemap
+    processedPages.push({
+      outputPath: isIndexFile 
+        ? (path.dirname(relativeMdPath) === '.' ? 'index.html' : path.dirname(relativeMdPath) + '/')
+        : outputHtmlPath.replace(/\\/g, '/').replace(/\/index\.html$/, '/'),
+      frontmatter: frontmatter
+    });
+  }
+
+  // Generate sitemap if enabled in config
+  if (config.plugins?.sitemap !== false) {
+    try {
+      await generateSitemap(config, processedPages, OUTPUT_DIR);
+    } catch (error) {
+      console.error(`❌ Error generating sitemap: ${error.message}`);
+    }
   }
 }
 
+// findMarkdownFiles function remains the same
 async function findMarkdownFiles(dir) {
   let files = [];
   const items = await fs.readdir(dir, { withFileTypes: true });

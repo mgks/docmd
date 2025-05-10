@@ -7,7 +7,7 @@ module.exports = {
   srcDir: 'docs',
   outputDir: 'site',
   theme: {
-    defaultTheme: 'light', // 'light' or 'dark'
+    defaultMode: 'light', // 'light' or 'dark'
   },
   navigation: [
     { title: 'Home', path: '/' }, // Corresponds to docs/index.md

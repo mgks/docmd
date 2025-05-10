@@ -1,0 +1,76 @@
+/* TOC Styles - Simplified Hyperlink Style */
+.toc-container {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+  }
+  
+  .toc-title {
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: var(--text-muted);
+  
+  }
+  
+  .toc-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0;
+  }
+  
+  .toc-item {
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+  }
+  
+  .toc-link {
+      text-decoration: none;
+      color: var(--link-color);
+      display: inline-block;
+      padding: 0.1rem 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+  
+  }
+  
+  .toc-link:hover {
+    text-decoration: underline;
+  }
+  
+  /* Indentation for different heading levels */
+  .toc-level-2 {
+    margin-left: 0;
+  }
+  
+  .toc-level-3 {
+    margin-left: 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .toc-level-4 {
+    margin-left: 1.5rem;
+    font-size: 0.8rem;
+  }
+  
+  /* TOC sidebar should only display on active pages */
+  .toc-sidebar {
+      width: 180px;
+      position: sticky;
+      top: 2rem;
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
+      align-self: flex-start;
+  
+  }
+  
+  /* Hide TOC on mobile */
+  @media (max-width: 1024px) {
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      margin-bottom: 1rem;
+    }
+  } 

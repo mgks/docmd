@@ -3,25 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <%- metaTagsHtml || '' %> <%# SEO Plugin Meta Tags %>
+
     <title><%= pageTitle %> | <%= siteTitle %></title>
-    <% if (description) { %><meta name="description" content="<%= description %>"><% } %>
+    <% if (description && !(metaTagsHtml && metaTagsHtml.includes('name="description"'))) { %>
+      <meta name="description" content="<%= description %>">
+    <% } %>
+
+    <%- faviconLinkHtml || '' %> <%# Favicon %>
+
     <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/main.css">
-    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/highlight-<%= defaultTheme === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
-    <!-- Add more themes if you plan to switch highlight themes with light/dark mode -->
+
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
+
+    <%- themeCssLinkHtml || '' %> <%# For theme.name specific CSS %>
+
+    <% (customCssFiles || []).forEach(cssFile => { %>
+      <link rel="stylesheet" href="<%= relativePathToRoot %><%- cssFile.startsWith('/') ? cssFile.substring(1) : cssFile %>">
+    <% }); %>
+
+    <%- pluginStylesHtml || '' %> <%# Plugin specific CSS %>
+
+    <%- pluginHeadScriptsHtml || '' %> <%# Plugin specific head scripts (e.g., Analytics) %>
 </head>
-<body data-theme="<%= defaultTheme %>">
+<body data-theme="<%= defaultMode %>">
     <aside class="sidebar">
-        <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
+        <div class="sidebar-header">
+            <% if (logo && logo.light && logo.dark) { %>
+                <a href="<%= logo.href || (relativePathToRoot + 'index.html') %>" class="logo-link">
+                    <img src="<%= relativePathToRoot %><%- logo.light.startsWith('/') ? logo.light.substring(1) : logo.light %>" alt="<%= logo.alt || siteTitle %>" class="logo-light" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+                    <img src="<%= relativePathToRoot %><%- logo.dark.startsWith('/') ? logo.dark.substring(1) : logo.dark %>" alt="<%= logo.alt || siteTitle %>" class="logo-dark" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+                </a>
+            <% } else { %>
+                <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
+            <% } %>
+        </div>
         <%- navigationHtml %>
+        <% if (theme && theme.enableModeToggle) { %>
+          <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button">
+            <%# renderIcon is available in the global EJS scope from html-generator %>
+            <%- renderIcon('sun', { class: 'icon-sun' }) %>
+            <%- renderIcon('moon', { class: 'icon-moon' }) %>
+          </button>
+        <% } %>
     </aside>
     <div class="main-content-wrapper">
         <header class="page-header">
             <h1><%= pageTitle %></h1>
         </header>
         <main class="content-area">
-            <%- content %>
+            <div class="content-layout">
+                <div class="main-content">
+                    <%- content %>
+                    
+                    <% if (prevPage || nextPage) { %>
+                    <div class="page-navigation">
+                        <% if (prevPage) { %>
+                        <a href="<%= prevPage.url %>" class="prev-page">
+                            <%- renderIcon('arrow-left', { class: 'page-nav-icon' }) %>
+                            <span>
+                                <small>Previous</small>
+                                <strong><%= prevPage.title %></strong>
+                            </span>
+                        </a>
+                        <% } else { %>
+                        <div class="prev-page-placeholder"></div>
+                        <% } %>
+                        
+                        <% if (nextPage) { %>
+                        <a href="<%= nextPage.url %>" class="next-page">
+                            <span>
+                                <small>Next</small>
+                                <strong><%= nextPage.title %></strong>
+                            </span>
+                            <%- renderIcon('arrow-right', { class: 'page-nav-icon' }) %>
+                        </a>
+                        <% } else { %>
+                        <div class="next-page-placeholder"></div>
+                        <% } %>
+                    </div>
+                    <% } %>
+                </div>
+                
+                <!-- DEBUG: <%- JSON.stringify({headingsLength: headings ? headings.length : 0}) %> -->
+                
+                <!-- TOC sidebar -->
+                <div class="toc-sidebar">
+                    <% 
+                    // Helper function to decode HTML entities
+                    function decodeHtmlEntities(html) {
+                      return html
+                        .replace(/&amp;/g, '&')
+                        .replace(/&lt;/g, '<')
+                        .replace(/&gt;/g, '>')
+                        .replace(/&quot;/g, '"')
+                        .replace(/&#39;/g, "'")
+                        .replace(/&nbsp;/g, ' ');
+                    }
+                    
+                    // Only show TOC on active pages
+                    const isActive = navigationHtml && navigationHtml.includes('class="active"');
+                    
+                    if (isActive) {
+                      // Extract headings directly from content - match with or without id attribute
+                      const headingRegex = /<h([2-4])[^>]*?(?:id="([^"]*)")?[^>]*?>([\s\S]*?)<\/h\1>/g;
+                      const tocHeadings = [];
+                      let match;
+                      let contentStr = content.toString();
+
+                      while ((match = headingRegex.exec(contentStr)) !== null) {
+                          const level = parseInt(match[1], 10);
+                          // Use ID if available, or generate one from the text
+                          let id = match[2];
+                          // Remove any HTML tags inside the heading text and decode HTML entities
+                          const textWithTags = match[3].replace(/<\/?[^>]+(>|$)/g, '');
+                          // Decode HTML entities
+                          const text = decodeHtmlEntities(textWithTags);
+                          
+                          if (!id) {
+                              // Generate an ID from the heading text if none exists
+                              id = text
+                                .toLowerCase()
+                                .replace(/\s+/g, '-')
+                                .replace(/[^\w-]/g, '')
+                                .replace(/--+/g, '-')
+                                .replace(/^-+|-+$/g, '');
+                          }
+                          
+                          tocHeadings.push({ id, level, text });
+                      }
+                      
+                      // Only show TOC if there are enough headings
+                      if (tocHeadings.length > 1) { 
+                      %>
+                          <div class="toc-container">
+                              <h2 class="toc-title">On This Page</h2>
+                              <ul class="toc-list">
+                                  <% tocHeadings.forEach(heading => { %>
+                                      <li class="toc-item toc-level-<%= heading.level %>">
+                                          <a href="#<%= heading.id %>" class="toc-link"><%- heading.text %></a>
+                                      </li>
+                                  <% }); %>
+                              </ul>
+                          </div>
+                      <% } 
+                    } %>
+                </div>
+            </div>
         </main>
+        <footer class="page-footer">
+            <div class="footer-content">
+                <div class="user-footer">
+                    <%- footerHtml || '' %>
+                </div>
+                <div class="branding-footer">
+                    Build with 💜 <a href="https://docmd.mgks.dev" target="_blank" rel="noopener">docmd.</a>
+                </div>
+            </div>
+        </footer>
     </div>
+
     <script src="<%= relativePathToRoot %>assets/js/theme-toggle.js"></script>
+    <% (customJsFiles || []).forEach(jsFile => { %>
+      <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
+    <% }); %>
+
+    <%- pluginBodyScriptsHtml || '' %> <%# Plugin specific body scripts %>
 </body>
 </html>

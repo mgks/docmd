@@ -1,4 +1,6 @@
 /* src/assets/css/main.css */
+@import url('./toc.css'); /* Import the TOC styles */
+
 :root {
     --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -9,6 +11,7 @@
     --sidebar-bg: #f4f7f9;
     --sidebar-text: #2c3e50;
     --sidebar-link-active-bg: #e0e7ec;
+    --sidebar-link-active-parent-bg: #e9eff3; /* New variable for parent items */
     --link-color: #007bff;
     --border-color: #e0e0e0;
     --code-bg: #f8f8f8;
@@ -23,6 +26,7 @@
     --sidebar-bg: #2c2c2c;
     --sidebar-text: #bdc3c7;
     --sidebar-link-active-bg: #3a3a3a;
+    --sidebar-link-active-parent-bg: #343434; /* New variable for parent items in dark mode */
     --link-color: #58a6ff;
     --border-color: #444444;
     --code-bg: #282c34; /* Common dark code bg */
@@ -82,7 +86,37 @@
   .sidebar nav li a.active {
     background-color: var(--sidebar-link-active-bg);
   }
-  
+
+  /* Additional active highlight for the active page itself */
+  .sidebar nav li a.active {
+    font-weight: 600;
+    color: var(--link-color);
+  }
+
+  /* Specific style for parent items with active children */
+  .sidebar nav li.active-parent > a {
+    background-color: var(--sidebar-link-active-parent-bg);
+    font-weight: 500;
+    position: relative; /* For the indicator */
+  }
+
+  /* Add a subtle indicator for active parents */
+  .sidebar nav li.active-parent > a::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background-color: var(--link-color);
+    opacity: 0.5;
+  }
+
+  /* Make the indicator more prominent when it's the actual active page */
+  .sidebar nav li.active-parent > a.active::before {
+    opacity: 1;
+  }
+
   .sidebar nav ul ul { /* Nested lists */
     padding-left: 20px;
     margin-top: 5px;
@@ -112,12 +146,13 @@
   
   
   .content-area {
-    padding: 20px 30px;
-    max-width: 900px; /* Content readability */
-    margin: 0 auto; /* Center content area */
+    padding: 2.5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
     width: 100%;
     box-sizing: border-box;
-  }
+
+}
   
   
   /* Code blocks */
@@ -143,7 +178,199 @@
     padding: 0;
     font-size: inherit;
   }
-  
+
+  .sidebar-header {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: center; /* Or left, depending on design */
+  }
+  .sidebar-header h1 { /* If no logo */
+    font-size: 1.5em;
+    margin-top: 0;
+    margin-bottom: 0; /* Handled by sidebar-header */
+  }
+  .logo-link img {
+    max-height: 40px; /* Default max height, can be overridden by inline style from config */
+    width: auto;
+    display: block;
+    margin: 0 auto; /* Center if text-align: center on parent */
+  }
+  .logo-link img.logo-light { display: block; } /* Show light logo by default */
+  .logo-link img.logo-dark { display: none; } /* Hide dark logo by default */
+
+  /* In dark mode, show dark logo and hide light logo */
+  body[data-theme="dark"] .logo-link img.logo-light { display: none; }
+  body[data-theme="dark"] .logo-link img.logo-dark { display: block; }
+
+  /* Navigation Icons (Lucide SVGs will have these classes) */
+  .sidebar-nav .lucide-icon { /* General class for all lucide icons in nav */
+    width: 1em; /* Default, can be overridden by specific icon classes if needed */
+    height: 1em;
+    margin-right: 0.5em;
+    vertical-align: -0.15em; /* Fine-tune alignment */
+    stroke-width: 2; /* Default Lucide stroke width */
+  }
+  .sidebar-nav .nav-external-icon {
+    width: 1em;
+    height: 1.5em;
+    float: right;
+    margin-left: 0.3em;
+    opacity: 0.7;
+
+}
+
+  /* Theme Toggle Button */
+  .theme-toggle-button {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--sidebar-text); /* Not directly used as icon has its own color */
+    padding: 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+  .theme-toggle-button:hover {
+    background-color: var(--sidebar-link-active-bg);
+  }
+  .theme-toggle-button .lucide-icon { /* Styles for sun/moon icons in button */
+    width: 1.2em;
+    height: 1.2em;
+  }
+  .theme-toggle-button .icon-moon { display: none; } /* icon-moon is class from renderIcon */
+  .theme-toggle-button .icon-sun { display: block; }
+  body[data-theme="dark"] .theme-toggle-button .icon-moon { display: block; }
+  body[data-theme="dark"] .theme-toggle-button .icon-sun { display: none; }
+
+
+  /* Custom Containers */
+  .docmd-container {
+    padding: 1rem 1.5rem; /* More horizontal padding */
+    margin-bottom: 1.5rem;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--code-bg); /* Default background, can be overridden */
+  }
+  .docmd-container > :first-child { margin-top: 0; }
+  .docmd-container > :last-child { margin-bottom: 0; }
+
+  /* Callouts */
+  .callout {
+    border-left-width: 5px;
+    background-color: transparent; /* Override default docmd-container bg */
+  }
+  .callout-title {
+    font-weight: bold;
+    margin-bottom: 0.5em;
+  }
+  .callout-info { border-left-color: #3498db; background-color: rgba(52, 152, 219, 0.07); }
+  .callout-warning { border-left-color: #f39c12; background-color: rgba(243, 156, 18, 0.07); }
+  .callout-tip { border-left-color: #2ecc71; background-color: rgba(46, 204, 113, 0.07); }
+  .callout-success { border-left-color: #2ecc71; background-color: rgba(46, 204, 113, 0.07); }
+  .callout-danger { border-left-color: #e74c3c; background-color: rgba(231, 76, 60, 0.07); }
+  .callout .callout-content > :first-child { margin-top: 0; }
+  .callout .callout-content > :last-child { margin-bottom: 0; }
+
+
+  /* Cards */
+  .card {
+    /* background-color: var(--code-bg); /* Already set by .docmd-container */
+  }
+  .card .card-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin: -1rem -1.5rem 1rem -1.5rem; /* Extend to edges of padding */
+    padding: 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .card .card-content > :first-child { margin-top: 0; }
+  .card .card-content > :last-child { margin-bottom: 0; }
+
+  /* Steps (using CSS counters for H4 headings within .steps) */
+  .steps {
+    /* counter-reset is set inline on the div by markdown-it-container render function */
+    background-color: transparent; /* Often steps don't need a strong background */
+    border: none; /* Or a very light border */
+    padding-left: 0; padding-right: 0; /* Remove default container padding if steps are full-width */
+  }
+  .steps h4 { /* Assuming users use H4 for step titles */
+    counter-increment: step-counter;
+    position: relative;
+    padding-left: 3em; /* Space for number */
+    margin-bottom: 0.5em;
+    margin-top: 1.5em; /* Space between steps */
+    font-size: 1.2em; /* Make step titles prominent */
+  }
+  .steps h4:first-child {
+    margin-top: 0.5em; /* Less top margin for the very first step */
+  }
+  .steps h4::before {
+    content: counter(step-counter);
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2em; /* Larger circle */
+    height: 2em;
+    border-radius: 50%;
+    background-color: var(--link-color);
+    color: white;
+    font-size: 0.9em; /* Number font size relative to H4 */
+    font-weight: bold;
+    line-height: 2em; /* Ensure number is centered in circle */
+  }
+  .steps h4 + * { /* Content immediately after step title */
+    margin-left: 3em; /* Align with title text */
+    margin-top: 0.5em;
+    padding-bottom: 1em; /* Space before next step title or end of container */
+  }
+  .steps > :last-child { margin-bottom: 0; }
+
+
+  /* Footer */
+  .page-footer {
+    text-align: center;
+    padding: 20px 30px;
+    margin-top: auto; /* Pushes footer to bottom if content is short */
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9em;
+    color: var(--text-color);
+    background-color: var(--sidebar-bg); /* Or a distinct footer background */
+  }
+  .page-footer a {
+    color: var(--link-color);
+    text-decoration: none;
+  }
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* Focus Visible */
+  :focus-visible {
+  outline: 2px solid var(--link-color);
+  outline-offset: 2px;
+  /* box-shadow: 0 0 0 4px var(--bg-color), 0 0 0 6px var(--link-color); Optional halo */
+  }
+  :focus:not(:focus-visible) {
+  outline: none;
+  }
+  .sidebar nav li a:focus-visible {
+    background-color: var(--sidebar-link-active-bg);
+    outline: 2px solid var(--link-color);
+    outline-offset: -2px;
+  }
+  .theme-toggle-button:focus-visible {
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 2px var(--link-color);
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     body {
@@ -161,5 +388,175 @@
     }
     .content-area {
       padding: 15px;
+    }
+  }
+
+  /* Page Navigation at Bottom */
+  .page-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .prev-page,
+  .next-page {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--link-color);
+    padding: 0.75rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+    width: 48%;
+    max-width: 48%;
+  }
+
+  .prev-page:hover,
+  .next-page:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    text-decoration: none;
+  }
+
+  body[data-theme="dark"] .prev-page:hover,
+  body[data-theme="dark"] .next-page:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .prev-page {
+    justify-content: flex-start;
+  }
+
+  .next-page {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .prev-page-placeholder,
+  .next-page-placeholder {
+    width: 48%;
+  }
+
+  .prev-page span,
+  .next-page span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .prev-page small,
+  .next-page small {
+    font-size: 0.8rem;
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+  }
+
+  .prev-page strong,
+  .next-page strong {
+    font-weight: 500;
+  }
+
+  .page-nav-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  .prev-page .page-nav-icon {
+    margin-right: 0.75rem;
+  }
+
+  .next-page .page-nav-icon {
+    margin-left: 0.75rem;
+  }
+
+  /* Footer with Branding */
+  .page-footer {
+    text-align: center;
+    padding: 20px 30px;
+    margin-top: auto; /* Pushes footer to bottom if content is short */
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9em;
+    color: var(--text-color);
+    background-color: var(--sidebar-bg); /* Or a distinct footer background */
+  }
+
+  .footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 auto;
+    width: 100%;
+
+}
+
+  .user-footer {
+    text-align: left;
+  }
+
+  .branding-footer {
+    text-align: right;
+    opacity: 0.9;
+    font-weight: 500;
+
+}
+
+  .page-footer a {
+    color: var(--link-color);
+    text-decoration: none;
+  }
+
+  .page-footer a:hover {
+    text-decoration: underline;
+  }
+
+  /* Mobile responsiveness for footer and navigation */
+  @media (max-width: 768px) {
+    .footer-content {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .user-footer,
+    .branding-footer {
+      text-align: center;
+    }
+    
+    .page-navigation {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .prev-page,
+    .next-page,
+    .prev-page-placeholder,
+    .next-page-placeholder {
+      width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  /* Content layout with TOC */
+  .content-layout {
+    display: flex;
+    gap: 2rem;
+    width: 100%;
+  }
+
+  .main-content {
+    flex: 1;
+    -webkit-min-logical-width: 0;
+
+}
+
+  /* Hide TOC on mobile */
+  @media (max-width: 1024px) {
+    .content-layout {
+      flex-direction: column;
+    }
+    
+    /* Show TOC before content on mobile */
+    .content-layout {
+      display: flex;
+      flex-direction: column-reverse;
     }
   }

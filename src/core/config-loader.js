@@ -16,7 +16,7 @@ async function loadConfig(configPath) {
     config.srcDir = config.srcDir || 'docs';
     config.outputDir = config.outputDir || 'site';
     config.theme = config.theme || {};
-    config.theme.defaultTheme = config.theme.defaultTheme || 'light';
+    config.theme.defaultMode = config.theme.defaultMode || 'light';
     config.navigation = config.navigation || [{ title: 'Home', path: '/' }];
 
     return config;
