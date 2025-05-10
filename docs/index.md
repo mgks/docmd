@@ -35,7 +35,7 @@ This very documentation site is built using `docmd`!
 
 1.  **Install `docmd`:**
     ```bash
-    npm install -g docmd # Or your scoped package name
+    npm install -g @mgks/docmd
     ```
 2.  **Initialize Your Project:**
     ```bash
