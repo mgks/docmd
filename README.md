@@ -10,8 +10,8 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/docmd"><img src="https://img.shields.io/npm/v/docmd.svg" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/docmd"><img src="https://img.shields.io/npm/dm/docmd.svg" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/v/@mgks/docmd.svg" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/dm/@mgks/docmd.svg" alt="npm downloads"></a>
   <a href="https://github.com/mgks/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mgks/docmd.svg" alt="license"></a>
 </p>
 
@@ -33,10 +33,10 @@ Docmd (`docmd`) is a Node.js command-line tool dedicated to generating beautiful
 
 ```bash
 # Global installation (recommended)
-npm install -g docmd
+npm install -g @mgks/docmd
 
 # Local project installation
-npm install --save-dev docmd
+npm install --save-dev @mgks/docmd
 ```
 
 ### Quick Start
