@@ -16,25 +16,32 @@ jobs:
         uses: actions/checkout@v4
         # At this point, package.json in the workspace has name: "docmd"
 
-      - name: Set up Node.js (common for initial steps)
+      - name: Set up Node.js (common for initial steps and npm ci)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
+          cache: 'npm' # Cache npm dependencies
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci # Install dependencies based on package-lock.json and original package.json
+
+      # Optional: Run build script if you have one for the package itself
+      # - name: Build package
+      #   run: npm run build
+
+      # Optional: Run tests
+      # - name: Test package
+      #   run: npm test
 
       # --- Publish to NPM Registry (npmjs.com) ---
       - name: Set up Node.js for npmjs.com
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org/' # Point to public NPM registry
+          registry-url: 'https://registry.npmjs.org/'
+        env: # Pass the token to the setup-node action itself to configure .npmrc
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # This step ensures the name is "docmd" and removes any publishConfig.
-      # If your repo's package.json is already "docmd" and has no publishConfig,
-      # this step mainly acts as a safeguard and version re-assertion.
       - name: Ensure package.json is set for npmjs.com (publish as docmd)
         run: |
           echo "Current package.json before npmjs.com publish:"
@@ -46,20 +53,38 @@ jobs:
           echo "package.json for npmjs.com publishing:"
           cat package.json
 
+      # DEBUG - Remove after confirming NPM_TOKEN is working
+      - name: DEBUG - Check NPM_TOKEN availability for npmjs.com
+        if: always() # Run even if previous steps fail, for debugging
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN_SECRET" ]; then # Use a temporary env var for the secret
+            echo "NPM_TOKEN secret is empty or not set for npmjs.com."
+          else
+            echo "NPM_TOKEN secret is set for npmjs.com. Length: ${#NODE_AUTH_TOKEN_SECRET}"
+          fi
+        env:
+          NODE_AUTH_TOKEN_SECRET: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to NPM Registry (npmjs.com)
         run: npm publish
+        # .npmrc (configured by setup-node) should handle authentication.
+        # Explicitly setting NODE_AUTH_TOKEN here is a fallback/belt-and-suspenders.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
 
       # --- Publish to GitHub Packages ---
       - name: Set up Node.js for GitHub Packages
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: 'https://npm.pkg.github.com' # Point to GitHub Packages registry
-          scope: '@mgks' # Crucial: Configures .npmrc for this scope
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@mgks'
+        env: # Pass the token to the setup-node action itself to configure .npmrc
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # At this point, package.json name is "docmd".
+
+      # At this point, package.json name is "docmd" (from the previous npmjs.com step's jq)
       # This step changes it to "@mgks/docmd" for GPR.
       - name: Adjust package.json for GitHub Packages (publish as @mgks/docmd)
         run: |
@@ -74,5 +99,7 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: npm publish
+        # .npmrc (configured by setup-node) should handle authentication.
+        # Explicitly setting NODE_AUTH_TOKEN here is a fallback.
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
