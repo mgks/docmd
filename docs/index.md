@@ -1,5 +1,5 @@
 ---
-title: "docmd: Minimalist Markdown Docs"
+title: "Minimalist Markdown Documentation"
 description: "Generate beautiful, lightweight static documentation sites directly from your Markdown files with docmd. Zero clutter, just content."
 ---
 
