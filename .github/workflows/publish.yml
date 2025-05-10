@@ -2,36 +2,27 @@ name: Publish Package to NPM and GitHub Packages
 
 on:
   release:
-    types: [created] # Triggers when a new GitHub Release is published
-  workflow_dispatch: # Allows manual triggering for testing
+    types: [created]
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Required for GitHub Packages
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # At this point, package.json in the workspace has name: "docmd"
 
       - name: Set up Node.js (common for initial steps and npm ci)
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm' # Cache npm dependencies
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci # Install dependencies based on package-lock.json and original package.json
-
-      # Optional: Run build script if you have one for the package itself
-      # - name: Build package
-      #   run: npm run build
-
-      # Optional: Run tests
-      # - name: Test package
-      #   run: npm test
+        run: npm ci
 
       # --- Publish to NPM Registry (npmjs.com) ---
       - name: Set up Node.js for npmjs.com
@@ -39,25 +30,24 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org/'
-        env: # Pass the token to the setup-node action itself to configure .npmrc
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # This configures .npmrc
 
       - name: Ensure package.json is set for npmjs.com (publish as docmd)
         run: |
           echo "Current package.json before npmjs.com publish:"
           cat package.json
           VERSION=$(node -p "require('./package.json').version")
-          # Ensure name is "docmd" and remove publishConfig if it exists
           jq --arg newName "docmd" --arg newVersion "$VERSION" '.name = $newName | .version = $newVersion | del(.publishConfig)' package.json > package_temp.json
           mv package_temp.json package.json
           echo "package.json for npmjs.com publishing:"
           cat package.json
 
-      # DEBUG - Remove after confirming NPM_TOKEN is working
+      # DEBUG - REMOVE THIS AFTER CONFIRMING NPM_TOKEN IS WORKING
       - name: DEBUG - Check NPM_TOKEN availability for npmjs.com
-        if: always() # Run even if previous steps fail, for debugging
+        if: always()
         run: |
-          if [ -z "$NODE_AUTH_TOKEN_SECRET" ]; then # Use a temporary env var for the secret
+          if [ -z "$NODE_AUTH_TOKEN_SECRET" ]; then
             echo "NPM_TOKEN secret is empty or not set for npmjs.com."
           else
             echo "NPM_TOKEN secret is set for npmjs.com. Length: ${#NODE_AUTH_TOKEN_SECRET}"
@@ -67,11 +57,7 @@ jobs:
 
       - name: Publish to NPM Registry (npmjs.com)
         run: npm publish
-        # .npmrc (configured by setup-node) should handle authentication.
-        # Explicitly setting NODE_AUTH_TOKEN here is a fallback/belt-and-suspenders.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
+        # No explicit env: NODE_AUTH_TOKEN needed here if setup-node configured .npmrc correctly
 
       # --- Publish to GitHub Packages ---
       - name: Set up Node.js for GitHub Packages
@@ -80,18 +66,14 @@ jobs:
           node-version: '22'
           registry-url: 'https://npm.pkg.github.com'
           scope: '@mgks'
-        env: # Pass the token to the setup-node action itself to configure .npmrc
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This configures .npmrc
 
-
-      # At this point, package.json name is "docmd" (from the previous npmjs.com step's jq)
-      # This step changes it to "@mgks/docmd" for GPR.
       - name: Adjust package.json for GitHub Packages (publish as @mgks/docmd)
         run: |
           echo "Current package.json before GPR publish (should be 'docmd'):"
           cat package.json
           VERSION=$(node -p "require('./package.json').version")
-          # Change name to "@mgks/docmd"
           jq --arg newName "@mgks/docmd" --arg newVersion "$VERSION" '.name = $newName | .version = $newVersion' package.json > package_temp.json
           mv package_temp.json package.json
           echo "Updated package.json for GPR publishing:"
@@ -99,7 +81,4 @@ jobs:
 
       - name: Publish to GitHub Packages
         run: npm publish
-        # .npmrc (configured by setup-node) should handle authentication.
-        # Explicitly setting NODE_AUTH_TOKEN here is a fallback.
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # No explicit env: NODE_AUTH_TOKEN needed here if setup-node configured .npmrc correctly
