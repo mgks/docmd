@@ -41,12 +41,19 @@ The `build` command reads your Markdown files from the source directory (specifi
 
 The output `site/` directory contains all the HTML, CSS, JavaScript, and other assets needed to deploy your documentation.
 
+By default, the build process will update all assets to ensure you have the latest versions from the docmd package. This ensures your site benefits from the latest improvements and fixes.
+
 **Options:**
 
 *   `-c, --config <path>`
     *   **Default:** `config.js`
     *   **Description:** Specifies the path to the configuration file. Useful if your config file is not named `config.js` or is not in the project root.
     *   **Example:** `docmd build --config my.docmd.config.js`
+
+*   `-p, --preserve`
+    *   **Default:** `false`
+    *   **Description:** Preserves existing asset files instead of updating them. Use this flag if you've customized any of the default assets and want to keep your modifications.
+    *   **Example:** `docmd build --preserve`
 
 ## `docmd dev`
 
@@ -72,6 +79,12 @@ This provides a fast feedback loop, allowing you to see your changes almost inst
     *   **Default:** `config.js`
     *   **Description:** Specifies the path to the configuration file.
     *   **Example:** `docmd dev --config my.docmd.config.js`
+
+*   `-p, --preserve`
+    *   **Default:** `false`
+    *   **Description:** Preserves existing asset files instead of updating them. Use this flag if you've customized any of the default assets and want to keep your modifications.
+    *   **Example:** `docmd dev --preserve`
+
 *   `-p, --port <port_number>` (Future Option)
     *   **Description:** While not yet implemented, a future version might allow specifying a custom port for the development server. Currently, it defaults to port 3000 or the next available port if 3000 is in use.
 
