@@ -8,11 +8,10 @@ module.exports = {
 
   // Logo Configuration
   logo: {
-    light: '/assets/images/logo-light.png', // Path relative to outputDir root
-    dark: '/assets/images/logo-dark.png',   // Path relative to outputDir root
+    light: '/assets/images/docmd-logo-light.png', // Path relative to outputDir root
+    dark: '/assets/images/docmd-logo-dark.png',   // Path relative to outputDir root
     alt: 'docmd Logo',                      // Alt text for the logo
     href: '/',                              // Link for the logo, defaults to site root
-    // height: '30px',                      // Optional: control via CSS is often better
   },
 
   // Directory Configuration
@@ -25,14 +24,14 @@ module.exports = {
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
     customCss: [            // Array of paths to custom CSS files
-      '/assets/css/toc.css', // Custom TOC styles
+      // '/assets/css/custom.css', // Custom TOC styles
     ],
     // options: { /* Future: theme-specific options */ }
   },
 
   // Custom JavaScript Files
   customJs: [               // Array of paths to custom JS files, loaded at end of body
-    // '/assets/js/custom-script.js', // Paths relative to outputDir root
+    '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
 
   // Plugins Configuration (Object format)
@@ -78,53 +77,54 @@ module.exports = {
   // Navigation Structure (Sidebar)
   // Icons are kebab-case names from Lucide Icons (https://lucide.dev/)
   navigation: [
-      { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
-      { title: 'Home', path: '/', icon: 'home' }, // Corresponds to docs/index.md
+      { title: 'Home', path: '/', icon: 'home' },
       {
         title: 'Getting Started',
-        icon: 'rocket', // Lucide: rocket
-        path: '/getting-started/', // Path to the index.md in this folder
+        icon: 'rocket',
+        path: '/getting-started/',
         children: [
-          { title: 'Installation', path: '/getting-started/installation', icon: 'download' }, // Lucide: download
-          { title: 'Basic Usage', path: '/getting-started/basic-usage', icon: 'play' },      // Lucide: play
+          { title: 'Installation', path: '/getting-started/installation', icon: 'download' },
+          { title: 'Basic Usage', path: '/getting-started/basic-usage', icon: 'play' },
         ],
       },
       {
-        title: 'Writing Content',
-        icon: 'pencil', // Lucide: pencil
-        path: '/writing-content/',
+        title: 'Content',
+        icon: 'layout-template',
+        path: '/content/',
         children: [
-          { title: 'Frontmatter', path: '/writing-content/frontmatter', icon: 'file-text' },      // Lucide: file-text
-          { title: 'Markdown Syntax', path: '/writing-content/markdown-syntax', icon: 'code-2' }, // Lucide: code-2
-          { title: 'Custom Containers', path: '/writing-content/custom-containers', icon: 'box' }, // Lucide: box
+          { title: 'Frontmatter', path: '/content/frontmatter', icon: 'file-text' },
+          { title: 'Markdown Syntax', path: '/content/markdown-syntax', icon: 'code-2' },
+          { title: 'Images', path: '/content/images', icon: 'image' },
+          { title: 'Custom Containers', path: '/content/custom-containers', icon: 'box' },
         ],
       },
-      { title: 'Configuration', path: '/configuration', icon: 'settings' }, // Lucide: settings or cog
+      { title: 'Configuration', path: '/configuration', icon: 'settings' },
       {
         title: 'Theming',
-        icon: 'palette', // Lucide: palette
+        icon: 'palette',
         path: '/theming/',
         children: [
-          { title: 'Available Themes', path: '/theming/available-themes', icon: 'layout-grid' }, // Lucide: layout-grid
-          { title: 'Light & Dark Mode', path: '/theming/light-dark-mode', icon: 'sun-moon' },     // Lucide: sun-moon
-          { title: 'Custom CSS & JS', path: '/theming/custom-css-js', icon: 'file-code' },     // Lucide: file-code
-          { title: 'Icons', path: '/theming/icons', icon: 'image' },                        // Lucide: image
+          { title: 'Available Themes', path: '/theming/available-themes', icon: 'layout-grid' },
+          { title: 'Light & Dark Mode', path: '/theming/light-dark-mode', icon: 'sun-moon' },
+          { title: 'Custom CSS & JS', path: '/theming/custom-css-js', icon: 'file-code' },
+          { title: 'Icons', path: '/theming/icons', icon: 'pencil-ruler' },
         ],
       },
       {
         title: 'Plugins',
-        icon: 'puzzle', // Lucide: puzzle
+        icon: 'puzzle',
         path: '/plugins/',
         children: [
-          { title: 'SEO & Meta Tags', path: '/plugins/seo', icon: 'search' },      // Lucide: search
-          { title: 'Analytics', path: '/plugins/analytics', icon: 'bar-chart' },   // Lucide: bar-chart
-          { title: 'Sitemap', path: '/plugins/sitemap', icon: 'map' },             // Lucide: map
+          { title: 'SEO & Meta Tags', path: '/plugins/seo', icon: 'search' },
+          { title: 'Analytics', path: '/plugins/analytics', icon: 'bar-chart' },
+          { title: 'Sitemap', path: '/plugins/sitemap', icon: 'map' },
         ],
       },
-      { title: 'CLI Commands', path: '/cli-commands', icon: 'terminal' }, // Lucide: terminal
-      { title: 'Deployment', path: '/deployment', icon: 'upload-cloud' }, // Lucide: upload-cloud
-      { title: 'Contributing', path: '/contributing', icon: 'users-2' },   // Lucide: users-2
-      // Example of an external link:
+      { title: 'CLI Commands', path: '/cli-commands', icon: 'terminal' },
+      { title: 'Deployment', path: '/deployment', icon: 'upload-cloud' },
+      { title: 'Contributing', path: '/contributing', icon: 'users-2' },
+
+      { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true }
   ],
 
   // Footer Configuration

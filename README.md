@@ -1,7 +1,7 @@
 <p align="center">
-  <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/docmd-logo.png" alt="docmd logo" width="65" />
+  <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/docmd-logo.png" alt="docmd logo" width="70" />
   <br />
-  <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/logo-light.png" alt="docmd dark logo" width="200" />
+  <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/logo-light.png" alt="docmd dark logo" width="180" />
 </p>
 
 <p align="center">
