@@ -30,10 +30,13 @@ program
   .command('build')
   .description('Build the static site from Markdown files and config.js')
   .option('-c, --config <path>', 'Path to config.js file', 'config.js')
+  .option('-p, --preserve', 'Preserve existing asset files instead of updating them', false)
   .action(async (options) => {
     try {
       console.log('🚀 Starting build process...');
-      await buildSite(options.config);
+      await buildSite(options.config, { 
+        preserve: options.preserve
+      });
       console.log('✅ Build complete! Site generated in `site/` directory.');
     } catch (error) {
       console.error('❌ Build failed:', error.message);
@@ -46,9 +49,10 @@ program
   .command('dev')
   .description('Start a live preview development server')
   .option('-c, --config <path>', 'Path to config.js file', 'config.js')
+  .option('-p, --preserve', 'Preserve existing asset files instead of updating them', false)
   .action(async (options) => {
     try {
-      await startDevServer(options.config);
+      await startDevServer(options.config, { preserve: options.preserve });
     } catch (error) {
       console.error('❌ Dev server failed:', error.message);
       console.error(error.stack);
