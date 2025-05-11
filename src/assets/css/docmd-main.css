@@ -1,6 +1,4 @@
-/* src/assets/css/main.css */
-@import url('./toc.css'); /* Import the TOC styles */
-
+/* src/assets/css/docmd-main.css */
 :root {
     --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -18,6 +16,14 @@
     --code-text: #333;
     --header-bg: #ffffff; /* Added for header */
     --header-border: #e0e0e0; /* Added for header border */
+    
+    /* Image styling variables */
+    --image-border-color: #e0e0e0;
+    --image-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --image-caption-bg: #f8f8f8;
+    --image-caption-text: #666;
+    --lightbox-bg: rgba(0, 0, 0, 0.9);
+    --lightbox-text: #fff;
   }
   
   body[data-theme="dark"] {
@@ -33,6 +39,14 @@
     --code-text: #abb2bf;
     --header-bg: #1a1a1a; /* Added for header */
     --header-border: #444444; /* Added for header border */
+    
+    /* Image styling variables for dark mode */
+    --image-border-color: #444444;
+    --image-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --image-caption-bg: #2c2c2c;
+    --image-caption-text: #bdc3c7;
+    --lightbox-bg: rgba(0, 0, 0, 0.95);
+    --lightbox-text: #fff;
   }
   
   body {
@@ -275,11 +289,6 @@
   .callout .callout-content > :first-child { margin-top: 0; }
   .callout .callout-content > :last-child { margin-bottom: 0; }
 
-
-  /* Cards */
-  .card {
-    /* background-color: var(--code-bg); /* Already set by .docmd-container */
-  }
   .card .card-title {
     font-weight: bold;
     font-size: 1.1em;
@@ -560,3 +569,237 @@
       flex-direction: column-reverse;
     }
   }
+
+  /* TOC Styles - Simplified Hyperlink Style */
+.toc-container {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background-color: transparent;
+}
+
+.toc-title {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+    font-weight: bold;
+    color: var(--text-muted);
+
+}
+
+.toc-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.toc-item {
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+}
+
+.toc-link {
+    text-decoration: none;
+    color: var(--link-color);
+    display: inline-block;
+    padding: 0.1rem 0;
+    font-size: 0.9rem;
+    font-weight: 500;
+
+}
+
+.toc-link:hover {
+  text-decoration: underline;
+}
+
+/* Indentation for different heading levels */
+.toc-level-2 {
+  margin-left: 0;
+}
+
+.toc-level-3 {
+  margin-left: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.toc-level-4 {
+  margin-left: 1.5rem;
+  font-size: 0.8rem;
+}
+
+/* TOC sidebar should only display on active pages */
+.toc-sidebar {
+    width: 180px;
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    align-self: flex-start;
+
+}
+
+/* Hide TOC on mobile */
+@media (max-width: 1024px) {
+  .toc-sidebar {
+    width: 100%;
+    position: static;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Basic image styling */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem 0;
+}
+
+/* Image alignment classes */
+img.align-left {
+  float: left;
+  margin-right: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+img.align-center {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+img.align-right {
+  float: right;
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Image size classes */
+img.size-small {
+  max-width: 300px;
+}
+
+img.size-medium {
+  max-width: 500px;
+}
+
+img.size-large {
+  max-width: 800px;
+}
+
+/* Image borders and shadows */
+img.with-border {
+  border: 1px solid var(--image-border-color);
+  padding: 4px;
+}
+
+img.with-shadow {
+  box-shadow: var(--image-shadow);
+}
+
+/* Figure and caption styling */
+.docmd-container figure {
+  margin: 2rem 0;
+}
+
+.docmd-container figure img {
+  margin-bottom: 0.5rem;
+}
+
+.docmd-container figcaption {
+  font-size: 0.9rem;
+  color: var(--image-caption-text);
+  text-align: center;
+  padding: 0.5rem;
+  background-color: var(--image-caption-bg);
+  border-radius: 0 0 4px 4px;
+}
+
+/* Image gallery */
+.docmd-container .image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.docmd-container .image-gallery figure {
+  margin: 0;
+}
+
+/* Clear floats after aligned images */
+.docmd-container .clear-float::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Lightbox styling */
+.docmd-lightbox {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--lightbox-bg);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.docmd-lightbox-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+  text-align: center;
+}
+
+.docmd-lightbox-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  margin: 0 auto;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.docmd-lightbox-caption {
+  color: var(--lightbox-text);
+  padding: 1rem;
+  font-size: 1rem;
+  max-width: 100%;
+}
+
+.docmd-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  color: var(--lightbox-text);
+  font-size: 2.5rem;
+  cursor: pointer;
+  z-index: 10000;
+}
+
+.docmd-lightbox-close:hover {
+  color: #ddd;
+}
+
+/* Cursor for lightbox images */
+img.lightbox,
+.docmd-container .image-gallery img {
+  cursor: zoom-in;
+}
+
+/* Responsive image handling */
+@media (max-width: 768px) {
+  img.align-left,
+  img.align-right {
+    float: none;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .docmd-container .image-gallery {
+    grid-template-columns: 1fr;
+  }
+} 

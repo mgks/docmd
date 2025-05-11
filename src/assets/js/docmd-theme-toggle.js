@@ -12,10 +12,10 @@ function applyTheme(theme, isInitialLoad = false) {
     const isLight = theme.includes('light');
     const currentHref = highlightThemeLink.href;
     
-    if (isDark && currentHref.includes('highlight-light.css')) {
-      highlightThemeLink.href = currentHref.replace('highlight-light.css', 'highlight-dark.css');
-    } else if (isLight && currentHref.includes('highlight-dark.css')) {
-      highlightThemeLink.href = currentHref.replace('highlight-dark.css', 'highlight-light.css');
+    if (isDark && currentHref.includes('docmd-highlight-light.css')) {
+      highlightThemeLink.href = currentHref.replace('docmd-highlight-light.css', 'docmd-highlight-dark.css');
+    } else if (isLight && currentHref.includes('docmd-highlight-dark.css')) {
+      highlightThemeLink.href = currentHref.replace('docmd-highlight-dark.css', 'docmd-highlight-light.css');
     }
   }
 }

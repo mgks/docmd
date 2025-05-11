@@ -8,7 +8,7 @@ const fs = require('fs-extra');
 const { buildSite } = require('./build'); // Re-use the build logic
 const { loadConfig } = require('../core/config-loader');
 
-async function startDevServer(configPathOption) {
+async function startDevServer(configPathOption, options = { preserve: false }) {
   let config = await loadConfig(configPathOption); // Load initial config
   const CWD = process.cwd(); // Current Working Directory where user runs `docmd dev`
 
@@ -88,7 +88,7 @@ async function startDevServer(configPathOption) {
   // Initial build
   console.log('🚀 Performing initial build for dev server...');
   try {
-    await buildSite(configPathOption, { isDev: true }); // Use the original config path option
+    await buildSite(configPathOption, { isDev: true, preserve: options.preserve }); // Use the original config path option
     console.log('✅ Initial build complete.');
   } catch (error) {
       console.error('❌ Initial build failed:', error.message, error.stack);
@@ -143,7 +143,7 @@ async function startDevServer(configPathOption) {
         paths = newPaths; // Update paths for next build reference
       }
 
-      await buildSite(configPathOption, { isDev: true }); // Re-build using the potentially updated config path
+      await buildSite(configPathOption, { isDev: true, preserve: options.preserve }); // Re-build using the potentially updated config path
       broadcastReload();
       console.log('✅ Rebuild complete. Browser should refresh.');
     } catch (error) {

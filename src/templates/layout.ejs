@@ -13,9 +13,9 @@
 
     <%- faviconLinkHtml || '' %> <%# Favicon %>
 
-    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/main.css">
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
 
-    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
 
     <%- themeCssLinkHtml || '' %> <%# For theme.name specific CSS %>
 
@@ -90,65 +90,7 @@
                 
                 <!-- TOC sidebar -->
                 <div class="toc-sidebar">
-                    <% 
-                    // Helper function to decode HTML entities
-                    function decodeHtmlEntities(html) {
-                      return html
-                        .replace(/&amp;/g, '&')
-                        .replace(/&lt;/g, '<')
-                        .replace(/&gt;/g, '>')
-                        .replace(/&quot;/g, '"')
-                        .replace(/&#39;/g, "'")
-                        .replace(/&nbsp;/g, ' ');
-                    }
-                    
-                    // Only show TOC on active pages
-                    const isActive = navigationHtml && navigationHtml.includes('class="active"');
-                    
-                    if (isActive) {
-                      // Extract headings directly from content - match with or without id attribute
-                      const headingRegex = /<h([2-4])[^>]*?(?:id="([^"]*)")?[^>]*?>([\s\S]*?)<\/h\1>/g;
-                      const tocHeadings = [];
-                      let match;
-                      let contentStr = content.toString();
-
-                      while ((match = headingRegex.exec(contentStr)) !== null) {
-                          const level = parseInt(match[1], 10);
-                          // Use ID if available, or generate one from the text
-                          let id = match[2];
-                          // Remove any HTML tags inside the heading text and decode HTML entities
-                          const textWithTags = match[3].replace(/<\/?[^>]+(>|$)/g, '');
-                          // Decode HTML entities
-                          const text = decodeHtmlEntities(textWithTags);
-                          
-                          if (!id) {
-                              // Generate an ID from the heading text if none exists
-                              id = text
-                                .toLowerCase()
-                                .replace(/\s+/g, '-')
-                                .replace(/[^\w-]/g, '')
-                                .replace(/--+/g, '-')
-                                .replace(/^-+|-+$/g, '');
-                          }
-                          
-                          tocHeadings.push({ id, level, text });
-                      }
-                      
-                      // Only show TOC if there are enough headings
-                      if (tocHeadings.length > 1) { 
-                      %>
-                          <div class="toc-container">
-                              <h2 class="toc-title">On This Page</h2>
-                              <ul class="toc-list">
-                                  <% tocHeadings.forEach(heading => { %>
-                                      <li class="toc-item toc-level-<%= heading.level %>">
-                                          <a href="#<%= heading.id %>" class="toc-link"><%- heading.text %></a>
-                                      </li>
-                                  <% }); %>
-                              </ul>
-                          </div>
-                      <% } 
-                    } %>
+                    <%- include('toc', { content, headings, navigationHtml, isActivePage }) %>
                 </div>
             </div>
         </main>
@@ -164,7 +106,7 @@
         </footer>
     </div>
 
-    <script src="<%= relativePathToRoot %>assets/js/theme-toggle.js"></script>
+    <script src="<%= relativePathToRoot %>assets/js/docmd-theme-toggle.js"></script>
     <% (customJsFiles || []).forEach(jsFile => { %>
       <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
     <% }); %>

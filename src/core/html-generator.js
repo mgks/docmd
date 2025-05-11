@@ -23,8 +23,8 @@ async function processPluginHooks(config, pageData, relativePathToRoot) {
 
     // 2. Theme CSS (built-in handling for theme.name)
     if (config.theme && config.theme.name && config.theme.name !== 'default') {
-        // Assumes theme CSS files are like 'theme-yourthemename.css' in assets/css
-        const themeCssPath = `assets/css/theme-${config.theme.name}.css`;
+        // Assumes theme CSS files are like 'docmd-theme-yourthemename.css' in assets/css
+        const themeCssPath = `assets/css/docmd-theme-${config.theme.name}.css`;
         // Check if theme file exists before linking (optional, good practice)
         // For now, assume it will exist if specified.
         themeCssLinkHtml = `  <link rel="stylesheet" href="${relativePathToRoot}${themeCssPath}">\n`;
@@ -109,7 +109,9 @@ async function generateHtmlPage(templateData) {
     };
 
     try {
-        return ejs.render(layoutTemplate, ejsData);
+        return ejs.render(layoutTemplate, ejsData, {
+            filename: layoutTemplatePath // Add filename for proper include resolution
+        });
     } catch (e) {
         console.error(`❌ Error rendering EJS template for ${outputPath}: ${e.message}`);
         console.error("EJS Data:", JSON.stringify(ejsData, null, 2).substring(0, 1000) + "..."); // Log partial data
@@ -133,6 +135,8 @@ async function generateNavigationHtml(navItems, currentPagePath, relativePathToR
         relativePathToRoot,
         config, // Pass full config if needed by nav (e.g. for base path)
         ...ejsHelpers
+    }, {
+        filename: navTemplatePath // Add filename for proper include resolution
     });
 }
 

@@ -6,6 +6,7 @@ const { processMarkdownFile } = require('../core/file-processor');
 const { generateHtmlPage, generateNavigationHtml } = require('../core/html-generator');
 const { renderIcon, clearWarnedIcons } = require('../core/icon-renderer'); // Update import
 const { generateSitemap } = require('../plugins/sitemap'); // Import our sitemap plugin
+const { version } = require('../../package.json'); // Import package version
 
 // Debug function to log navigation information
 function logNavigationPaths(pagePath, navPath, normalizedPath) {
@@ -17,7 +18,17 @@ function logNavigationPaths(pagePath, navPath, normalizedPath) {
 // Add a global or scoped flag to track if the warning has been shown in the current dev session
 let highlightWarningShown = false;
 
-async function buildSite(configPath, options = { isDev: false }) {
+// Asset version metadata - update this when making significant changes to assets
+const ASSET_VERSIONS = {
+  'css/docmd-main.css': { version: version, description: 'Core styles' },
+  'css/docmd-theme-sky.css': { version: version, description: 'Sky theme' },
+  'css/docmd-highlight-light.css': { version: version, description: 'Light syntax highlighting' },
+  'css/docmd-highlight-dark.css': { version: version, description: 'Dark syntax highlighting' },
+  'js/docmd-theme-toggle.js': { version: version, description: 'Theme toggle functionality' },
+  // Add other assets here with their versions
+};
+
+async function buildSite(configPath, options = { isDev: false, preserve: false }) {
   clearWarnedIcons(); // Clear warnings at the start of every build
 
   const config = await loadConfig(configPath);
@@ -29,25 +40,66 @@ async function buildSite(configPath, options = { isDev: false }) {
     throw new Error(`Source directory not found: ${SRC_DIR}`);
   }
 
-  await fs.emptyDir(OUTPUT_DIR);
-  if (!options.isDev) {
-    console.log(`🧹 Cleaned output directory: ${OUTPUT_DIR}`);
+  // Create output directory if it doesn't exist
+  await fs.ensureDir(OUTPUT_DIR);
+
+  // Instead of emptying the entire directory, we'll selectively clean up HTML files
+  // This preserves custom assets while ensuring we don't have stale HTML files
+  if (await fs.pathExists(OUTPUT_DIR)) {
+    const cleanupFiles = await findFilesToCleanup(OUTPUT_DIR);
+    for (const file of cleanupFiles) {
+      await fs.remove(file);
+    }
+    if (!options.isDev) {
+      console.log(`🧹 Cleaned HTML files from output directory: ${OUTPUT_DIR}`);
+    }
   }
 
+  // Track preserved files for summary report
+  const preservedFiles = [];
+
+  // Copy assets
   const assetsSrcDir = path.join(__dirname, '..', 'assets');
   const assetsDestDir = path.join(OUTPUT_DIR, 'assets');
+  
   if (await fs.pathExists(assetsSrcDir)) {
-    await fs.copy(assetsSrcDir, assetsDestDir);
     if (!options.isDev) {
-        console.log(`📂 Copied assets to ${assetsDestDir}`);
+      console.log(`📂 Copying assets to ${assetsDestDir}...`);
+    }
+    
+    // Create destination directory if it doesn't exist
+    await fs.ensureDir(assetsDestDir);
+    
+    // Get all files from source directory recursively
+    const assetFiles = await getAllFiles(assetsSrcDir);
+    
+    // Copy each file individually, checking for existing files if preserve flag is set
+    for (const srcFile of assetFiles) {
+      const relativePath = path.relative(assetsSrcDir, srcFile);
+      const destFile = path.join(assetsDestDir, relativePath);
+      
+      // Check if destination file already exists
+      const fileExists = await fs.pathExists(destFile);
+      
+      if (fileExists && options.preserve) {
+        // Skip file and add to preserved list
+        preservedFiles.push(relativePath);
+        if (!options.isDev) {
+          console.log(`  Preserving existing file: ${relativePath}`);
+        }
+      } else {
+        // Copy file (either it doesn't exist or we're not preserving)
+        await fs.ensureDir(path.dirname(destFile));
+        await fs.copyFile(srcFile, destFile);
+      }
     }
   } else {
     console.warn(`⚠️  Assets source directory not found: ${assetsSrcDir}`);
   }
 
   // Check for Highlight.js themes
-  const lightThemePath = path.join(__dirname, '..', 'assets', 'css', 'highlight-light.css');
-  const darkThemePath = path.join(__dirname, '..', 'assets', 'css', 'highlight-dark.css');
+  const lightThemePath = path.join(__dirname, '..', 'assets', 'css', 'docmd-highlight-light.css');
+  const darkThemePath = path.join(__dirname, '..', 'assets', 'css', 'docmd-highlight-dark.css');
 
   const themesMissing = !await fs.pathExists(lightThemePath) || !await fs.pathExists(darkThemePath);
 
@@ -280,6 +332,55 @@ async function buildSite(configPath, options = { isDev: false }) {
       console.error(`❌ Error generating sitemap: ${error.message}`);
     }
   }
+
+  // Print summary of preserved files at the end of build
+  if (preservedFiles.length > 0 && !options.isDev) {
+    console.log(`\n📋 Build Summary: ${preservedFiles.length} existing files were preserved:`);
+    preservedFiles.forEach(file => console.log(`  - assets/${file}`));
+    console.log(`\nTo update these files in future builds, run without the --preserve flag.`);
+  }
+}
+
+// Helper function to find HTML files and sitemap.xml to clean up
+async function findFilesToCleanup(dir) {
+  const filesToRemove = [];
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    
+    if (item.isDirectory()) {
+      // Don't delete the assets directory
+      if (item.name !== 'assets') {
+        const subDirFiles = await findFilesToCleanup(fullPath);
+        filesToRemove.push(...subDirFiles);
+      }
+    } else if (
+      item.name.endsWith('.html') || 
+      item.name === 'sitemap.xml'
+    ) {
+      filesToRemove.push(fullPath);
+    }
+  }
+  
+  return filesToRemove;
+}
+
+// Helper function to recursively get all files in a directory
+async function getAllFiles(dir) {
+  const files = [];
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      files.push(...await getAllFiles(fullPath));
+    } else {
+      files.push(fullPath);
+    }
+  }
+  
+  return files;
 }
 
 // findMarkdownFiles function remains the same

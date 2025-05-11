@@ -4,6 +4,7 @@ const MarkdownIt = require('markdown-it');
 const matter = require('gray-matter');
 const hljs = require('highlight.js');
 const container = require('markdown-it-container');
+const attrs = require('markdown-it-attrs');
 
 const md = new MarkdownIt({
   html: true,
@@ -22,6 +23,45 @@ const md = new MarkdownIt({
     return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
   }
 });
+
+// Add markdown-it-attrs for image styling and other element attributes
+// This allows for {.class} syntax after elements
+md.use(attrs, {
+  // Allow attributes on images and other elements
+  leftDelimiter: '{',
+  rightDelimiter: '}',
+  allowedAttributes: ['class', 'id', 'width', 'height', 'style']
+});
+
+// Custom image renderer to ensure attributes are properly applied
+const defaultImageRenderer = md.renderer.rules.image;
+md.renderer.rules.image = function(tokens, idx, options, env, self) {
+  // Get the rendered HTML from the default renderer
+  const renderedImage = defaultImageRenderer(tokens, idx, options, env, self);
+  
+  // Check if the next token is an attrs_block
+  const nextToken = tokens[idx + 1];
+  if (nextToken && nextToken.type === 'attrs_block') {
+    // Extract attributes from the attrs_block token
+    const attrs = nextToken.attrs || [];
+    
+    // Build the attributes string
+    const attrsStr = attrs.map(([name, value]) => {
+      if (name === 'class') {
+        return `class="${value}"`;
+      } else if (name.startsWith('data-')) {
+        return `${name}="${value}"`;
+      } else {
+        return `${name}="${value}"`;
+      }
+    }).join(' ');
+    
+    // Insert attributes into the image tag
+    return renderedImage.replace('<img ', `<img ${attrsStr} `);
+  }
+  
+  return renderedImage;
+};
 
 // Add anchors to headings for TOC linking
 md.use((md) => {

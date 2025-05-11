@@ -1,4 +1,4 @@
-/* theme-sky.css - Sky theme for docmd inspired by Mintlify */
+/* theme-sky.css - Sky theme for docmd */
 
 :root [data-theme="light"] {
     /* Font family */
@@ -35,6 +35,16 @@
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Image styling variables */
+    --image-border-color: var(--sky-border);
+    --image-shadow: var(--shadow-md);
+    --image-caption-bg: var(--sky-background-alt);
+    --image-caption-text: var(--sky-text-light);
+    --image-hover-transform: translateY(-2px);
+    --image-hover-shadow: var(--shadow-lg);
+    --image-border-radius: 8px;
+    --image-transition: all 0.3s ease;
   }
   
   /* Dark mode */
@@ -69,6 +79,16 @@
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    
+    /* Image styling variables for dark mode */
+    --image-border-color: var(--sky-border);
+    --image-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    --image-caption-bg: var(--sky-background-alt);
+    --image-caption-text: var(--sky-text-light);
+    --image-hover-transform: translateY(-2px);
+    --image-hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
+    --image-border-radius: 8px;
+    --image-transition: all 0.3s ease;
   }
   
   /* Apply theme styles */
@@ -495,5 +515,137 @@
     
     h3 {
       font-size: 1.25rem;
+    }
+  }  
+
+  /* Enhanced image styling for Sky theme */
+  img {
+    border-radius: var(--image-border-radius);
+    transition: var(--image-transition);
+  }
+
+  /* Enhanced borders and shadows */
+  img.with-border {
+    border: 1px solid var(--image-border-color);
+    padding: 8px;
+    background-color: var(--bg-color);
+  }
+
+  img.with-shadow {
+    box-shadow: var(--image-shadow);
+  }
+
+  img.with-shadow:hover {
+    box-shadow: var(--image-hover-shadow);
+  }
+
+  /* Beautiful figure styling */
+  figure {
+    border-radius: var(--image-border-radius);
+    overflow: hidden;
+    transition: var(--image-transition);
+    box-shadow: var(--shadow-sm);
+  }
+
+  figure:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  figure img {
+    margin-bottom: 0;
+    border-radius: var(--image-border-radius) var(--image-border-radius) 0 0;
+  }
+
+  figcaption {
+    background-color: var(--image-caption-bg);
+    color: var(--image-caption-text);
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  /* Advanced image gallery */
+  .image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .image-gallery figure {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    transition: var(--image-transition);
+  }
+
+  .image-gallery figure:hover {
+    transform: var(--image-hover-transform);
+  }
+
+  .image-gallery img {
+    height: 200px;
+    width: 100%;
+    object-fit: cover;
+    margin: 0;
+  }
+
+  .image-gallery figcaption {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Zoom effect on gallery images */
+  .image-gallery.zoom img {
+    transition: transform 0.5s ease;
+  }
+
+  .image-gallery.zoom figure:hover img {
+    transform: scale(1.05);
+  }
+
+  /* Lightbox effect - requires JavaScript implementation */
+  img.lightbox {
+    cursor: zoom-in;
+  }
+
+  /* Image with frames */
+  img.framed {
+    border: 8px solid white;
+    box-shadow: 0 0 0 1px var(--image-border-color), var(--image-shadow);
+    box-sizing: border-box;
+  }
+
+  /* Polaroid style */
+  figure.polaroid {
+    background: white;
+    padding: 10px 10px 30px 10px;
+    box-shadow: var(--shadow-md);
+  }
+
+  figure.polaroid img {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  figure.polaroid figcaption {
+    background: white;
+    color: var(--sky-text);
+    font-family: 'Caveat', cursive, var(--font-family-sans);
+    font-size: 1.1rem;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .image-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+    
+    .image-gallery img {
+      height: 150px;
     }
   }  
