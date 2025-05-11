@@ -2,7 +2,7 @@ name: Publish Package to NPM and GitHub Packages
 
 on:
   release:
-    types: [created] # Triggers when a new GitHub Release is published
+    types: [created, published] # Triggers when a new GitHub Release is created or published
   workflow_dispatch: # Allows manual triggering for testing
 
 jobs:
