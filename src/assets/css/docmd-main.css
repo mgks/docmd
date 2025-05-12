@@ -506,8 +506,10 @@
     text-align: right;
     opacity: 0.9;
     font-weight: 500;
-
 }
+.branding-footer svg {
+  color: rgb(251, 58, 58);
+  }
 
   .page-footer a {
     color: var(--link-color);

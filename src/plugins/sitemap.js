@@ -6,11 +6,15 @@ const path = require('path');
  * @param {Object} config - The full configuration object
  * @param {Array} pages - Array of page objects with data about each processed page
  * @param {string} outputDir - Path to the output directory
+ * @param {Object} options - Additional options
+ * @param {boolean} options.isDev - Whether running in development mode
  */
-async function generateSitemap(config, pages, outputDir) {
+async function generateSitemap(config, pages, outputDir, options = { isDev: false }) {
   // Skip if no siteUrl is defined (sitemap needs absolute URLs)
   if (!config.siteUrl) {
-    console.warn('⚠️ No siteUrl defined in config. Skipping sitemap generation.');
+    if (!options.isDev) {
+      console.warn('⚠️ No siteUrl defined in config. Skipping sitemap generation.');
+    }
     return;
   }
 
@@ -94,7 +98,10 @@ async function generateSitemap(config, pages, outputDir) {
   const sitemapPath = path.join(outputDir, 'sitemap.xml');
   await fs.writeFile(sitemapPath, sitemapXml);
   
-  console.log(`✅ Generated sitemap at ${sitemapPath}`);
+  // Only show sitemap generation message in production mode or if DOCMD_DEV is true
+  if (!options.isDev || process.env.DOCMD_DEV === 'true') {
+    console.log(`✅ Generated sitemap at ${sitemapPath}`);
+  }
 }
 
 module.exports = { generateSitemap }; 
