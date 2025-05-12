@@ -30,7 +30,8 @@ program
   .command('build')
   .description('Build the static site from Markdown files and config.js')
   .option('-c, --config <path>', 'Path to config.js file', 'config.js')
-  .option('-p, --preserve', 'Preserve existing asset files instead of updating them', false)
+  .option('-p, --preserve', 'Preserve existing asset files instead of updating them')
+  .option('--no-preserve', 'Force update all asset files, overwriting existing ones')
   .action(async (options) => {
     try {
       console.log('🚀 Starting build process...');
@@ -49,7 +50,8 @@ program
   .command('dev')
   .description('Start a live preview development server')
   .option('-c, --config <path>', 'Path to config.js file', 'config.js')
-  .option('-p, --preserve', 'Preserve existing asset files instead of updating them', false)
+  .option('-p, --preserve', 'Preserve existing asset files instead of updating them')
+  .option('--no-preserve', 'Force update all asset files, overwriting existing ones')
   .action(async (options) => {
     try {
       await startDevServer(options.config, { preserve: options.preserve });
