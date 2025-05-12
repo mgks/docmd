@@ -1,5 +1,6 @@
 const fs = require('fs-extra');
 const path = require('path');
+const readline = require('readline');
 
 const defaultConfigContent = `// config.js: basic config for docmd
 module.exports = {
@@ -76,9 +77,18 @@ module.exports = {
   // Icons are kebab-case names from Lucide Icons (https://lucide.dev/)
   navigation: [
       { title: 'Welcome', path: '/', icon: 'home' }, // Corresponds to docs/index.md
+      {
+        title: 'Getting Started',
+        icon: 'rocket',
+        path: '#',
+        children: [
+          { title: 'Documentation', path: 'https://docmd.mgks.dev', icon: 'scroll', external: true },
+          { title: 'Installation', path: 'https://docmd.mgks.dev/getting-started/installation', icon: 'download', external: true },
+          { title: 'Basic Usage', path: 'https://docmd.mgks.dev/getting-started/basic-usage', icon: 'play', external: true },
+        ],
+      },
       // External links:
       { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
-      { title: 'Documentation', path: 'https://github.com/mgks/docmd', icon: 'scroll', external: true }
   ],
 
   // Footer Configuration
@@ -106,16 +116,117 @@ async function initProject() {
   const docsDir = path.join(baseDir, 'docs');
   const configFile = path.join(baseDir, 'config.js');
   const indexMdFile = path.join(docsDir, 'index.md');
-
-  if (await fs.pathExists(configFile) || await fs.pathExists(docsDir)) {
-    console.warn('⚠️  `docs/` directory or `config.js` already exists. Skipping creation to avoid overwriting.');
-  } else {
-    await fs.ensureDir(docsDir);
-    await fs.writeFile(configFile, defaultConfigContent, 'utf8');
-    await fs.writeFile(indexMdFile, defaultIndexMdContent, 'utf8');
-    console.log('📄 Created `config.js`');
-    console.log('📁 Created `docs/` directory with a sample `index.md`');
+  const assetsDir = path.join(baseDir, 'assets');
+  const assetsCssDir = path.join(assetsDir, 'css');
+  const assetsJsDir = path.join(assetsDir, 'js');
+  const assetsImagesDir = path.join(assetsDir, 'images');
+  
+  const existingFiles = [];
+  const dirExists = {
+    docs: false,
+    assets: false
+  };
+  
+  // Check each file individually
+  if (await fs.pathExists(configFile)) {
+    existingFiles.push('config.js');
   }
+  
+  if (await fs.pathExists(docsDir)) {
+    dirExists.docs = true;
+    
+    if (await fs.pathExists(indexMdFile)) {
+      existingFiles.push('docs/index.md');
+    }
+  }
+
+  // Check if assets directory exists
+  if (await fs.pathExists(assetsDir)) {
+    dirExists.assets = true;
+  }
+  
+  // Determine if we should override existing files
+  let shouldOverride = false;
+  if (existingFiles.length > 0) {
+    console.warn('⚠️  The following files already exist:');
+    existingFiles.forEach(file => console.warn(`   - ${file}`));
+    
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    
+    const answer = await new Promise(resolve => {
+      rl.question('Do you want to override these files? (y/N): ', resolve);
+    });
+    
+    rl.close();
+    
+    shouldOverride = answer.toLowerCase() === 'y';
+    
+    if (!shouldOverride) {
+      console.log('⏭️  Skipping existing files. Will only create new files.');
+    }
+  }
+  
+  // Create docs directory if it doesn't exist
+  if (!dirExists.docs) {
+    await fs.ensureDir(docsDir);
+    console.log('📁 Created `docs/` directory');
+  } else {
+    console.log('📁 Using existing `docs/` directory');
+  }
+
+  // Create assets directory structure if it doesn't exist
+  if (!dirExists.assets) {
+    await fs.ensureDir(assetsDir);
+    await fs.ensureDir(assetsCssDir);
+    await fs.ensureDir(assetsJsDir);
+    await fs.ensureDir(assetsImagesDir);
+    console.log('📁 Created `assets/` directory with css, js, and images subdirectories');
+  } else {
+    console.log('📁 Using existing `assets/` directory');
+    
+    // Create subdirectories if they don't exist
+    if (!await fs.pathExists(assetsCssDir)) {
+      await fs.ensureDir(assetsCssDir);
+      console.log('📁 Created `assets/css/` directory');
+    }
+    
+    if (!await fs.pathExists(assetsJsDir)) {
+      await fs.ensureDir(assetsJsDir);
+      console.log('📁 Created `assets/js/` directory');
+    }
+    
+    if (!await fs.pathExists(assetsImagesDir)) {
+      await fs.ensureDir(assetsImagesDir);
+      console.log('📁 Created `assets/images/` directory');
+    }
+  }
+  
+  // Write config file if it doesn't exist or user confirmed override
+  if (!await fs.pathExists(configFile)) {
+    await fs.writeFile(configFile, defaultConfigContent, 'utf8');
+    console.log('📄 Created `config.js`');
+  } else if (shouldOverride) {
+    await fs.writeFile(configFile, defaultConfigContent, 'utf8');
+    console.log('📄 Updated `config.js`');
+  } else {
+    console.log('⏭️  Skipped existing `config.js`');
+  }
+  
+  // Write index.md file if it doesn't exist or user confirmed override
+  if (!await fs.pathExists(indexMdFile)) {
+    await fs.writeFile(indexMdFile, defaultIndexMdContent, 'utf8');
+    console.log('📄 Created `docs/index.md`');
+  } else if (shouldOverride) {
+    await fs.writeFile(indexMdFile, defaultIndexMdContent, 'utf8');
+    console.log('📄 Updated `docs/index.md`');
+  } else {
+    console.log('⏭️  Skipped existing `docs/index.md`');
+  }
+  
+  console.log('✅ Project initialization complete!');
 }
 
 module.exports = { initProject };

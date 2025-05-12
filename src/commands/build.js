@@ -35,6 +35,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
   const CWD = process.cwd();
   const SRC_DIR = path.resolve(CWD, config.srcDir);
   const OUTPUT_DIR = path.resolve(CWD, config.outputDir);
+  const USER_ASSETS_DIR = path.resolve(CWD, 'assets'); // User's custom assets directory
 
   if (!await fs.pathExists(SRC_DIR)) {
     throw new Error(`Source directory not found: ${SRC_DIR}`);
@@ -57,6 +58,33 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
 
   // Track preserved files for summary report
   const preservedFiles = [];
+  const userAssetsCopied = [];
+
+  // Copy user assets from root assets/ directory if it exists
+  if (await fs.pathExists(USER_ASSETS_DIR)) {
+    const assetsDestDir = path.join(OUTPUT_DIR, 'assets');
+    await fs.ensureDir(assetsDestDir);
+    
+    if (!options.isDev) {
+      console.log(`📂 Copying user assets from ${USER_ASSETS_DIR} to ${assetsDestDir}...`);
+    }
+    
+    const userAssetFiles = await getAllFiles(USER_ASSETS_DIR);
+    
+    for (const srcFile of userAssetFiles) {
+      const relativePath = path.relative(USER_ASSETS_DIR, srcFile);
+      const destFile = path.join(assetsDestDir, relativePath);
+      
+      // Ensure directory exists
+      await fs.ensureDir(path.dirname(destFile));
+      await fs.copyFile(srcFile, destFile);
+      userAssetsCopied.push(relativePath);
+    }
+    
+    if (!options.isDev && userAssetsCopied.length > 0) {
+      console.log(`📦 Copied ${userAssetsCopied.length} user assets`);
+    }
+  }
 
   // Copy assets
   const assetsSrcDir = path.join(__dirname, '..', 'assets');
@@ -64,7 +92,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
   
   if (await fs.pathExists(assetsSrcDir)) {
     if (!options.isDev) {
-      console.log(`📂 Copying assets to ${assetsDestDir}...`);
+      console.log(`📂 Copying docmd assets to ${assetsDestDir}...`);
     }
     
     // Create destination directory if it doesn't exist
@@ -81,10 +109,13 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
       // Check if destination file already exists
       const fileExists = await fs.pathExists(destFile);
       
-      if (fileExists && options.preserve) {
+      // Skip if the file exists and either:
+      // 1. The preserve flag is set, OR
+      // 2. The file was copied from user assets (user assets take precedence)
+      if (fileExists && (options.preserve || userAssetsCopied.includes(relativePath))) {
         // Skip file and add to preserved list
         preservedFiles.push(relativePath);
-        if (!options.isDev) {
+        if (!options.isDev && options.preserve) {
           console.log(`  Preserving existing file: ${relativePath}`);
         }
       } else {
@@ -327,7 +358,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
   // Generate sitemap if enabled in config
   if (config.plugins?.sitemap !== false) {
     try {
-      await generateSitemap(config, processedPages, OUTPUT_DIR);
+      await generateSitemap(config, processedPages, OUTPUT_DIR, { isDev: options.isDev });
     } catch (error) {
       console.error(`❌ Error generating sitemap: ${error.message}`);
     }
@@ -338,6 +369,16 @@ async function buildSite(configPath, options = { isDev: false, preserve: false }
     console.log(`\n📋 Build Summary: ${preservedFiles.length} existing files were preserved:`);
     preservedFiles.forEach(file => console.log(`  - assets/${file}`));
     console.log(`\nTo update these files in future builds, run without the --preserve flag.`);
+  }
+  
+  if (userAssetsCopied.length > 0 && !options.isDev) {
+    console.log(`\n📋 User Assets: ${userAssetsCopied.length} files were copied from your assets/ directory:`);
+    if (userAssetsCopied.length <= 10) {
+      userAssetsCopied.forEach(file => console.log(`  - assets/${file}`));
+    } else {
+      userAssetsCopied.slice(0, 5).forEach(file => console.log(`  - assets/${file}`));
+      console.log(`  - ... and ${userAssetsCopied.length - 5} more files`);
+    }
   }
 }
 

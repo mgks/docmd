@@ -18,6 +18,7 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
       outputDir: path.resolve(CWD, currentConfig.outputDir),
       srcDirToWatch: path.resolve(CWD, currentConfig.srcDir),
       configFileToWatch: path.resolve(CWD, configPathOption), // Path to the config file itself
+      userAssetsDir: path.resolve(CWD, 'assets'), // User's assets directory
     };
   };
 
@@ -65,11 +66,72 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
         if (typeof body === 'string') {
           const liveReloadScript = `
             <script>
-              const socket = new WebSocket(\`ws://\${window.location.host}\`);
-              socket.onmessage = function(event) { if (event.data === 'reload') window.location.reload(); };
-              socket.onerror = function(error) { console.error('WebSocket Client Error:', error); };
-              // socket.onopen = function() { console.log('WebSocket Client Connected'); };
-              // socket.onclose = function() { console.log('WebSocket Client Disconnected'); };
+              (function() {
+                // More robust WebSocket connection with automatic reconnection
+                let socket;
+                let reconnectAttempts = 0;
+                const maxReconnectAttempts = 5;
+                const reconnectDelay = 1000; // Start with 1 second delay
+                
+                function connect() {
+                  socket = new WebSocket(\`ws://\${window.location.host}\`);
+                  
+                  socket.onmessage = function(event) { 
+                    if (event.data === 'reload') {
+                      console.log('Received reload signal. Refreshing page...');
+                      window.location.reload(); 
+                    }
+                  };
+                  
+                  socket.onopen = function() {
+                    console.log('Live reload connected.');
+                    reconnectAttempts = 0; // Reset reconnect counter on successful connection
+                  };
+                  
+                  socket.onclose = function() {
+                    if (reconnectAttempts < maxReconnectAttempts) {
+                      reconnectAttempts++;
+                      const delay = reconnectDelay * Math.pow(1.5, reconnectAttempts - 1); // Exponential backoff
+                      console.log(\`Live reload disconnected. Reconnecting in \${delay/1000} seconds...\`);
+                      setTimeout(connect, delay);
+                    } else {
+                      console.log('Live reload disconnected. Max reconnect attempts reached.');
+                    }
+                  };
+                  
+                  socket.onerror = function(error) {
+                    console.error('WebSocket error:', error);
+                  };
+                }
+                
+                // Initial connection
+                connect();
+                
+                // Backup reload mechanism using polling for browsers with WebSocket issues
+                let lastModified = new Date().getTime();
+                const pollInterval = 2000; // Poll every 2 seconds
+                
+                function checkForChanges() {
+                  fetch(window.location.href, { method: 'HEAD', cache: 'no-store' })
+                    .then(response => {
+                      const serverLastModified = new Date(response.headers.get('Last-Modified')).getTime();
+                      if (serverLastModified > lastModified) {
+                        console.log('Change detected via polling. Refreshing page...');
+                        window.location.reload();
+                      }
+                      lastModified = serverLastModified;
+                    })
+                    .catch(error => console.error('Error checking for changes:', error));
+                }
+                
+                // Only use polling as a fallback if WebSocket fails
+                setTimeout(() => {
+                  if (socket.readyState !== WebSocket.OPEN) {
+                    console.log('WebSocket not connected. Falling back to polling.');
+                    setInterval(checkForChanges, pollInterval);
+                  }
+                }, 5000);
+              })();
             </script>
           `;
           body = body.replace('</body>', `${liveReloadScript}</body>`);
@@ -77,6 +139,12 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
         originalSend.call(this, body);
       };
     }
+    next();
+  });
+
+  // Add Last-Modified header to all responses for polling fallback
+  app.use((req, res, next) => {
+    res.setHeader('Last-Modified', new Date().toUTCString());
     next();
   });
 
@@ -95,21 +163,38 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
       // Optionally, don't start server if initial build fails, or serve a specific error page.
   }
 
+  // Check if user assets directory exists
+  const userAssetsDirExists = await fs.pathExists(paths.userAssetsDir);
 
   // Watch for changes
   const watchedPaths = [
     paths.srcDirToWatch,
     paths.configFileToWatch,
-    DOCMD_TEMPLATES_DIR,
-    DOCMD_ASSETS_DIR
   ];
 
-  console.log(`👀 Watching for changes in:
-    - Source: ${paths.srcDirToWatch}
-    - Config: ${paths.configFileToWatch}
-    - docmd Templates: ${DOCMD_TEMPLATES_DIR} (internal)
-    - docmd Assets: ${DOCMD_ASSETS_DIR} (internal)
-  `);
+  // Add user assets directory to watched paths if it exists
+  if (userAssetsDirExists) {
+    watchedPaths.push(paths.userAssetsDir);
+  }
+
+  // Add internal paths for docmd development (not shown to end users)
+  const internalPaths = [DOCMD_TEMPLATES_DIR, DOCMD_ASSETS_DIR];
+  
+  // Only in development environments, we might want to watch internal files too
+  if (process.env.DOCMD_DEV === 'true') {
+    watchedPaths.push(...internalPaths);
+  }
+
+  console.log(`👀 Watching for changes in:`);
+  console.log(`    - Source: ${paths.srcDirToWatch}`);
+  console.log(`    - Config: ${paths.configFileToWatch}`);
+  if (userAssetsDirExists) {
+    console.log(`    - Assets: ${paths.userAssetsDir}`);
+  }
+  if (process.env.DOCMD_DEV === 'true') {
+    console.log(`    - docmd Templates: ${DOCMD_TEMPLATES_DIR} (internal)`);
+    console.log(`    - docmd Assets: ${DOCMD_ASSETS_DIR} (internal)`);
+  }
 
   const watcher = chokidar.watch(watchedPaths, {
     ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -145,7 +230,7 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
 
       await buildSite(configPathOption, { isDev: true, preserve: options.preserve }); // Re-build using the potentially updated config path
       broadcastReload();
-      console.log('✅ Rebuild complete. Browser should refresh.');
+      console.log('✅ Rebuild complete. Browser will refresh automatically.');
     } catch (error) {
       console.error('❌ Rebuild failed:', error.message, error.stack);
     }
@@ -164,6 +249,7 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
     }
     console.log(`🎉 Dev server started at http://localhost:${PORT}`);
     console.log(`Serving content from: ${paths.outputDir}`);
+    console.log(`Live reload is active. Browser will refresh automatically when files change.`);
   });
 
   // Graceful shutdown
