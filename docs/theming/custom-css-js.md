@@ -1,5 +1,5 @@
 ---
-title: "Custom CSS & JS"
+title: "Custom Styles & Scripts"
 description: "Learn how to add your own custom CSS and JavaScript to your docmd site for advanced customization."
 ---
 
@@ -30,41 +30,8 @@ module.exports = {
 **How it works:**
 *   Each string in the `customCss` array should be an absolute path from the root of your generated `site/` directory (e.g., if your file is `site/assets/css/my-branding.css`, the path is `/assets/css/my-branding.css`).
 *   These `<link rel="stylesheet">` tags will be added to the `<head>` of every page *after* the main theme CSS and `highlight.js` CSS. This allows your custom styles to override the default theme styles.
-*   You are responsible for ensuring these CSS files exist at the specified locations in your final `site/` output. Typically, you would:
-    1.  Create your custom CSS files (e.g., `my-branding.css`).
-    2.  Place them in a folder within your project (e.g., `my-project/static-assets/css/`).
-    3.  Ensure that this folder (or its contents) is copied to the correct location in your `site/` directory during `docmd`'s asset copying process. If `docmd` copies a top-level `assets/` folder from your source, place them there.
 
-## Managing Custom Assets
-
-By default, `docmd` will always update assets to the latest version when you run `build` or `dev` commands. This ensures your site benefits from the latest improvements and fixes.
-
-### Customizing Default Assets
-
-If you want to customize default assets (like theme CSS files or scripts):
-
-1. First, build your site normally to generate all assets:
-   ```bash
-   docmd build
-   ```
-
-2. Modify the generated files in the `site/assets` directory as needed.
-
-3. When rebuilding, use the `--preserve` flag to keep your customized files:
-   ```bash
-   docmd build --preserve
-   ```
-
-This approach allows you to:
-- Always get the latest assets when you want them (default behavior)
-- Preserve your customizations when needed (with `--preserve`)
-- Easily see which files are being preserved during the build process
-
-The `--preserve` flag works with both `build` and `dev` commands:
-```bash
-# Preserve custom assets during development
-docmd dev --preserve
-```
+> **Note:** For information on how to manage your custom asset files (CSS, JS, images), see the [Assets Management](/theming/assets-management/) documentation.
 
 **Use Cases for Custom CSS:**
 *   **Overriding CSS Variables:** The `default` theme uses CSS variables extensively. You can redefine these in your custom CSS.
@@ -104,7 +71,6 @@ module.exports = {
 **How it works:**
 *   Each string in the `customJs` array should be an absolute path from the root of your generated `site/` directory.
 *   These `<script src="..."></script>` tags will be added just before the closing `</body>` tag on every page. This ensures the DOM is loaded before your scripts run and is generally better for page performance.
-*   Similar to custom CSS, you are responsible for ensuring these JavaScript files exist at the specified locations in your final `site/` output.
 
 **Use Cases for Custom JS:**
 *   Adding interactive elements (e.g., custom modals, tabs not provided by `docmd`).
