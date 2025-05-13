@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/v/@mgks/docmd.svg" alt="npm version"></a>
-  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/dm/@mgks/docmd.svg" alt="npm downloads"></a>
+  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/d18m/@mgks/docmd.svg" alt="npm downloads"></a>
   <a href="https://github.com/mgks/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mgks/docmd.svg" alt="license"></a>
 </p>
 
