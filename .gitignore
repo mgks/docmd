@@ -133,3 +133,4 @@ dist
 context.md
 createContext.js
 CHANGELOG.md
+.DS_Store
