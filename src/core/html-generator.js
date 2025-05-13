@@ -18,7 +18,7 @@ async function processPluginHooks(config, pageData, relativePathToRoot) {
     // 1. Favicon (built-in handling)
     if (config.favicon) {
         const faviconPath = config.favicon.startsWith('/') ? config.favicon.substring(1) : config.favicon;
-        faviconLinkHtml = `  <link rel="icon" href="${relativePathToRoot}${faviconPath}">\n`;
+        faviconLinkHtml = `<link rel="shortcut icon" href="${relativePathToRoot}${faviconPath}" type="image/x-icon">\n`;
     }
 
     // 2. Theme CSS (built-in handling for theme.name)
@@ -75,9 +75,21 @@ async function generateHtmlPage(templateData) {
         footerHtml = mdInstance.renderInline(config.footer);
     }
 
-    const layoutTemplatePath = path.join(__dirname, '..', 'templates', 'layout.ejs');
+    // Determine which template to use based on frontmatter
+    let templateName = 'layout.ejs';
+    if (frontmatter.noStyle === true) {
+        templateName = 'no-style.ejs';
+        
+        // For no-style pages, ensure we're passing the raw HTML content
+        // without any additional processing or escaping
+        if (content.includes('&lt;') || content.includes('&gt;')) {
+            console.warn(`⚠️ Warning: HTML content in no-style page appears to be escaped. This may cause rendering issues.`);
+        }
+    }
+
+    const layoutTemplatePath = path.join(__dirname, '..', 'templates', templateName);
     if (!await fs.pathExists(layoutTemplatePath)) {
-        throw new Error(`Layout template not found: ${layoutTemplatePath}`);
+        throw new Error(`Template not found: ${layoutTemplatePath}`);
     }
     const layoutTemplate = await fs.readFile(layoutTemplatePath, 'utf8');
 
@@ -105,6 +117,7 @@ async function generateHtmlPage(templateData) {
         currentPagePath, // Pass the current page path for active state detection
         headings: headings || [], // Pass headings for TOC, default to empty array if not provided
         isActivePage, // Flag to determine if TOC should be shown
+        frontmatter, // Pass the entire frontmatter for no-style template
         ...pluginOutputs, // Spread all plugin generated HTML strings
     };
 

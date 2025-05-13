@@ -8,6 +8,25 @@ const fs = require('fs-extra');
 const { buildSite } = require('./build'); // Re-use the build logic
 const { loadConfig } = require('../core/config-loader');
 
+/**
+ * Format paths for display to make them relative to CWD
+ * @param {string} absolutePath - The absolute path to format
+ * @param {string} cwd - Current working directory
+ * @returns {string} - Formatted relative path
+ */
+function formatPathForDisplay(absolutePath, cwd) {
+  // Get the relative path from CWD
+  const relativePath = path.relative(cwd, absolutePath);
+  
+  // If it's not a subdirectory, prefix with ./ for clarity
+  if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+    return `./${relativePath}`;
+  }
+  
+  // Return the relative path
+  return relativePath;
+}
+
 async function startDevServer(configPathOption, options = { preserve: false }) {
   let config = await loadConfig(configPathOption); // Load initial config
   const CWD = process.cwd(); // Current Working Directory where user runs `docmd dev`
@@ -48,22 +67,24 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
     console.error('WebSocket Server error:', error);
   });
 
-
   function broadcastReload() {
-    // console.log('Broadcasting reload to', wsClients.size, 'clients');
     wsClients.forEach(client => {
       if (client.readyState === WebSocket.OPEN) {
-        client.send('reload');
+        try {
+          client.send('reload');
+        } catch (error) {
+          console.error('Error sending reload command to client:', error);
+        }
       }
     });
   }
 
-  // Inject live reload script into HTML
+  // Inject live reload script into HTML responses
   app.use((req, res, next) => {
-    if (req.path.endsWith('.html')) {
+    if (req.path.endsWith('.html') || !req.path.includes('.')) {
       const originalSend = res.send;
-      res.send = function (body) {
-        if (typeof body === 'string') {
+      res.send = function(body) {
+        if (typeof body === 'string' && body.includes('</body>')) {
           const liveReloadScript = `
             <script>
               (function() {
@@ -156,7 +177,7 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
   // Initial build
   console.log('🚀 Performing initial build for dev server...');
   try {
-    await buildSite(configPathOption, { isDev: true, preserve: options.preserve }); // Use the original config path option
+    await buildSite(configPathOption, { isDev: true, preserve: options.preserve, noDoubleProcessing: true }); // Use the original config path option
     console.log('✅ Initial build complete.');
   } catch (error) {
       console.error('❌ Initial build failed:', error.message, error.stack);
@@ -186,14 +207,14 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
   }
 
   console.log(`👀 Watching for changes in:`);
-  console.log(`    - Source: ${paths.srcDirToWatch}`);
-  console.log(`    - Config: ${paths.configFileToWatch}`);
+  console.log(`    - Source: ${formatPathForDisplay(paths.srcDirToWatch, CWD)}`);
+  console.log(`    - Config: ${formatPathForDisplay(paths.configFileToWatch, CWD)}`);
   if (userAssetsDirExists) {
-    console.log(`    - Assets: ${paths.userAssetsDir}`);
+    console.log(`    - Assets: ${formatPathForDisplay(paths.userAssetsDir, CWD)}`);
   }
   if (process.env.DOCMD_DEV === 'true') {
-    console.log(`    - docmd Templates: ${DOCMD_TEMPLATES_DIR} (internal)`);
-    console.log(`    - docmd Assets: ${DOCMD_ASSETS_DIR} (internal)`);
+    console.log(`    - docmd Templates: ${formatPathForDisplay(DOCMD_TEMPLATES_DIR, CWD)} (internal)`);
+    console.log(`    - docmd Assets: ${formatPathForDisplay(DOCMD_ASSETS_DIR, CWD)} (internal)`);
   }
 
   const watcher = chokidar.watch(watchedPaths, {
@@ -219,7 +240,7 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
         // For simplicity, we might need to restart the watcher or inform user to restart dev server if srcDir/outputDir change.
         // For now, we'll at least update the static server path.
         if (newPaths.outputDir !== paths.outputDir) {
-            console.log(`Output directory changed from ${paths.outputDir} to ${newPaths.outputDir}. Updating static server.`);
+            console.log(`Output directory changed from ${formatPathForDisplay(paths.outputDir, CWD)} to ${formatPathForDisplay(newPaths.outputDir, CWD)}. Updating static server.`);
             staticMiddleware = express.static(newPaths.outputDir);
         }
         // If srcDirToWatch changes, chokidar won't automatically pick it up.
@@ -228,9 +249,9 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
         paths = newPaths; // Update paths for next build reference
       }
 
-      await buildSite(configPathOption, { isDev: true, preserve: options.preserve }); // Re-build using the potentially updated config path
+      await buildSite(configPathOption, { isDev: true, preserve: options.preserve, noDoubleProcessing: true }); // Re-build using the potentially updated config path
       broadcastReload();
-      console.log('✅ Rebuild complete. Browser will refresh automatically.');
+      console.log('✅ Rebuild complete.');
     } catch (error) {
       console.error('❌ Rebuild failed:', error.message, error.stack);
     }
@@ -238,19 +259,40 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
 
   watcher.on('error', error => console.error(`Watcher error: ${error}`));
 
+  // Try different ports if the default port is in use
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, async () => {
-    // Check if index.html exists after initial build
-    const indexHtmlPath = path.join(paths.outputDir, 'index.html');
-    if (!await fs.pathExists(indexHtmlPath)) {
-        console.warn(`⚠️  Warning: ${indexHtmlPath} not found after initial build.
-        The dev server is running, but you might see a 404 for the root page.
-        Ensure your '${config.srcDir}' directory contains an 'index.md' or your navigation points to existing files.`);
-    }
-    console.log(`🎉 Dev server started at http://localhost:${PORT}`);
-    console.log(`Serving content from: ${paths.outputDir}`);
-    console.log(`Live reload is active. Browser will refresh automatically when files change.`);
-  });
+  const MAX_PORT_ATTEMPTS = 10;
+  let currentPort = PORT;
+  
+  // Function to try starting the server on different ports
+  function tryStartServer(port, attempt = 1) {
+    server.listen(port)
+      .on('listening', async () => {
+        // Check if index.html exists after initial build
+        const indexHtmlPath = path.join(paths.outputDir, 'index.html');
+        if (!await fs.pathExists(indexHtmlPath)) {
+            console.warn(`⚠️  Warning: ${formatPathForDisplay(indexHtmlPath, CWD)} not found after initial build.
+            The dev server is running, but you might see a 404 for the root page.
+            Ensure your '${config.srcDir}' directory contains an 'index.md' or your navigation points to existing files.`);
+        }
+        console.log(`🎉 Dev server started at http://localhost:${port}`);
+        console.log(`Serving content from: ${formatPathForDisplay(paths.outputDir, CWD)}`);
+        console.log(`Live reload is active. Browser will refresh automatically when files change.`);
+      })
+      .on('error', (err) => {
+        if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_ATTEMPTS) {
+          console.log(`Port ${port} is in use, trying port ${port + 1}...`);
+          server.close();
+          tryStartServer(port + 1, attempt + 1);
+        } else {
+          console.error(`Failed to start server: ${err.message}`);
+          process.exit(1);
+        }
+      });
+  }
+  
+  // Start the server with port fallback
+  tryStartServer(currentPort);
 
   // Graceful shutdown
   process.on('SIGINT', () => {

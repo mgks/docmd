@@ -5,6 +5,21 @@ const matter = require('gray-matter');
 const hljs = require('highlight.js');
 const container = require('markdown-it-container');
 const attrs = require('markdown-it-attrs');
+const path = require('path'); // Add path module for findMarkdownFiles
+
+// Function to format paths for display (relative to CWD)
+function formatPathForDisplay(absolutePath) {
+  const CWD = process.cwd();
+  const relativePath = path.relative(CWD, absolutePath);
+  
+  // If it's not a subdirectory, prefix with ./ for clarity
+  if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+    return `./${relativePath}`;
+  }
+  
+  // Return the relative path
+  return relativePath;
+}
 
 const md = new MarkdownIt({
   html: true,
@@ -335,7 +350,7 @@ function extractHeadingsFromHtml(htmlContent) {
   return headings;
 }
 
-async function processMarkdownFile(filePath) {
+async function processMarkdownFile(filePath, options = { isDev: false }) {
   const rawContent = await fs.readFile(filePath, 'utf8');
   let frontmatter, markdownContent;
 
@@ -346,21 +361,43 @@ async function processMarkdownFile(filePath) {
   } catch (e) {
     if (e.name === 'YAMLException') {
       // Provide more specific error for YAML parsing issues
-      const errorMessage = `Error parsing YAML frontmatter in ${filePath}: ${e.reason || e.message}${e.mark ? ` at line ${e.mark.line + 1}, column ${e.mark.column + 1}` : ''}. Please check the syntax.`;
+      const errorMessage = `Error parsing YAML frontmatter in ${formatPathForDisplay(filePath)}: ${e.reason || e.message}${e.mark ? ` at line ${e.mark.line + 1}, column ${e.mark.column + 1}` : ''}. Please check the syntax.`;
       console.error(`❌ ${errorMessage}`);
       throw new Error(errorMessage); // Propagate error to stop build/dev
     }
     // For other errors from gray-matter or unknown errors
-    console.error(`❌ Error processing frontmatter in ${filePath}: ${e.message}`);
+    console.error(`❌ Error processing frontmatter in ${formatPathForDisplay(filePath)}: ${e.message}`);
     throw e;
   }
 
   if (!frontmatter.title) {
-    console.warn(`⚠️ Warning: Markdown file ${filePath} is missing a 'title' in its frontmatter. Using filename as fallback.`);
+    console.warn(`⚠️ Warning: Markdown file ${formatPathForDisplay(filePath)} is missing a 'title' in its frontmatter. Using filename as fallback.`);
     // Fallback title, or you could make it an error
     // frontmatter.title = path.basename(filePath, path.extname(filePath));
   }
 
+  // Special handling for no-style pages with HTML content
+  if (frontmatter.noStyle === true) {
+    // Only log when not in dev mode to reduce console output during dev
+    if (!options.isDev) {
+      console.log(`📄 Processing no-style page: ${formatPathForDisplay(filePath)} - Using raw HTML content`);
+    }
+    
+    // For no-style pages, we'll use the raw content directly
+    // No markdown processing, no HTML escaping
+    const htmlContent = markdownContent;
+    
+    // Extract headings for table of contents (if needed)
+    const headings = extractHeadingsFromHtml(htmlContent);
+
+    return {
+      frontmatter,
+      htmlContent,
+      headings,
+    };
+  }
+
+  // Regular processing for standard pages
   // Check if this is a documentation example showing how to use containers
   const isContainerDocumentation = markdownContent.includes('containerName [optionalTitleOrType]') || 
                                   markdownContent.includes('## Callouts') || 
@@ -413,4 +450,29 @@ async function processMarkdownFile(filePath) {
   };
 }
 
-module.exports = { processMarkdownFile, mdInstance: md, extractHeadingsFromHtml }; // Export mdInstance if needed by plugins for consistency
+// Add findMarkdownFiles function
+/**
+ * Recursively finds all Markdown files in a directory and its subdirectories
+ * @param {string} dir - Directory to search in
+ * @returns {Promise<string[]>} - Array of file paths
+ */
+async function findMarkdownFiles(dir) {
+  let files = [];
+  const items = await fs.readdir(dir, { withFileTypes: true });
+  for (const item of items) {
+    const fullPath = path.join(dir, item.name);
+    if (item.isDirectory()) {
+      files = files.concat(await findMarkdownFiles(fullPath));
+    } else if (item.isFile() && (item.name.endsWith('.md') || item.name.endsWith('.markdown'))) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+module.exports = { 
+  processMarkdownFile, 
+  mdInstance: md, 
+  extractHeadingsFromHtml,
+  findMarkdownFiles // Export the findMarkdownFiles function
+};

@@ -1,6 +1,20 @@
 const fs = require('fs-extra');
 const path = require('path');
 
+// Function to format paths for display (relative to CWD)
+function formatPathForDisplay(absolutePath) {
+  const CWD = process.cwd();
+  const relativePath = path.relative(CWD, absolutePath);
+  
+  // If it's not a subdirectory, prefix with ./ for clarity
+  if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
+    return `./${relativePath}`;
+  }
+  
+  // Return the relative path
+  return relativePath;
+}
+
 /**
  * Generate sitemap.xml in the output directory root
  * @param {Object} config - The full configuration object
@@ -100,7 +114,7 @@ async function generateSitemap(config, pages, outputDir, options = { isDev: fals
   
   // Only show sitemap generation message in production mode or if DOCMD_DEV is true
   if (!options.isDev || process.env.DOCMD_DEV === 'true') {
-    console.log(`✅ Generated sitemap at ${sitemapPath}`);
+    console.log(`✅ Generated sitemap at ${formatPathForDisplay(sitemapPath)}`);
   }
 }
 
