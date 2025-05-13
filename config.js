@@ -31,7 +31,7 @@ module.exports = {
 
   // Custom JavaScript Files
   customJs: [               // Array of paths to custom JS files, loaded at end of body
-    '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
+    // '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality (commented out)
   ],
 
   // Plugins Configuration (Object format)
@@ -77,7 +77,8 @@ module.exports = {
   // Navigation Structure (Sidebar)
   // Icons are kebab-case names from Lucide Icons (https://lucide.dev/)
   navigation: [
-      { title: 'Home', path: '/', icon: 'home' },
+      { title: 'Welcome', path: '/', icon: 'feather' },
+      { title: 'Overview', path: '/overview', icon: 'home' },
       {
         title: 'Getting Started',
         icon: 'rocket',
@@ -96,6 +97,8 @@ module.exports = {
           { title: 'Markdown Syntax', path: '/content/markdown-syntax', icon: 'code-2' },
           { title: 'Images', path: '/content/images', icon: 'image' },
           { title: 'Custom Containers', path: '/content/custom-containers', icon: 'box' },
+          { title: 'No-Style Pages', path: '/content/no-style-pages', icon: 'layout' },
+          { title: 'No-Style Example', path: '/content/no-style-example', icon: 'sparkles' },
         ],
       },
       { title: 'Configuration', path: '/configuration', icon: 'settings' },
