@@ -31,7 +31,7 @@ module.exports = {
 
   // Custom JavaScript Files
   customJs: [               // Array of paths to custom JS files, loaded at end of body
-     '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality (commented out)
+     '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
 
   // Plugins Configuration (Object format)
@@ -127,7 +127,9 @@ module.exports = {
       { title: 'Deployment', path: '/deployment', icon: 'upload-cloud' },
       { title: 'Contributing', path: '/contributing', icon: 'users-2' },
 
-      { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true }
+      { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
+      { title: 'Discussions', path: 'https://github.com/mgks/docmd/discussions', icon: 'message-square', external: true },
+      { title: 'Issues', path: 'https://github.com/mgks/docmd/issues', icon: 'badge-alert', external: true }
   ],
 
   // Footer Configuration
