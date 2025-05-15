@@ -142,8 +142,9 @@
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
   }
-  
+
   .page-header {
     padding: 15px 30px;
     border-bottom: 1px solid var(--header-border);

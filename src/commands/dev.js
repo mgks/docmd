@@ -44,6 +44,9 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
   let paths = resolveConfigPaths(config);
 
   // docmd's internal templates and assets (for live dev of docmd itself)
+  const DOCMD_COMMANDS_DIR = path.resolve(__dirname, '..', 'commands');
+  const DOCMD_CORE_DIR = path.resolve(__dirname, '..', 'core');
+  const DOCMD_PLUGINS_DIR = path.resolve(__dirname, '..', 'plugins');
   const DOCMD_TEMPLATES_DIR = path.resolve(__dirname, '..', 'templates');
   const DOCMD_ASSETS_DIR = path.resolve(__dirname, '..', 'assets');
 
@@ -199,13 +202,13 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
   }
 
   // Add internal paths for docmd development (not shown to end users)
-  const internalPaths = [DOCMD_TEMPLATES_DIR, DOCMD_ASSETS_DIR];
+  const internalPaths = [DOCMD_TEMPLATES_DIR, DOCMD_ASSETS_DIR, DOCMD_COMMANDS_DIR, DOCMD_CORE_DIR, DOCMD_PLUGINS_DIR];
   
   // Only in development environments, we might want to watch internal files too
   if (process.env.DOCMD_DEV === 'true') {
     watchedPaths.push(...internalPaths);
   }
-
+  
   console.log(`👀 Watching for changes in:`);
   console.log(`    - Source: ${formatPathForDisplay(paths.srcDirToWatch, CWD)}`);
   console.log(`    - Config: ${formatPathForDisplay(paths.configFileToWatch, CWD)}`);
