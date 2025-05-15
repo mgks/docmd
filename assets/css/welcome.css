@@ -335,6 +335,9 @@
     :root {
       --container-padding: 1.5rem;
     }
+    body {
+      overflow: auto;
+    }
     
     .content-side {
       padding: 2rem 0;
@@ -353,7 +356,20 @@
     }
     
     .header-top {
-      right: 1.5rem;
+      padding: 1rem 0;
+      text-align: center;
+      right: 1rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+    }
+    .tagline{
+      font-size: 1em;
+      font-weight: 500;
+    }
+    .landing-container {
+      padding: 1rem;
+      flex-direction: column;
     }
   }
 .social-links .lucide-heart-handshake {
