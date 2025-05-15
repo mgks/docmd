@@ -31,7 +31,7 @@ module.exports = {
 
   // Custom JavaScript Files
   customJs: [               // Array of paths to custom JS files, loaded at end of body
-    // '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality (commented out)
+     '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality (commented out)
   ],
 
   // Plugins Configuration (Object format)
