@@ -35,6 +35,7 @@ module.exports = {
   // Custom JavaScript Files
   customJs: [  // Array of paths to custom JS files, loaded at end of body
     // '/assets/js/custom-script.js', // Paths relative to outputDir root
+    '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
 
   // Plugins Configuration
@@ -85,6 +86,7 @@ module.exports = {
           { title: 'Documentation', path: 'https://docmd.mgks.dev', icon: 'scroll', external: true },
           { title: 'Installation', path: 'https://docmd.mgks.dev/getting-started/installation', icon: 'download', external: true },
           { title: 'Basic Usage', path: 'https://docmd.mgks.dev/getting-started/basic-usage', icon: 'play', external: true },
+          { title: 'Content', path: 'https://docmd.mgks.dev/content', icon: 'layout-template', external: true },
         ],
       },
       // External links:
