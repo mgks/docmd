@@ -24,7 +24,7 @@ module.exports = {
   outputDir: 'site',
 
   theme: {
-    name: 'default',        // Name of the built-in theme to use (e.g., 'default', 'classic')
+    name: 'sky',            // Name of the built-in theme to use (e.g., 'sky', 'default')
     defaultMode: 'light',   // 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
     customCss: [            // Array of paths to your custom CSS files
@@ -37,20 +37,32 @@ module.exports = {
     // '/js/extra-functionality.js', // Loaded at the end of the body
   ],
 
-  plugins: [
-    // Example: Enable built-in SEO enhancements
-    // ['seo', {
-    //   defaultDescription: 'A fantastic site about interesting things.',
-    //   openGraph: { defaultImage: '/assets/images/og-social-default.png' },
-    //   twitter: { cardType: 'summary_large_image', siteUsername: '@MyProject' }
-    // }],
+  plugins: {
+    // SEO Plugin Configuration
+    seo: {
+      defaultDescription: 'A fantastic site about interesting things.',
+      openGraph: { 
+        defaultImage: '/assets/images/og-social-default.png'
+      },
+      twitter: { 
+        cardType: 'summary_large_image', 
+        siteUsername: '@MyProject' 
+      }
+    },
 
-    // Example: Enable Google Analytics (Universal Analytics)
-    // ['analytics-google-ua', { trackingId: 'UA-XXXXXXXXX-Y' }],
-
-    // Example: Enable Google Analytics 4
-    // ['analytics-google-v4', { measurementId: 'G-XXXXXXXXXX' }],
-  ],
+    // Google Analytics 4
+    analytics: {
+      googleV4: { 
+        measurementId: 'G-XXXXXXXXXX' 
+      }
+    },
+    
+    // Sitemap generation
+    sitemap: {
+      defaultChangefreq: 'weekly',
+      defaultPriority: 0.8
+    }
+  },
 
   navigation: [
     { title: 'Home', path: '/', icon: 'home' }, // Icon names correspond to SVGs
@@ -137,15 +149,15 @@ Configures the visual theme of your site.
 *   **Paths:** Should be relative to the `outputDir` root (e.g., `'/js/my-analytics-alternative.js'`).
 *   **Example:** `customJs: ['/assets/js/interactive-component.js']`
 
-## `plugins` (Array)
-*   **Type:** `Array`
-*   **Default:** `[]`
-*   **Description:** An array to configure and enable plugins. `docmd` will ship with some core "local" plugins (like SEO and Analytics) that you can enable here. Future versions might support third-party plugins.
-*   **Format:** Each item in the array is typically another array: `['plugin-name', { pluginOptions }]` or a direct `require()` for local project plugins (advanced usage).
+## `plugins` (Object)
+*   **Type:** `Object`
+*   **Default:** `{}`
+*   **Description:** An object to configure and enable plugins. `docmd` ships with core plugins like SEO, Analytics, and Sitemap that you can configure here.
+*   **Format:** Each key in the object represents a plugin name, and its value is an object containing the plugin's configuration options.
 *   **Built-in Plugin Examples:**
-    *   `['seo', { defaultDescription: '...', openGraph: { ... }, ... }]`
-    *   `['analytics-google-ua', { trackingId: 'UA-...' }]`
-    *   `['analytics-google-v4', { measurementId: 'G-...' }]`
+    *   `seo: { defaultDescription: '...', openGraph: { ... }, ... }`
+    *   `analytics: { googleV4: { measurementId: 'G-XXXXXXXXXX' } }`
+    *   `sitemap: { defaultChangefreq: 'weekly', defaultPriority: 0.8 }`
 *   **See Also:** [Plugins](/plugins/)
 
 ## `navigation` (Array of Objects)

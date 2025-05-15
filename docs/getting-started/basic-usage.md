@@ -36,6 +36,7 @@ Create your Markdown (`.md`) files inside the `docs/` directory. You can organiz
 
 ```
 my-awesome-docs/
+├── assets/
 ├── docs/
 │   ├── index.md
 │   └── api/
@@ -47,7 +48,7 @@ my-awesome-docs/
 └── config.js
 ```
 
-Each Markdown file should start with YAML frontmatter to define metadata like the page title. See [Writing Content > Frontmatter](/writing-content/frontmatter/) for details.
+Each Markdown file should start with YAML frontmatter to define metadata like the page title. See [Content > Frontmatter](/content/frontmatter/) for details.
 
 ## 3. Preview Your Site (`docmd dev`)
 
@@ -85,4 +86,4 @@ This command:
 
 The contents of the `site/` directory are all you need to deploy your documentation. You can upload this folder to any static web hosting provider. See [Deployment](/deployment/) for more information.
 
-This covers the fundamental workflow of using `docmd`. Next, you'll want to learn more about [Writing Content](/writing-content/) and [Configuration](/configuration/).
+This covers the fundamental workflow of using `docmd`. Next, you'll want to learn more about [Content](/content/) and [Configuration](/configuration/).

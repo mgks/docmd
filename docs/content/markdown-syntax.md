@@ -51,7 +51,7 @@ You can use all standard Markdown elements:
     ```markdown
     [Link Text](https://www.example.com)
     [Link with Title](https://www.example.com "Link Title")
-    [Relative Link to another page](../section/other-page.md)
+    [Relative Link to another page](../section/other-page/)
     ```
     *Note: For internal links to other documentation pages, use relative paths to the `.md` files. `docmd` will convert these to the correct HTML paths during the build.*
 
@@ -152,7 +152,7 @@ Because `markdown-it` is configured with `html: true`, you can embed raw HTML di
 </div>
 ```
 
-For most formatting needs, standard Markdown and `docmd`'s [Custom Containers](./custom-containers.md) should suffice.
+For most formatting needs, standard Markdown and `docmd`'s [Custom Containers](/content/custom-containers/) should suffice.
 
 # Advanced Markdown Capabilities
 
@@ -264,7 +264,7 @@ $$
 ## Container Extensions
 
 Beyond standard Markdown, docmd provides custom containers for enhanced formatting. 
-These are detailed in the [Custom Containers](./custom-containers.md) guide, and include:
+These are detailed in the [Custom Containers](/content/custom-containers/) guide, and include:
 
 ::: callout info
 Use containers for callouts, cards, and steps to structure your documentation.

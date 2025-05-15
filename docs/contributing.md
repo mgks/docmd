@@ -58,6 +58,13 @@ To set up `docmd` for local development:
    * Follow the existing code style and formatting.
    * Consider running `npm run lint` to check for style issues (if set up).
 
+### Environment Setup
+
+To enable live change tracking for internal files during development, set the DOCMD_DEV environment variable:
+
+- **Temporarily:** Run `export DOCMD_DEV=true` in your terminal before starting the dev server.
+- **Permanently:** Add `export DOCMD_DEV=true` to your `~/.zshrc` file and run `source ~/.zshrc`.
+
 ## Pull Request Process
 
 Once you're satisfied with your changes:

@@ -105,6 +105,6 @@ bodyClass: "no-style-example"
       without affecting the rest of your site.
     </p>
     
-    <a href="/content/no-style-pages" class="button">Get Back to No-Style Pages Documentation</a>
+    <a href="/content/no-style-pages/" class="button">Get Back to No-Style Pages Documentation</a>
   </div>
 </div> 

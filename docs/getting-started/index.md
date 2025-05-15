@@ -11,11 +11,11 @@ Whether you're documenting a new open-source project, an internal tool, or just 
 
 ## What You'll Learn:
 
-*   **[Installation](./installation.md):** How to install `docmd` on your system using npm.
-*   **[Basic Usage](./basic-usage.md):**
+*   **[Installation](/getting-started/installation/):** How to install `docmd` on your system using npm.
+*   **[Basic Usage](/getting-started/basic-usage/):**
     *   Initializing a new `docmd` project with `docmd init`.
     *   Adding and structuring your Markdown content.
     *   Building your static site with `docmd build`.
     *   Previewing your site with live reloading using `docmd dev`.
 
-Ready to begin? Let's start with [Installation](./installation.md).
+Ready to begin? Let's start with [Installation](/getting-started/installation/).

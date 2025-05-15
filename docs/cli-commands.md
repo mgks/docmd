@@ -85,8 +85,7 @@ This provides a fast feedback loop, allowing you to see your changes almost inst
     *   **Description:** Preserves existing asset files instead of updating them. Use this flag if you've customized any of the default assets and want to keep your modifications.
     *   **Example:** `docmd dev --preserve`
 
-*   `-p, --port <port_number>` (Future Option)
-    *   **Description:** While not yet implemented, a future version might allow specifying a custom port for the development server. Currently, it defaults to port 3000 or the next available port if 3000 is in use.
+**Note:** The development server starts on port 3000 by default. If port 3000 is already in use, the server will automatically try the next available port (3001, 3002, etc.) until it finds an open port.
 
 ## Global Options (Apply to all commands)
 

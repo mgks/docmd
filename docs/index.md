@@ -1,5 +1,5 @@
 ---
-title: "docmd: Documentation. Zero Clutter. Just Content."
+title: "Documentation. Zero Clutter. Just Content."
 description: "A lightweight static documentation site generator that transforms Markdown into beautiful, responsive documentation websites."
 noStyle: true
 components:
@@ -7,10 +7,9 @@ components:
   favicon: true
   css: false
   theme: false
-  scripts: true
-  themeToggle: false
-  lightbox: false
+  scripts: false
 customHead: |
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
@@ -26,7 +25,7 @@ customHead: |
         document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
       }
     }
-    
+
     // Toggle theme between light and dark
     function toggleTheme() {
       const currentTheme = document.body.getAttribute('data-theme');
@@ -34,7 +33,7 @@ customHead: |
       document.body.setAttribute('data-theme', newTheme);
       localStorage.setItem('docmd-theme', newTheme);
     }
-    
+
     // Run on page load
     document.addEventListener('DOMContentLoaded', initTheme);
   </script>
@@ -101,8 +100,6 @@ customHead: |
       </div>
     </div>
 
-    <a href="https://www.producthunt.com/posts/docmd?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_souce=badge-docmd" target="_blank" style="margin-bottom: .5em;"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=963681&amp;theme=dark&amp;t=1747100482899" alt="docmd - Generate beautiful, light documentation sites from Markdown. | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54"></a>
-
     <div class="buttons">
       <a href="/getting-started/" class="btn btn-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket-icon lucide-rocket"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
@@ -118,9 +115,9 @@ customHead: |
       <a href="https://github.com/sponsors/mgks" target="_blank" rel="noopener" class="social-link" title="Buy me a Coffee – GitHub Sponsors">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart-handshake-icon lucide-heart-handshake"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"/><path d="m18 15-2-2"/><path d="m15 18-2-2"/></svg>
       </a>
-      <!--<a href="https://twitter.com/share?url=https://docmd.mgks.dev" target="_blank" rel="noopener" class="social-link">
+      <a href="https://twitter.com/share?url=https://docmd.mgks.dev" target="_blank" rel="noopener" class="social-link">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4.5-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg>
-      </a>-->
+      </a>
     </div>
   </div>
   
@@ -140,4 +137,4 @@ customHead: |
       </div>
     </div>
   </div>
-</div> 
+</div>

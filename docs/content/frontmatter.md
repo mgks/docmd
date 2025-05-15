@@ -26,7 +26,7 @@ tags:
 *   **`title`** (String, Required)
     *   **Purpose:** This is the primary title of the page.
     *   **Usage:**
-        *   Used for the HTML `<title>` tag (e.g., `Page Title | Site Title`).
+        *   Used for the HTML `<title>` tag (e.g., `Page Title : Site Title`).
         *   Often used as the main heading (`<h1>`) on the page by default (though themes can customize this).
         *   Used as the display text for links in the navigation sidebar if the path matches.
     *   **Example:** `title: "Installation Guide"`
@@ -68,7 +68,7 @@ This guide will walk you through installing our application...
 ```
 
 In this example:
-*   The browser tab will show "Installation Steps | Your Site Title".
+*   The browser tab will show "Installation Steps : Your Site Title".
 *   The `<meta name="description">` will be set.
 *   The `order: 1` field is available if you later want to sort "guides" pages by this value.
 

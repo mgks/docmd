@@ -59,14 +59,12 @@ The most robust and automated way to deploy to GitHub Pages is using a GitHub Ac
 Create a file at `.github/workflows/deploy-docs.yml` with the following content:
 
 ```yaml
-name: Deploy docmd docs to Pages
+name: Deploy docmd docs to GitHub Pages
 
 on:
-  # Run on pushes to main branch
   push:
-    branches: ["main"]
-  # Allows manual workflow trigger from Actions tab
-  workflow_dispatch:
+    branches: ["main"]  # Your default branch
+  workflow_dispatch:   # Allows manual workflow trigger from Actions tab
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -74,46 +72,39 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20' # Or the Node.js version docmd supports/requires
-          cache: 'npm'
-      - name: Install docmd (globally or from devDependencies)
-        # If docmd is a dev dependency of the project being documented:
-        # run: npm ci && npm run build:docs # Assuming 'build:docs' script runs 'docmd build'
-        # If installing docmd globally for this action:
-        run: npm install -g docmd # Or your scoped package name e.g. @mgks/docmd
-      - name: Build site with docmd
-        run: docmd build # Assumes config.js is in the root and correctly points to srcDir/outputDir
-      - name: Setup Pages
-        uses: actions/configure-pages@v3
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v2
-        with:
-          # This should be your outputDir path
-          path: './site' # or './docs' if you set outputDir: 'docs'
-  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install docmd (globally or from devDependencies)
+        run: npm install -g @mgks/docmd
+
+      - name: Build site with docmd
+        run: docmd build # Assumes config.js is in the root and correctly points to srcDir/outputDir
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./site # This should be your outputDir path
+
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
 ```
 
 Then:

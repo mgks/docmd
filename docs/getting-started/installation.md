@@ -5,7 +5,7 @@ description: "Learn how to install docmd on your system globally or as a project
 
 # Installation
 
-You can install `docmd` using npm (Node Package Manager), which comes with Node.js. If you don't have Node.js and npm installed, please visit [nodejs.org](https://nodejs.org/) to download and install them first (Node.js version 20.x or higher is recommended for `docmd`).
+You can install `docmd` using npm (Node Package Manager), which comes with Node.js. If you don't have Node.js and npm installed, please visit [nodejs.org](https://nodejs.org/) to download and install them first (Node.js version 22.x or higher is required for `docmd`).
 
 ## Global Installation (Recommended for CLI Use)
 

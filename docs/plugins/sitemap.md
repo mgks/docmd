@@ -85,4 +85,4 @@ sitemap: false
 
 ## Verifying Your Sitemap
 
-After building your site, check the generated sitemap at `your-site/sitemap.xml`. You can also submit the sitemap URL to search engines like Google Search Console or Bing Webmaster Tools to help them discover and index your content more efficiently. 
+After building your site, check the generated sitemap at `your-site/sitemap.xml`. You can also submit the sitemap URL to search engines like Google Search Console or Bing Webmaster Tools to help them discover and index your content more efficiently.
