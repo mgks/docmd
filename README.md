@@ -70,7 +70,7 @@ Contributions are welcome! Please check our [contributing guidelines](https://do
 
 ## License
 
-`docmd` is licensed under the [MIT License](LICENSE).
+`docmd` is licensed under the [MIT License](https://github.com/mgks/docmd/blob/main/LICENSE).
 
 ## Support the Project
 
@@ -82,4 +82,6 @@ If you find `docmd` useful, please consider:
 
 **[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time GitHub sponsor to support docmd & other projects developed by [me](https://mgks.dev).**
 
-<br /><img src="https://forthebadge.com/images/badges/built-with-love.svg" alt="Built with Love">
+<br />
+
+<img src="https://forthebadge.com/images/badges/built-with-love.svg" alt="Built with Love">
