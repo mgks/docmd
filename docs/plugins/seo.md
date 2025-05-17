@@ -62,6 +62,7 @@ image: "/assets/images/widgets/super-widget-social.jpg" # Used for og:image and 
 ogType: "article" # Specify Open Graph type, e.g., article, website
 twitterCreator: "@widgetMaster"
 keywords: "widget, configuration, advanced, performance, security" # Optional, some argue keywords meta tag is less relevant now
+permalink: "https://example.com/docs/widgets/advanced-configuration" # Canonical URL
 ---
 
 # Advanced Widget Configuration
@@ -75,5 +76,6 @@ Supported frontmatter fields that the `seo` plugin may look for:
 *   `twitterCard` (Overrides `config.seo.twitter.cardType` for this page)
 *   `twitterCreator` (Overrides `config.seo.twitter.creatorUsername` for this page)
 *   `noindex` (Boolean): If `true`, adds `<meta name="robots" content="noindex">` to discourage search engines from indexing this specific page.
+*   `permalink` (String): If provided, sets a canonical URL for the page. This is useful when you have duplicate content across different URLs and want to indicate the preferred version. If not specified, the page's URL will be used as the canonical URL. (Note: `canonicalUrl` is also supported for backward compatibility)
 
 By configuring the `seo` plugin and utilizing frontmatter effectively, you can significantly improve how your documentation is presented and discovered online.
