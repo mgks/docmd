@@ -50,6 +50,7 @@ Examples of custom fields you *might* add (these are not built-in features):
 *   `order`: 2 (For custom sorting of pages within a section, if you implement logic for it)
 *   `draft`: true (To mark a page as a draft, if you implement logic to exclude drafts from builds)
 *   `tags`: ["tag1", "tag2"]
+*   `permalink`: "https://example.com/your-canonical-url/" (Sets the canonical URL for SEO purposes)
 
 ## Example Usage
 
@@ -73,4 +74,3 @@ In this example:
 *   The `order: 1` field is available if you later want to sort "guides" pages by this value.
 
 Using frontmatter consistently ensures your pages are well-defined, SEO-friendly, and integrate smoothly with `docmd`'s navigation and theming systems.
-```
