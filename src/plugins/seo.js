@@ -19,6 +19,10 @@ function generateSeoMetaTags(config, pageData, relativePathToRoot) {
   
     metaTagsHtml += `  <meta name="description" content="${description}">\n`;
   
+    // Canonical URL - use permalink first, fall back to canonicalUrl, then default to pageUrl
+    const canonicalUrl = frontmatter.permalink || frontmatter.canonicalUrl || pageUrl;
+    metaTagsHtml += `  <link rel="canonical" href="${canonicalUrl}">\n`;
+  
     // Open Graph
     metaTagsHtml += `  <meta property="og:title" content="${pageTitle} | ${siteTitle}">\n`;
     metaTagsHtml += `  <meta property="og:description" content="${description}">\n`;
