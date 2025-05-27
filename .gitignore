@@ -133,4 +133,6 @@ dist
 context.md
 createContext.js
 CHANGELOG.md
+ROADMAP.md
+
 .DS_Store
