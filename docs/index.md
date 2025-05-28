@@ -10,9 +10,6 @@ components:
   scripts: false
 customHead: |
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/welcome.css">
   <script>
     // Initialize theme from localStorage or system preference
@@ -124,16 +121,16 @@ customHead: |
   <div class="preview-side">
     <div class="preview-stack">
       <div class="preview-image top">
-        <img src="/assets/images/preview-light-1.png" alt="docmd documentation preview" class="light-img">
-        <img src="/assets/images/preview-dark-1.png" alt="docmd documentation preview" class="dark-img">
+        <img src="/assets/images/preview-light-1.webp" alt="docmd documentation preview" class="light-img" loading="lazy">
+        <img src="/assets/images/preview-dark-1.webp" alt="docmd documentation preview" class="dark-img" loading="lazy">
       </div>
       <div class="preview-image middle">
-        <img src="/assets/images/preview-light-2.png" alt="docmd documentation preview" class="light-img">
-        <img src="/assets/images/preview-dark-2.png" alt="docmd documentation preview" class="dark-img">
+        <img src="/assets/images/preview-light-2.webp" alt="docmd documentation preview" class="light-img" loading="lazy">
+        <img src="/assets/images/preview-dark-2.webp" alt="docmd documentation preview" class="dark-img" loading="lazy">
       </div>
       <div class="preview-image bottom">
-        <img src="/assets/images/preview-light-3.png" alt="docmd documentation preview" class="light-img">
-        <img src="/assets/images/preview-dark-3.png" alt="docmd documentation preview" class="dark-img">
+        <img src="/assets/images/preview-light-3.webp" alt="docmd documentation preview" class="light-img" loading="lazy">
+        <img src="/assets/images/preview-dark-3.webp" alt="docmd documentation preview" class="dark-img" loading="lazy">
       </div>
     </div>
   </div>
