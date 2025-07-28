@@ -5,22 +5,25 @@ const matter = require('gray-matter');
 const hljs = require('highlight.js');
 const container = require('markdown-it-container');
 const attrs = require('markdown-it-attrs');
-const path = require('path'); // Add path module for findMarkdownFiles
+const path = require('path');
+const markdown_it_footnote = require('markdown-it-footnote');
+const markdown_it_task_lists = require('markdown-it-task-lists');
+const markdown_it_abbr = require('markdown-it-abbr');
+const markdown_it_deflist = require('markdown-it-deflist');
 
-// Function to format paths for display (relative to CWD)
+/**
+ * Formats an absolute path to be relative to the current working directory for cleaner logging.
+ */
 function formatPathForDisplay(absolutePath) {
   const CWD = process.cwd();
   const relativePath = path.relative(CWD, absolutePath);
-  
-  // If it's not a subdirectory, prefix with ./ for clarity
   if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
     return `./${relativePath}`;
   }
-  
-  // Return the relative path
   return relativePath;
 }
 
+// Initialize MarkdownIt with plugins and options.
 const md = new MarkdownIt({
   html: true,
   linkify: true,
@@ -31,431 +34,345 @@ const md = new MarkdownIt({
         return '<pre class="hljs"><code>' +
                hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
                '</code></pre>';
-      } catch (e) {
-        console.error(`Error highlighting language ${lang}:`, e);
-      }
+      } catch (e) { console.error(`Error highlighting language ${lang}:`, e); }
     }
     return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
   }
 });
 
-// Add markdown-it-attrs for image styling and other element attributes
-// This allows for {.class} syntax after elements
-md.use(attrs, {
-  // Allow attributes on images and other elements
-  leftDelimiter: '{',
-  rightDelimiter: '}',
-  allowedAttributes: ['class', 'id', 'width', 'height', 'style']
-});
+// Use standard markdown-it plugins for extended syntax support.
+md.use(attrs, { leftDelimiter: '{', rightDelimiter: '}' });
+md.use(markdown_it_footnote);
+md.use(markdown_it_task_lists);
+md.use(markdown_it_abbr);
+md.use(markdown_it_deflist);
 
-// Custom image renderer to ensure attributes are properly applied
+// Override the default image renderer to properly handle attributes like {.class}.
 const defaultImageRenderer = md.renderer.rules.image;
 md.renderer.rules.image = function(tokens, idx, options, env, self) {
-  // Get the rendered HTML from the default renderer
   const renderedImage = defaultImageRenderer(tokens, idx, options, env, self);
-  
-  // Check if the next token is an attrs_block
   const nextToken = tokens[idx + 1];
   if (nextToken && nextToken.type === 'attrs_block') {
-    // Extract attributes from the attrs_block token
     const attrs = nextToken.attrs || [];
-    
-    // Build the attributes string
-    const attrsStr = attrs.map(([name, value]) => {
-      if (name === 'class') {
-        return `class="${value}"`;
-      } else if (name.startsWith('data-')) {
-        return `${name}="${value}"`;
-      } else {
-        return `${name}="${value}"`;
-      }
-    }).join(' ');
-    
-    // Insert attributes into the image tag
+    const attrsStr = attrs.map(([name, value]) => `${name}="${value}"`).join(' ');
     return renderedImage.replace('<img ', `<img ${attrsStr} `);
   }
-  
   return renderedImage;
 };
 
-// Add anchors to headings for TOC linking
+// Add IDs to headings for anchor links, used by the Table of Contents.
 md.use((md) => {
-  // Original renderer
   const defaultRender = md.renderer.rules.heading_open || function(tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
   };
-
   md.renderer.rules.heading_open = function(tokens, idx, options, env, self) {
     const token = tokens[idx];
-    // Get the heading level (h1, h2, etc.)
-    const level = token.tag.substring(1);
-    
-    // Find the heading text from the next inline token
     const contentToken = tokens[idx + 1];
     if (contentToken && contentToken.type === 'inline') {
       const headingText = contentToken.content;
-      
-      // Generate an ID from the heading text
-      // Simple slugify: lowercase, replace spaces and special chars with dashes
-      const id = headingText
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      
-      // Add the id attribute
-      if (id) {
-        token.attrSet('id', id);
-      }
+      const id = headingText.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
+      if (id) { token.attrSet('id', id); }
     }
-    
-    // Call the original renderer
     return defaultRender(tokens, idx, options, env, self);
   };
 });
 
-// Custom Containers
-md.use(container, 'callout', {
-  validate: function(params) {
-    // Allows optional title for callout: ::: callout type [Optional Title Text]
-    return params.trim().match(/^callout\s+(info|warning|tip|danger|success)(\s+.*)?$/);
-  },
-  render: function (tokens, idx) {
-    const token = tokens[idx];
-    const match = token.info.trim().match(/^callout\s+(info|warning|tip|danger|success)(\s+(.*))?$/);
 
-    if (token.nesting === 1) {
-      const type = match[1];
-      const title = match[3] ? md.renderInline(match[3]) : ''; // Render title as markdown
-      let titleHtml = '';
-      if (title) {
-        titleHtml = `<div class="callout-title">${title}</div>`;
-      }
-      return `<div class="docmd-container callout callout-${type}">\n${titleHtml}<div class="callout-content">\n`;
-    } else {
-      return '</div></div>\n';
-    }
-  }
-});
+// ===================================================================
+// --- SAFE CONTAINER WRAPPER (FOR SIMPLE CONTAINERS) ---
+// This wrapper creates a fence-aware version of the container plugin.
+// ===================================================================
+function safeContainer(mdInstance, name, options) {
+    const min_markers = 3;
+    const marker_str  = ':';
+    const marker_char = marker_str.charCodeAt(0);
+    const marker_len  = marker_str.length;
 
-md.use(container, 'card', {
-  validate: function(params) {
-    // Allows optional title for card: ::: card [Optional Title Text]
-    return params.trim().match(/^card(\s+.*)?$/);
-  },
-  render: function (tokens, idx) {
-    const token = tokens[idx];
-    const titleText = token.info.trim().substring('card'.length).trim();
+    function containerRule(state, startLine, endLine, silent) {
+        let pos = state.bMarks[startLine] + state.tShift[startLine];
+        let max = state.eMarks[startLine];
+        let auto_closed = false;
 
-    if (token.nesting === 1) {
-      let titleHtml = '';
-      if (titleText) {
-        titleHtml = `<div class="card-title">${md.renderInline(titleText)}</div>\n`;
-      }
-      return `<div class="docmd-container card">\n${titleHtml}<div class="card-content">\n`;
-    } else {
-      return '</div></div>\n';
-    }
-  }
-});
+        if (marker_char !== state.src.charCodeAt(pos)) { return false; }
 
-// Steps container: Uses CSS counters for H4 or P > STRONG elements within it.
-// Markdown syntax:
-// ::: steps
-// > 1. **First Step Title:**
-// > Content for step 1
-//
-// > 2. **Second Step Title:**
-// > More content
-// :::
-md.use(container, 'steps', {
-  render: function (tokens, idx) {
-    if (tokens[idx].nesting === 1) {
-      // style="counter-reset: step-counter;" is added for CSS counters
-      return '<div class="docmd-container steps" style="counter-reset: step-counter;">\n';
-    } else {
-      return '</div>\n';
-    }
-  }
-});
-
-// Post-process step markers for blockquote-based steps
-function processStepsContent(html) {
-  // Clean up any malformed containers
-  html = html.replace(/<blockquote>\s*<p>::: /g, '<p>');
-  
-  // Find all steps containers and process their blockquotes as steps
-  return html.replace(
-    /<div class="docmd-container steps"[^>]*>([\s\S]*?)<\/div>/g,
-    function(match, stepsContent) {
-      // Process blockquotes within steps container
-      const processedContent = stepsContent
-        // Handle numbered steps - improved pattern to better capture the number and title
-        .replace(
-          /<blockquote>\s*<[^>]*>\s*(\d+|[*])(?:\.)?(?:\s*)(?:<strong>)?([^<]*)(?:<\/strong>)?(?::)?(?:\s*)([\s\S]*?)(?=<\/blockquote>)/g,
-          function(blockquote, stepNumber, stepTitle, stepContent) {
-            // Ensure there's always content in the step title
-            const title = stepTitle.trim() || `Step ${stepNumber}`;
-            
-            // Preserve paragraph breaks in the content
-            const formattedContent = stepContent
-              .replace(/<p>([\s\S]*?)<\/p>/g, '</div><p>$1</p><div class="step-content">') // Convert paragraphs
-              .replace(/<pre([\s\S]*?)<\/pre>/g, '</div><pre$1</pre><div class="step-content">'); // Preserve code blocks
-            
-            return `<div class="step"><h4>${stepNumber}. <strong>${title}</strong></h4><div class="step-content">${formattedContent}</div></div>`;
-          }
-        )
-        // Handle unnumbered steps - like "**Title:**"
-        .replace(
-          /<blockquote>\s*<p><strong>([^<:]*?):<\/strong>([\s\S]*?)(?=<\/blockquote>)/g,
-          function(blockquote, stepTitle, stepContent) {
-            // Preserve paragraph breaks in the content
-            const formattedContent = stepContent
-              .replace(/<p>([\s\S]*?)<\/p>/g, '</div><p>$1</p><div class="step-content">') // Convert paragraphs
-              .replace(/<pre([\s\S]*?)<\/pre>/g, '</div><pre$1</pre><div class="step-content">'); // Preserve code blocks
-            
-            return `<div class="step"><h4><strong>${stepTitle}</strong></h4><div class="step-content">${formattedContent}</div></div>`;
-          }
-        )
-        // Handle any remaining blockquotes as generic steps
-        .replace(
-          /<blockquote>([\s\S]*?)<\/blockquote>/g,
-          function(blockquote, content) {
-            return `<div class="step">${content}</div>`;
-          }
-        );
-      
-      // Fix any empty step-content divs or doubled divs
-      let fixedContent = processedContent
-        .replace(/<div class="step-content"><\/div><div class="step-content">/g, '<div class="step-content">')
-        .replace(/<div class="step-content"><\/div>/g, '');
-      
-      return `<div class="docmd-container steps" style="counter-reset: step-counter;">${fixedContent}</div>`;
-    }
-  );
-}
-
-// Pre-process step markers in Markdown content
-// to ensure they'll be processed correctly by the markdown renderer
-function preprocessStepMarkers(content) {
-  // Find content between ::: steps and ::: markers
-  return content.replace(
-    /:::\s*steps\s*\n([\s\S]*?):::/g,
-    function(match, stepsContent) {
-      // Replace the step markers with a format that will survive markdown parsing
-      const processedSteps = stepsContent.replace(
-        /^::\s*((?:\d+|\*)?\.?\s*)(.*)$/gm,
-        function(stepMatch, stepNumber, stepContent) {
-          // Format it as a heading that we can target later
-          return `### STEP_MARKER ${stepNumber}${stepContent}`;
+        let marker_count = 1;
+        pos++;
+        while (pos < max && marker_char === state.src.charCodeAt(pos)) {
+            marker_count++;
+            pos++;
         }
-      );
-      
-      return `::: steps\n${processedSteps}:::`;
+
+        if (marker_count < min_markers) { return false; }
+
+        const markup = state.src.slice(pos - marker_count, pos);
+        const params = state.src.slice(pos, max);
+
+        if (options.validate && !options.validate(params)) { return false; }
+
+        if (silent) { return true; }
+
+        let nextLine = startLine;
+        for (;;) {
+            nextLine++;
+            if (nextLine >= endLine) {
+                break;
+            }
+
+            pos = state.bMarks[nextLine] + state.tShift[nextLine];
+            max = state.eMarks[nextLine];
+
+            // --- THIS IS THE FIREWALL ---
+            // If we find a code fence, stop parsing this container.
+            if (state.src.slice(pos, max).trim().startsWith('```')) {
+                break;
+            }
+            // --- END FIREWALL ---
+
+            if (pos < max && state.tShift[nextLine] < state.blkIndent) {
+                break;
+            }
+
+            if (marker_char !== state.src.charCodeAt(pos)) { continue; }
+
+            let pos_after_marker = state.skipChars(pos, marker_char);
+
+            if (pos_after_marker - pos < marker_count) { continue; }
+
+            pos = state.skipSpaces(pos_after_marker);
+
+            if (pos < max) { continue; }
+
+            auto_closed = true;
+            break;
+        }
+
+        const old_parent = state.parentType;
+        const old_line_max = state.lineMax;
+        state.parentType = 'container';
+        state.lineMax = nextLine;
+
+        const open_token = state.push('container_' + name + '_open', 'div', 1);
+        open_token.markup = markup;
+        open_token.block = true;
+        open_token.info = params;
+        open_token.map = [ startLine, nextLine ];
+
+        state.md.block.tokenize(state, startLine + 1, nextLine);
+
+        const close_token = state.push('container_' + name + '_close', 'div', -1);
+        close_token.markup = state.src.slice(state.bMarks[nextLine], state.eMarks[nextLine]);
+        close_token.block = true;
+
+        state.parentType = old_parent;
+        state.lineMax = old_line_max;
+        state.line = nextLine + (auto_closed ? 1 : 0);
+
+        return true;
     }
-  );
+
+    mdInstance.block.ruler.before('fence', 'container_' + name, containerRule, {
+        alt: [ 'paragraph', 'reference', 'blockquote', 'list' ]
+    });
+
+    mdInstance.renderer.rules['container_' + name + '_open'] = options.render;
+    mdInstance.renderer.rules['container_' + name + '_close'] = options.render;
 }
 
-// Post-process step markers back to the expected format
-function postprocessStepMarkers(html) {
-  return html.replace(
-    /<h3>STEP_MARKER\s*((?:\d+|\*)?\.?\s*)(.*?)<\/h3>/g,
-    function(match, stepNumber, stepContent) {
-      return `<h4>${stepNumber}${stepContent}</h4>`;
+// ===================================================================
+// --- IMPLEMENTING SIMPLE CONTAINERS WITH THE SAFE WRAPPER ---
+// ===================================================================
+
+// Callouts
+safeContainer(md, 'callout', {
+  validate: params => params.trim().match(/^callout\s+(info|warning|tip|danger|success)$/),
+  render: (tokens, idx) => {
+    const token = tokens[idx];
+    if (token.nesting === 1) {
+      const type = token.info.trim().split(/\s+/)[1];
+      return `<div class="docmd-container callout callout-${type}"><div class="callout-content">`;
     }
-  );
-}
+    return `</div></div>`;
+  }
+});
 
-// Escape container syntax in code blocks
-function escapeContainerSyntax(content) {
-  // Find all fenced code blocks and escape container markers within them
-  return content.replace(
-    /```(.*?)\n([\s\S]*?)```/g,
-    function(match, language, codeContent) {
-      // Don't modify code blocks that already contain escaped markers
-      if (codeContent.includes("\\:::") || codeContent.includes("\\::")) {
-        return match;
-      }
-      
-      // Escape ::: and :: markers within code blocks, but use a special marker
-      // that won't render a backslash in the final output
-      const escapedContent = codeContent
-        .replace(/:::/g, "___DOCMD_CONTAINER_ESCAPED___:::")
-        .replace(/^::/gm, "___DOCMD_CONTAINER_ESCAPED___::");
-        
-      return "```" + language + "\n" + escapedContent + "```";
+// Cards
+safeContainer(md, 'card', {
+  validate: params => params.trim().startsWith('card'),
+  render: (tokens, idx) => {
+    const token = tokens[idx];
+    if (token.nesting === 1) {
+      const titleText = token.info.trim().substring('card'.length).trim();
+      let titleHtml = titleText ? `<div class="card-title">${md.renderInline(titleText)}</div>` : '';
+      return `<div class="docmd-container card">${titleHtml}<div class="card-content">`;
     }
-  );
-}
+    return `</div></div>`;
+  }
+});
 
-// Fix container syntax issues in Markdown content
-function normalizeContainerSyntax(content) {
-  // 1. Ensure container opening markers are at the beginning of lines, not inline
-  let fixed = content.replace(/([^\n])(:::)/g, '$1\n$2');
-  
-  // 2. Ensure container closing markers are at the beginning of lines and have proper newlines
-  fixed = fixed.replace(/(:::)([^\n])/g, '$1\n$2');
-  
-  // 3. Fix extra spaces after container marker
-  fixed = fixed.replace(/:::\s+(\w+)/g, '::: $1');
-  
-  // 4. Fix container markers that have newlines within them
-  fixed = fixed.replace(/:::\n(\w+)/g, '::: $1');
-  
-  // 5. Fix missing spaces between ::: and container type
-  fixed = fixed.replace(/:::(\w+)/g, '::: $1');
-  
-  return fixed;
-}
+// Buttons (Self-closing)
+safeContainer(md, 'button', {
+    validate: params => params.trim().startsWith('button'),
+    render: (tokens, idx) => {
+        if (tokens[idx].nesting === 1) {
+            let info = tokens[idx].info.trim().substring('button'.length).trim();
+            let colorStyle = '';
+            const colorMatch = info.match(/color:(#?\w+)/);
+            if (colorMatch) {
+                info = info.replace(colorMatch[0], '').trim();
+                colorStyle = ` style="background-color: ${colorMatch[1]}"`;
+            }
+            const parts = info.split(/\s+/);
+            const url = parts.pop() || '#';
+            const text = parts.join(' ').replace(/_/g, ' ') || 'Button';
+            return `<a href="${url}" class="docmd-button"${colorStyle}>${md.renderInline(text)}</a>`;
+        }
+        return '';
+    }
+});
 
-/**
- * Decodes HTML entities in a string
- * @param {string} html - The HTML string to decode
- * @returns {string} - Decoded string
- */
+// Steps
+safeContainer(md, 'steps', {
+  validate: params => params.trim() === 'steps',
+  render: (tokens, idx) => {
+    if (tokens[idx].nesting === 1) {
+      return `<div class="docmd-container steps">`;
+    }
+    return `</div>`;
+  }
+});
+
+
+// ===================================================================
+// --- TABS (CUSTOM BLOCK PARSER) ---
+// ===================================================================
+
+function tabsPlugin(md) {
+    function tabsRule(state, startLine, endLine, silent) {
+        let start = state.bMarks[startLine] + state.tShift[startLine];
+        let max = state.eMarks[startLine];
+
+        if (state.src.slice(start, max).trim() !== '::: tabs') {
+            return false;
+        }
+
+        if (silent) { return true; }
+
+        let nextLine = startLine;
+        let found = false;
+        while (nextLine < endLine) {
+            nextLine++;
+            let lineStr = state.getLines(nextLine, nextLine + 1, state.blkIndent, false);
+            if (lineStr.trim() === ':::') {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) { return false; }
+
+        const content = state.getLines(startLine + 1, nextLine, 0, true);
+        const tabRegex = /==\s+tab\s+"([^"]+)"/g;
+        let match;
+        const tabs = [];
+        let lastIndex = 0;
+
+        while ((match = tabRegex.exec(content)) !== null) {
+            if (tabs.length > 0) {
+                tabs[tabs.length - 1].content = content.slice(lastIndex, match.index).trim();
+            }
+            tabs.push({ title: match[1], content: '' });
+            lastIndex = tabRegex.lastIndex;
+        }
+        if (tabs.length > 0) {
+            tabs[tabs.length - 1].content = content.slice(lastIndex).trim();
+        }
+
+        state.line = nextLine + 1;
+
+        let token = state.push('tabs_open', 'div', 1);
+        token.attrs = [['class', 'docmd-tabs']];
+
+        token = state.push('tabs_nav_open', 'div', 1);
+        token.attrs = [['class', 'docmd-tabs-nav']];
+        tabs.forEach((tab, index) => {
+            let navItem = state.push('tabs_nav_item', 'div', 0);
+            navItem.attrs = [['class', 'docmd-tabs-nav-item ' + (index === 0 ? 'active' : '')]];
+            navItem.content = tab.title;
+        });
+        token = state.push('tabs_nav_close', 'div', -1);
+
+        token = state.push('tabs_content_open', 'div', 1);
+        token.attrs = [['class', 'docmd-tabs-content']];
+        tabs.forEach((tab, index) => {
+            token = state.push('tab_pane_open', 'div', 1);
+            token.attrs = [['class', 'docmd-tab-pane ' + (index === 0 ? 'active' : '')]];
+            
+            // Create a token to render the tab's markdown content
+            let contentToken = state.push('html_block', '', 0);
+            contentToken.content = md.render(tab.content);
+            
+            token = state.push('tab_pane_close', 'div', -1);
+        });
+        token = state.push('tabs_content_close', 'div', -1);
+
+        token = state.push('tabs_close', 'div', -1);
+        return true;
+    }
+    
+    md.block.ruler.before('fence', 'tabs', tabsRule);
+
+    md.renderer.rules.tabs_nav_item = (tokens, idx) => {
+        return `<div${md.renderer.renderAttrs(tokens[idx])}>${tokens[idx].content}</div>`;
+    };
+}
+md.use(tabsPlugin);
+
+// --- UTILITY AND PROCESSING FUNCTIONS ---
+
 function decodeHtmlEntities(html) {
-  return html
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+  return html.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, "'").replace(/ /g, ' ');
 }
 
-/**
- * Extracts headings from HTML content for table of contents generation
- * @param {string} htmlContent - The rendered HTML content
- * @returns {Array} - Array of heading objects with id, level, and text
- */
 function extractHeadingsFromHtml(htmlContent) {
   const headings = [];
-  
-  // Regular expression to find heading tags (h1-h6) with their content and id attributes
   const headingRegex = /<h([1-6])[^>]*?id="([^"]*)"[^>]*?>([\s\S]*?)<\/h\1>/g;
-  
   let match;
   while ((match = headingRegex.exec(htmlContent)) !== null) {
     const level = parseInt(match[1], 10);
     const id = match[2];
-    // Remove any HTML tags inside the heading text
-    const textWithTags = match[3].replace(/<\/?[^>]+(>|$)/g, '');
-    // Decode any HTML entities in the text
-    const text = decodeHtmlEntities(textWithTags);
-    
+    const text = decodeHtmlEntities(match[3].replace(/<\/?[^>]+(>|$)/g, ''));
     headings.push({ id, level, text });
   }
-  
   return headings;
 }
 
-async function processMarkdownFile(filePath, options = { isDev: false }) {
+async function processMarkdownFile(filePath, options = { isDev: false }, config) {
   const rawContent = await fs.readFile(filePath, 'utf8');
-  let frontmatter, markdownContent;
+  let { data: frontmatter, content: markdownContent } = matter(rawContent);
 
-  try {
-    const parsed = matter(rawContent);
-    frontmatter = parsed.data;
-    markdownContent = parsed.content;
-  } catch (e) {
-    if (e.name === 'YAMLException') {
-      // Provide more specific error for YAML parsing issues
-      const errorMessage = `Error parsing YAML frontmatter in ${formatPathForDisplay(filePath)}: ${e.reason || e.message}${e.mark ? ` at line ${e.mark.line + 1}, column ${e.mark.column + 1}` : ''}. Please check the syntax.`;
-      console.error(`❌ ${errorMessage}`);
-      throw new Error(errorMessage); // Propagate error to stop build/dev
-    }
-    // For other errors from gray-matter or unknown errors
-    console.error(`❌ Error processing frontmatter in ${formatPathForDisplay(filePath)}: ${e.message}`);
-    throw e;
-  }
-
+  // Handle autoTitleFromH1
   if (!frontmatter.title) {
-    console.warn(`⚠️ Warning: Markdown file ${formatPathForDisplay(filePath)} is missing a 'title' in its frontmatter. Using filename as fallback.`);
-    // Fallback title, or you could make it an error
-    // frontmatter.title = path.basename(filePath, path.extname(filePath));
-  }
-
-  // Special handling for no-style pages with HTML content
-  if (frontmatter.noStyle === true) {
-    // Only log when not in dev mode to reduce console output during dev
-    if (!options.isDev) {
-      console.log(`📄 Processing no-style page: ${formatPathForDisplay(filePath)} - Using raw HTML content`);
+    if (config.autoTitleFromH1 !== false) { // Default to true
+        const h1Match = markdownContent.match(/^#\s+(.*)/m);
+        if (h1Match && h1Match[1]) {
+            frontmatter.title = h1Match[1].trim();
+        }
     }
-    
-    // For no-style pages, we'll use the raw content directly
-    // No markdown processing, no HTML escaping
-    const htmlContent = markdownContent;
-    
-    // Extract headings for table of contents (if needed)
-    const headings = extractHeadingsFromHtml(htmlContent);
-
-    return {
-      frontmatter,
-      htmlContent,
-      headings,
-    };
+    if (!frontmatter.title) {
+        console.warn(`⚠️ Warning: Markdown file ${formatPathForDisplay(filePath)} has no title in frontmatter and no H1 fallback. The page header will be hidden.`);
+    }
   }
 
-  // Regular processing for standard pages
-  // Check if this is a documentation example showing how to use containers
-  const isContainerDocumentation = markdownContent.includes('containerName [optionalTitleOrType]') || 
-                                  markdownContent.includes('## Callouts') || 
-                                  markdownContent.includes('## Cards') || 
-                                  markdownContent.includes('## Steps');
-
-  // Special handling for container documentation - escape container syntax in code blocks
-  if (isContainerDocumentation) {
-    markdownContent = escapeContainerSyntax(markdownContent);
-  }
-  
-  // Normalize container syntax
-  const normalizedContent = normalizeContainerSyntax(markdownContent);
-  
-  // Render to HTML
-  let htmlContent = md.render(normalizedContent);
-  
-  // Apply steps formatting
-  htmlContent = processStepsContent(htmlContent);
-
-  // Fix any specific issues
-  // 1. Fix the issue with "These custom containers" paragraph in custom-containers.md
-  htmlContent = htmlContent.replace(
-    /<p>You should see "Application started successfully!" in your console.\s*<\/p>\s*<p>::: These custom containers/,
-    '<p>You should see "Application started successfully!" in your console.</p></div><p>These custom containers'
-  );
-  
-  // 2. Fix any remaining ::: markers at the start of paragraphs
-  htmlContent = htmlContent.replace(/<p>:::\s+(.*?)<\/p>/g, '<p>$1</p>');
-  
-  // 3. Fix any broken Asterisk steps
-  htmlContent = htmlContent.replace(
-    /<div class="step"><h4>\*\. <strong><\/strong><\/h4>(.+?)<\/strong>/,
-    '<div class="step"><h4>*. <strong>$1</strong>'
-  );
-
-  // 4. Replace our special escape marker with nothing (to fix backslash issue in rendered HTML)
-  htmlContent = htmlContent.replace(/___DOCMD_CONTAINER_ESCAPED___/g, '');
-
-  // Extract headings for table of contents
+  const htmlContent = md.render(markdownContent);
   const headings = extractHeadingsFromHtml(htmlContent);
 
   return {
-    frontmatter: {
-      title: "Untitled Page", // Default if not provided and no fallback
-      ...frontmatter
-    },
+    frontmatter,
     htmlContent,
-    headings, // Add headings to the returned object
+    headings,
   };
 }
 
-// Add findMarkdownFiles function
-/**
- * Recursively finds all Markdown files in a directory and its subdirectories
- * @param {string} dir - Directory to search in
- * @returns {Promise<string[]>} - Array of file paths
- */
 async function findMarkdownFiles(dir) {
   let files = [];
   const items = await fs.readdir(dir, { withFileTypes: true });
@@ -470,9 +387,9 @@ async function findMarkdownFiles(dir) {
   return files;
 }
 
-module.exports = { 
-  processMarkdownFile, 
-  mdInstance: md, 
+module.exports = {
+  processMarkdownFile,
+  mdInstance: md,
   extractHeadingsFromHtml,
-  findMarkdownFiles // Export the findMarkdownFiles function
+  findMarkdownFiles
 };
