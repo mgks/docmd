@@ -10,7 +10,6 @@ components:
   scripts: false
 customHead: |
   <script>
-  <script>
     window.location.href = "https://docmd.mgks.dev/content/containers/";
     document.addEventListener("DOMContentLoaded", function () {
         window.location.href = "https://docmd.mgks.dev/content/containers/";
