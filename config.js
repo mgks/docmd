@@ -18,21 +18,30 @@ module.exports = {
   srcDir: 'docs',       // Source directory for Markdown files
   outputDir: 'site',    // Directory for generated static site
 
+  // Sidebar Configuration
+  sidebar: {
+    collapsible: true,        // or false to disable
+    defaultCollapsed: false,  // or true to start collapsed
+  },
+
   // Theme Configuration
   theme: {
     name: 'sky',            // Themes: 'default', 'sky'
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
+    positionMode: 'top', // 'top' or 'bottom' for the theme toggle
     customCss: [            // Array of paths to custom CSS files
       // '/assets/css/custom.css', // Custom TOC styles
     ],
-    // options: { /* Future: theme-specific options */ }
   },
 
   // Custom JavaScript Files
   customJs: [               // Array of paths to custom JS files, loaded at end of body
      '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
+
+  // Content Processing
+  autoTitleFromH1: true, // Set to true to automatically use the first H1 as page title
 
   // Plugins Configuration (Object format)
   // Plugins are configured here. docmd will look for these keys.
@@ -79,6 +88,7 @@ module.exports = {
   navigation: [
       { title: 'Welcome', path: '/', icon: 'feather' },
       { title: 'Overview', path: '/overview', icon: 'home' },
+      // { title: 'Support the Project', path: 'https://github.com/sponsors/mgks', icon: 'heart', external: true },
       {
         title: 'Getting Started',
         icon: 'rocket',
@@ -96,7 +106,19 @@ module.exports = {
           { title: 'Frontmatter', path: '/content/frontmatter', icon: 'file-text' },
           { title: 'Markdown Syntax', path: '/content/markdown-syntax', icon: 'code-2' },
           { title: 'Images', path: '/content/images', icon: 'image' },
-          { title: 'Custom Containers', path: '/content/custom-containers', icon: 'box' },
+          {
+            title: 'Custom Containers',
+            path: '/content/containers/',
+            icon: 'box',
+            children: [
+              { title: 'Callouts', path: '/content/containers/callouts', icon: 'megaphone' },
+              { title: 'Cards', path: '/content/containers/cards', icon: 'panel-top' },
+              { title: 'Steps', path: '/content/containers/steps', icon: 'list-ordered' },
+              { title: 'Tabs', path: '/content/containers/tabs', icon: 'columns-3' },
+              { title: 'Buttons', path: '/content/containers/buttons', icon: 'mouse-pointer-click' },
+              { title: 'Nested Containers', path: '/content/containers/nested-containers', icon: 'folder-tree' },
+            ]
+          },
           { title: 'No-Style Pages', path: '/content/no-style-pages', icon: 'layout' },
           { title: 'No-Style Example', path: '/content/no-style-example', icon: 'sparkles' },
         ],
@@ -131,6 +153,13 @@ module.exports = {
       { title: 'Discussions', path: 'https://github.com/mgks/docmd/discussions', icon: 'message-square', external: true },
       { title: 'Issues', path: 'https://github.com/mgks/docmd/issues', icon: 'badge-alert', external: true }
   ],
+
+  // Sponsor Ribbon Configuration
+  sponsor: {
+    enabled: true,                    // Enable/disable the sponsor ribbon
+    title: 'Support docmd',     // Text to display on the ribbon
+    link: 'https://github.com/sponsors/mgks', // URL for the sponsor link
+  },
 
   // Footer Configuration
   // Markdown is supported here.
