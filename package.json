@@ -1,10 +1,10 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "bin": {
-    "docmd": "./bin/docmd.js"
+    "docmd": "bin/docmd.js"
   },
   "scripts": {
     "start": "node ./bin/docmd.js dev",
@@ -43,9 +43,12 @@
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
     "lucide-static": "^0.508.0",
-    "markdown-it": "^14.1.0",
+    "markdown-it-abbr": "^2.0.0",
     "markdown-it-attrs": "^4.3.1",
     "markdown-it-container": "^4.0.0",
+    "markdown-it-deflist": "^3.0.0",
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-task-lists": "^2.1.1",
     "ws": "^8.17.0"
   },
   "devDependencies": {
@@ -53,5 +56,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-node": "^11.1.0",
     "prettier": "^3.2.5"
+  },
+  "directories": {
+    "doc": "docs"
   }
 }
