@@ -23,13 +23,9 @@ async function processPluginHooks(config, pageData, relativePathToRoot) {
 
     // 2. Theme CSS (built-in handling for theme.name)
     if (config.theme && config.theme.name && config.theme.name !== 'default') {
-        // Assumes theme CSS files are like 'docmd-theme-yourthemename.css' in assets/css
         const themeCssPath = `assets/css/docmd-theme-${config.theme.name}.css`;
-        // Check if theme file exists before linking (optional, good practice)
-        // For now, assume it will exist if specified.
         themeCssLinkHtml = `  <link rel="stylesheet" href="${relativePathToRoot}${themeCssPath}">\n`;
     }
-
 
     // 3. SEO Plugin (if configured)
     if (config.plugins?.seo) {
@@ -43,9 +39,6 @@ async function processPluginHooks(config, pageData, relativePathToRoot) {
         pluginBodyScriptsHtml += analyticsScripts.bodyScriptsHtml;
     }
 
-    // Future: Loop through a more generic plugin array if you evolve the system
-    // for (const plugin of config.activePlugins) { /* plugin.runHook('meta', ...) */ }
-
     return {
         metaTagsHtml,
         faviconLinkHtml,
@@ -58,10 +51,12 @@ async function processPluginHooks(config, pageData, relativePathToRoot) {
 
 async function generateHtmlPage(templateData) {
     const {
-        content, pageTitle, siteTitle, navigationHtml,
+        content, siteTitle, navigationHtml,
         relativePathToRoot, config, frontmatter, outputPath,
         prevPage, nextPage, currentPagePath, headings
     } = templateData;
+
+    const pageTitle = frontmatter.title; // Get title from frontmatter (already processed in file-processor)
 
     // Process plugins to get their HTML contributions
     const pluginOutputs = await processPluginHooks(
@@ -75,16 +70,9 @@ async function generateHtmlPage(templateData) {
         footerHtml = mdInstance.renderInline(config.footer);
     }
 
-    // Determine which template to use based on frontmatter
     let templateName = 'layout.ejs';
     if (frontmatter.noStyle === true) {
         templateName = 'no-style.ejs';
-        
-        // For no-style pages, ensure we're passing the raw HTML content
-        // without any additional processing or escaping
-        if (content.includes('&lt;') || content.includes('&gt;')) {
-            console.warn(`⚠️ Warning: HTML content in no-style page appears to be escaped. This may cause rendering issues.`);
-        }
     }
 
     const layoutTemplatePath = path.join(__dirname, '..', 'templates', templateName);
@@ -93,42 +81,45 @@ async function generateHtmlPage(templateData) {
     }
     const layoutTemplate = await fs.readFile(layoutTemplatePath, 'utf8');
 
-    // Determine if this is an active page for TOC display
-    // The currentPagePath exists and has content
     const isActivePage = currentPagePath && content && content.trim().length > 0;
 
     const ejsData = {
         content,
-        pageTitle: frontmatter.title || pageTitle || 'Untitled', // Ensure pageTitle is robust
-        description: frontmatter.description, // Used by layout if no SEO plugin overrides
+        pageTitle, // Pass the potentially undefined title
+        description: frontmatter.description,
         siteTitle,
         navigationHtml,
         defaultMode: config.theme?.defaultMode || 'light',
         relativePathToRoot,
         logo: config.logo,
+        sidebarConfig: { 
+            collapsible: config.sidebar?.collapsible ?? false,
+            defaultCollapsed: config.sidebar?.defaultCollapsed ?? false,
+        },
         theme: config.theme,
         customCssFiles: config.theme?.customCss || [],
         customJsFiles: config.customJs || [],
+        sponsor: config.sponsor,
         footer: config.footer,
         footerHtml,
         renderIcon,
         prevPage,
         nextPage,
-        currentPagePath, // Pass the current page path for active state detection
-        headings: headings || [], // Pass headings for TOC, default to empty array if not provided
-        isActivePage, // Flag to determine if TOC should be shown
-        frontmatter, // Pass the entire frontmatter for no-style template
-        ...pluginOutputs, // Spread all plugin generated HTML strings
+        currentPagePath,
+        headings: headings || [],
+        isActivePage,
+        frontmatter,
+        ...pluginOutputs,
     };
 
     try {
         return ejs.render(layoutTemplate, ejsData, {
-            filename: layoutTemplatePath // Add filename for proper include resolution
+            filename: layoutTemplatePath
         });
     } catch (e) {
         console.error(`❌ Error rendering EJS template for ${outputPath}: ${e.message}`);
-        console.error("EJS Data:", JSON.stringify(ejsData, null, 2).substring(0, 1000) + "..."); // Log partial data
-        throw e; // Re-throw to stop build
+        console.error("EJS Data:", JSON.stringify(ejsData, null, 2).substring(0, 1000) + "...");
+        throw e;
     }
 }
 
@@ -139,17 +130,16 @@ async function generateNavigationHtml(navItems, currentPagePath, relativePathToR
     }
     const navTemplate = await fs.readFile(navTemplatePath, 'utf8');
 
-    // Make renderIcon available to the EJS template
     const ejsHelpers = { renderIcon };
 
     return ejs.render(navTemplate, {
         navItems,
         currentPagePath,
         relativePathToRoot,
-        config, // Pass full config if needed by nav (e.g. for base path)
+        config,
         ...ejsHelpers
     }, {
-        filename: navTemplatePath // Add filename for proper include resolution
+        filename: navTemplatePath
     });
 }
 

@@ -211,7 +211,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       const depth = outputHtmlPath.split(path.sep).length - 1;
       const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
 
-      const { frontmatter: pageFrontmatter, htmlContent, headings } = await processMarkdownFile(filePath, { isDev: options.isDev });
+      const { frontmatter: pageFrontmatter, htmlContent, headings } = await processMarkdownFile(filePath, { isDev: options.isDev }, config);
       
       // Special handling for no-style pages
       let finalHtmlContent = htmlContent;

@@ -27,7 +27,7 @@
 
     <%- pluginHeadScriptsHtml || '' %> <%# Plugin specific head scripts (e.g., Analytics) %>
 </head>
-<body data-theme="<%= defaultMode %>">
+<body class="<%= sidebarConfig.collapsible ? 'sidebar-collapsible' : 'sidebar-not-collapsible' %>" data-theme="<%= defaultMode %>" data-default-collapsed="<%= sidebarConfig.defaultCollapsed %>">
     <aside class="sidebar">
         <div class="sidebar-header">
             <% if (logo && logo.light && logo.dark) { %>
@@ -40,7 +40,7 @@
             <% } %>
         </div>
         <%- navigationHtml %>
-        <% if (theme && theme.enableModeToggle) { %>
+        <% if (theme && theme.enableModeToggle && theme.positionMode !== 'top') { %>
           <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button">
             <%# renderIcon is available in the global EJS scope from html-generator %>
             <%- renderIcon('sun', { class: 'icon-sun' }) %>
@@ -49,9 +49,25 @@
         <% } %>
     </aside>
     <div class="main-content-wrapper">
-        <header class="page-header">
-            <h1><%= pageTitle %></h1>
-        </header>
+        <div class="page-header">
+            <div class="header-left">
+                <% if (sidebarConfig.collapsible) { %>
+                <button id="sidebar-toggle-button" class="sidebar-toggle-button" aria-label="Toggle Sidebar">
+                    <%- renderIcon('panel-left-close') %>
+                </button>
+                <% } %>
+                <h1><%= pageTitle %></h1>
+            </div>
+            <% if (theme && theme.enableModeToggle && theme.positionMode === 'top') { %>
+            <div class="header-right">
+                <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button theme-toggle-header">
+                    <%# renderIcon is available in the global EJS scope from html-generator %>
+                    <%- renderIcon('sun', { class: 'icon-sun' }) %>
+                    <%- renderIcon('moon', { class: 'icon-moon' }) %>
+                </button>
+            </div>
+            <% } %>
+        </div>
         <main class="content-area">
             <div class="content-layout">
                 <div class="main-content">
@@ -106,11 +122,21 @@
         </footer>
     </div>
 
-    <script src="<%= relativePathToRoot %>assets/js/docmd-theme-toggle.js"></script>
+    <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
+
     <% (customJsFiles || []).forEach(jsFile => { %>
       <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
     <% }); %>
 
-    <%- pluginBodyScriptsHtml || '' %> <%# Plugin specific body scripts %>
+    <%- pluginBodyScriptsHtml || '' %>
+    
+    <% if (sponsor && sponsor.enabled) { %>
+    <div class="sponsor-ribbon">
+        <a href="<%= sponsor.link %>" target="_blank" rel="noopener noreferrer" class="sponsor-link">
+            <%- renderIcon('heart', { class: 'sponsor-icon' }) %>
+            <span class="sponsor-text"><%= sponsor.title %></span>
+        </a>
+    </div>
+    <% } %>
 </body>
 </html>

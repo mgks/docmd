@@ -28,6 +28,7 @@ const md = new MarkdownIt({
   html: true,
   linkify: true,
   typographer: true,
+  breaks: true,
   highlight: function (str, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
@@ -36,9 +37,12 @@ const md = new MarkdownIt({
                '</code></pre>';
       } catch (e) { console.error(`Error highlighting language ${lang}:`, e); }
     }
-    return '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
+    // For non-language code blocks, preserve the original content without processing
+    return '<pre class="hljs"><code>' + str + '</code></pre>';
   }
 });
+
+
 
 // Use standard markdown-it plugins for extended syntax support.
 md.use(attrs, { leftDelimiter: '{', rightDelimiter: '}' });
@@ -46,6 +50,576 @@ md.use(markdown_it_footnote);
 md.use(markdown_it_task_lists);
 md.use(markdown_it_abbr);
 md.use(markdown_it_deflist);
+
+// Override the default fence renderer to preserve original content for all code blocks
+const defaultFenceRenderer = md.renderer.rules.fence;
+md.renderer.rules.fence = function(tokens, idx, options, env, self) {
+  const token = tokens[idx];
+  
+  // Escape HTML entities to prevent rendering
+  const escapedContent = token.content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+  
+  // If no language is specified, preserve the original content without processing
+  if (!token.info || token.info.trim() === '') {
+    return '<pre class="hljs"><code>' + escapedContent + '</code></pre>';
+  }
+  
+  // For all language blocks, preserve the original content to avoid processing HTML or other content
+  // This ensures code blocks are treated as literal text only
+  const language = token.info.trim();
+  return '<pre class="hljs"><code class="language-' + language + '">' + escapedContent + '</code></pre>';
+};
+
+
+
+// ===================================================================
+// --- ADVANCED NESTED CONTAINER SYSTEM ---
+// ===================================================================
+
+// Container definitions
+// To add a new container type:
+// 1. Add it to this containers object
+// 2. Define the render function for opening (nesting === 1) and closing (nesting === -1)
+// 3. The system will automatically register it and support nesting
+const containers = {
+  card: {
+    name: 'card',
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        const title = tokens[idx].info ? tokens[idx].info.trim() : '';
+        return `<div class="docmd-container card">${title ? `<div class="card-title">${title}</div>` : ''}<div class="card-content">`;
+      }
+      return '</div></div>';
+    }
+  },
+  callout: {
+    name: 'callout',
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        const [type, ...titleParts] = tokens[idx].info.split(' ');
+        const title = titleParts.join(' ');
+        return `<div class="docmd-container callout callout-${type}">${title ? `<div class="callout-title">${title}</div>` : ''}<div class="callout-content">`;
+      }
+      return '</div></div>';
+    }
+  },
+  button: {
+    name: 'button',
+    selfClosing: true, // Mark as self-closing
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        const parts = tokens[idx].info.split(' ');
+        const text = parts[0];
+        const url = parts[1];
+        const color = parts[2];
+        const colorStyle = color && color.startsWith('color:') ? ` style="background-color: ${color.split(':')[1]}"` : '';
+        
+        // Check if URL starts with 'external:' for new tab behavior
+        let finalUrl = url;
+        let targetAttr = '';
+        if (url && url.startsWith('external:')) {
+          finalUrl = url.substring(9); // Remove 'external:' prefix
+          targetAttr = ' target="_blank" rel="noopener noreferrer"';
+        }
+        
+        return `<a href="${finalUrl}" class="docmd-button"${colorStyle}${targetAttr}>${text.replace(/_/g, ' ')}</a>`;
+      }
+      return '';
+    }
+  },
+  steps: {
+    name: 'steps',
+    render: (tokens, idx) => {
+      if (tokens[idx].nesting === 1) {
+        // Add a unique class for steps containers to enable CSS-based numbering reset
+        // The steps-numbering class will style only direct ol > li children as numbered steps
+        return '<div class="docmd-container steps steps-reset steps-numbering">';
+      }
+      return '</div>';
+    }
+  }
+  // Future containers can be added here:
+  // timeline: {
+  //   name: 'timeline',
+  //   render: (tokens, idx) => {
+  //     if (tokens[idx].nesting === 1) {
+  //       return '<div class="docmd-container timeline">';
+  //     }
+  //     return '</div>';
+  //   }
+  // },
+  // changelog: {
+  //   name: 'changelog',
+  //   render: (tokens, idx) => {
+  //     if (tokens[idx].nesting === 1) {
+  //       return '<div class="docmd-container changelog">';
+  //     }
+  //     return '</div>';
+  //   }
+  // }
+};
+
+
+
+// Advanced container rule with proper nesting support
+function advancedContainerRule(state, startLine, endLine, silent) {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+  
+  // Check if this is a container opening
+  const containerMatch = lineContent.match(/^:::\s*(\w+)(?:\s+(.+))?$/);
+  if (!containerMatch) return false;
+  
+  const [, containerName, params] = containerMatch;
+  const container = containers[containerName];
+  
+  if (!container) return false;
+  
+  if (silent) return true;
+  
+  // Handle self-closing containers (like buttons)
+  if (container.selfClosing) {
+    const openToken = state.push(`container_${containerName}_open`, 'div', 1);
+    openToken.info = params || '';
+    const closeToken = state.push(`container_${containerName}_close`, 'div', -1);
+    state.line = startLine + 1;
+    return true;
+  }
+  
+  // Find the closing tag with proper nesting handling
+  let nextLine = startLine;
+  let found = false;
+  let depth = 1;
+  
+  while (nextLine < endLine) {
+    nextLine++;
+    const nextStart = state.bMarks[nextLine] + state.tShift[nextLine];
+    const nextMax = state.eMarks[nextLine];
+    const nextContent = state.src.slice(nextStart, nextMax).trim();
+    
+    // Check for opening tags (any container)
+    if (nextContent.startsWith(':::')) {
+      const containerMatch = nextContent.match(/^:::\s*(\w+)/);
+      if (containerMatch && containerMatch[1] !== containerName) {
+        // Only increment depth for non-self-closing containers
+        const innerContainer = containers[containerMatch[1]];
+        if (innerContainer && innerContainer.render && !innerContainer.selfClosing) {
+          depth++;
+        }
+        continue;
+      }
+    }
+    
+    // Check for closing tags
+    if (nextContent === ':::') {
+      depth--;
+      if (depth === 0) {
+        found = true;
+        break;
+      }
+    }
+  }
+  
+  if (!found) return false;
+  
+  // Create tokens
+  const openToken = state.push(`container_${containerName}_open`, 'div', 1);
+  openToken.info = params || '';
+  
+  // Process content recursively
+  const oldParentType = state.parentType;
+  const oldLineMax = state.lineMax;
+  
+  state.parentType = 'container';
+  state.lineMax = nextLine;
+  
+  // Process the content inside the container
+  state.md.block.tokenize(state, startLine + 1, nextLine);
+  
+  const closeToken = state.push(`container_${containerName}_close`, 'div', -1);
+  
+  state.parentType = oldParentType;
+  state.lineMax = oldLineMax;
+  state.line = nextLine + 1;
+  
+  return true;
+}
+
+// --- Simple Steps Container Rule ---
+function stepsContainerRule(state, startLine, endLine, silent) {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+  if (lineContent !== '::: steps') return false;
+  if (silent) return true;
+
+  // Find the closing ':::' for the steps container
+  let nextLine = startLine;
+  let found = false;
+  let depth = 1;
+  
+  while (nextLine < endLine) {
+    nextLine++;
+    const nextStart = state.bMarks[nextLine] + state.tShift[nextLine];
+    const nextMax = state.eMarks[nextLine];
+    const nextContent = state.src.slice(nextStart, nextMax).trim();
+    
+    // Skip tab markers as they don't affect container depth
+    if (nextContent.startsWith('== tab')) {
+      continue;
+    }
+    
+    // Check for opening tags (any container)
+    if (nextContent.startsWith(':::')) {
+      const containerMatch = nextContent.match(/^:::\s*(\w+)/);
+      if (containerMatch) {
+        const containerName = containerMatch[1];
+        // Only count non-self-closing containers for depth
+        const innerContainer = containers[containerName];
+        if (innerContainer && !innerContainer.selfClosing) {
+          depth++;
+        }
+        continue;
+      }
+    }
+    
+    // Check for closing tags
+    if (nextContent === ':::') {
+      depth--;
+      if (depth === 0) {
+        found = true;
+        break;
+      }
+    }
+  }
+  
+  if (!found) return false;
+
+  // Create tokens for steps container
+  const openToken = state.push('container_steps_open', 'div', 1);
+  openToken.info = '';
+  
+  // Process content normally but disable automatic list processing
+  const oldParentType = state.parentType;
+  const oldLineMax = state.lineMax;
+  
+  state.parentType = 'container';
+  state.lineMax = nextLine;
+  
+  // Process the content inside the container
+  state.md.block.tokenize(state, startLine + 1, nextLine);
+  
+  const closeToken = state.push('container_steps_close', 'div', -1);
+  
+  state.parentType = oldParentType;
+  state.lineMax = oldLineMax;
+  state.line = nextLine + 1;
+  
+  return true;
+}
+
+// --- Enhanced tabs rule with nested content support ---
+function enhancedTabsRule(state, startLine, endLine, silent) {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+
+  if (lineContent !== '::: tabs') return false;
+  if (silent) return true;
+
+  // Find the closing tag with proper nesting handling
+  let nextLine = startLine;
+  let found = false;
+  let depth = 1;
+  while (nextLine < endLine) {
+    nextLine++;
+    const nextStart = state.bMarks[nextLine] + state.tShift[nextLine];
+    const nextMax = state.eMarks[nextLine];
+    const nextContent = state.src.slice(nextStart, nextMax).trim();
+    
+    // Check for opening tags (any container)
+    if (nextContent.startsWith(':::')) {
+      const containerMatch = nextContent.match(/^:::\s*(\w+)/);
+      if (containerMatch && containerMatch[1] !== 'tabs') {
+        // Don't increment depth for steps - they have their own depth counting
+        if (containerMatch[1] === 'steps') {
+          continue;
+        }
+        // Only increment depth for non-self-closing containers
+        const innerContainer = containers[containerMatch[1]];
+        if (innerContainer && !innerContainer.selfClosing) {
+          depth++;
+        }
+        continue;
+      }
+    }
+    
+    // Check for closing tags
+    if (nextContent === ':::') {
+      depth--;
+      if (depth === 0) {
+        found = true;
+        break;
+      }
+    }
+  }
+  if (!found) return false;
+
+  // Get the raw content by manually extracting lines
+  let content = '';
+  for (let i = startLine + 1; i < nextLine; i++) {
+    const lineStart = state.bMarks[i] + state.tShift[i];
+    const lineEnd = state.eMarks[i];
+    content += state.src.slice(lineStart, lineEnd) + '\n';
+  }
+
+  // Parse tabs manually
+  const lines = content.split('\n');
+  const tabs = [];
+  let currentTab = null;
+  let currentContent = [];
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    const tabMatch = line.match(/^==\s*tab\s+(?:"([^"]+)"|(\S+))$/);
+    
+    if (tabMatch) {
+      // Save previous tab if exists
+      if (currentTab) {
+        currentTab.content = currentContent.join('\n').trim();
+        tabs.push(currentTab);
+      }
+      // Start new tab
+      const title = tabMatch[1] || tabMatch[2];
+      currentTab = { title: title, content: '' };
+      currentContent = [];
+    } else if (currentTab) {
+      // Add line to current tab content (only if not empty and not a tab marker)
+      if (lines[i].trim() && !lines[i].trim().startsWith('==')) {
+        currentContent.push(lines[i]);
+      }
+    }
+  }
+  
+  // Save the last tab
+  if (currentTab) {
+    currentTab.content = currentContent.join('\n').trim();
+    tabs.push(currentTab);
+  }
+
+  // Create tabs structure
+  const openToken = state.push('tabs_open', 'div', 1);
+  openToken.attrs = [['class', 'docmd-tabs']];
+  
+  // Create navigation
+  const navToken = state.push('tabs_nav_open', 'div', 1);
+  navToken.attrs = [['class', 'docmd-tabs-nav']];
+  tabs.forEach((tab, index) => {
+    const navItemToken = state.push('tabs_nav_item', 'div', 0);
+    navItemToken.attrs = [['class', `docmd-tabs-nav-item ${index === 0 ? 'active' : ''}`]];
+    navItemToken.content = tab.title;
+  });
+  state.push('tabs_nav_close', 'div', -1);
+  
+  // Create content
+  const contentToken = state.push('tabs_content_open', 'div', 1);
+  contentToken.attrs = [['class', 'docmd-tabs-content']];
+  tabs.forEach((tab, index) => {
+    const paneToken = state.push('tab_pane_open', 'div', 1);
+    paneToken.attrs = [['class', `docmd-tab-pane ${index === 0 ? 'active' : ''}`]];
+    
+    // Process tab content with the main markdown-it instance
+    if (tab.content.trim()) {
+      const tabContent = tab.content.trim();
+      
+      // Create a separate markdown-it instance for tab content to avoid double processing
+      const tabMd = new MarkdownIt({
+        html: true,
+        linkify: true,
+        typographer: true,
+        breaks: true,
+        highlight: function (str, lang) {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return '<pre class="hljs"><code>' +
+                     hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+                     '</code></pre>';
+            } catch (e) { console.error(`Error highlighting language ${lang}:`, e); }
+          }
+          return '<pre class="hljs"><code>' + str + '</code></pre>';
+        }
+      });
+      
+      // Register the same plugins for the tab markdown instance
+      tabMd.use(attrs, { leftDelimiter: '{', rightDelimiter: '}' });
+      tabMd.use(markdown_it_footnote);
+      tabMd.use(markdown_it_task_lists);
+      tabMd.use(markdown_it_abbr);
+      tabMd.use(markdown_it_deflist);
+      
+      // Register container renderers for the tab markdown instance
+      Object.keys(containers).forEach(containerName => {
+        const container = containers[containerName];
+        tabMd.renderer.rules[`container_${containerName}_open`] = container.render;
+        tabMd.renderer.rules[`container_${containerName}_close`] = container.render;
+      });
+      
+      // Register the enhanced rules for the tab markdown instance
+      tabMd.block.ruler.before('fence', 'enhanced_tabs', enhancedTabsRule, {
+        alt: ['paragraph', 'reference', 'blockquote', 'list']
+      });
+      tabMd.block.ruler.before('paragraph', 'steps_container', stepsContainerRule, {
+        alt: ['paragraph', 'reference', 'blockquote', 'list']
+      });
+      tabMd.block.ruler.before('paragraph', 'advanced_container', advancedContainerRule, {
+        alt: ['paragraph', 'reference', 'blockquote', 'list']
+      });
+      
+      // Render the tab content
+      const renderedContent = tabMd.render(tabContent);
+      const htmlToken = state.push('html_block', '', 0);
+      htmlToken.content = renderedContent;
+    }
+    
+    state.push('tab_pane_close', 'div', -1);
+  });
+  state.push('tabs_content_close', 'div', -1);
+  state.push('tabs_close', 'div', -1);
+  state.line = nextLine + 1;
+  return true;
+}
+
+// Register the enhanced rules
+md.block.ruler.before('fence', 'steps_container', stepsContainerRule, {
+  alt: ['paragraph', 'reference', 'blockquote', 'list']
+});
+md.block.ruler.before('fence', 'enhanced_tabs', enhancedTabsRule, {
+  alt: ['paragraph', 'reference', 'blockquote', 'list']
+});
+md.block.ruler.before('paragraph', 'advanced_container', advancedContainerRule, {
+  alt: ['paragraph', 'reference', 'blockquote', 'list']
+});
+
+// Add a rule to handle standalone closing tags
+md.block.ruler.before('paragraph', 'standalone_closing', (state, startLine, endLine, silent) => {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+  
+  if (lineContent === ':::') {
+    if (silent) return true;
+    // Skip this line by not creating any tokens
+    state.line = startLine + 1;
+    return true;
+  }
+  
+  return false;
+}, {
+  alt: ['paragraph', 'reference', 'blockquote', 'list']
+});
+
+// Register renderers for all containers
+Object.keys(containers).forEach(containerName => {
+  const container = containers[containerName];
+  md.renderer.rules[`container_${containerName}_open`] = container.render;
+  md.renderer.rules[`container_${containerName}_close`] = container.render;
+});
+
+// Custom renderer for ordered lists in steps containers
+md.renderer.rules.ordered_list_open = function(tokens, idx, options, env, self) {
+  const token = tokens[idx];
+  // Check if we're inside a steps container by looking at the context
+  let isInSteps = false;
+  
+  // Look back through tokens to see if we're in a steps container
+  for (let i = idx - 1; i >= 0; i--) {
+    if (tokens[i].type === 'container_steps_open') {
+      isInSteps = true;
+      break;
+    }
+    if (tokens[i].type === 'container_steps_close') {
+      break;
+    }
+  }
+  
+  if (isInSteps) {
+    const start = token.attrGet('start');
+    return start ? 
+      `<ol class="steps-list" start="${start}">` : 
+      '<ol class="steps-list">';
+  }
+  
+  // Default behavior for non-steps ordered lists
+  const start = token.attrGet('start');
+  return start ? `<ol start="${start}">` : '<ol>';
+};
+
+// Custom renderer for list items in steps containers
+md.renderer.rules.list_item_open = function(tokens, idx, options, env, self) {
+  const token = tokens[idx];
+  // Check if we're inside a steps container and this is a direct child
+  let isInStepsList = false;
+  
+  // Look back through tokens to see if we're in a steps list
+  for (let i = idx - 1; i >= 0; i--) {
+    if (tokens[i].type === 'ordered_list_open' && 
+        tokens[i].markup && 
+        tokens[i].level < token.level) {
+      // Check if this ordered list has steps-list class (meaning it's in steps container)
+      let j = i - 1;
+      while (j >= 0) {
+        if (tokens[j].type === 'container_steps_open') {
+          isInStepsList = true;
+          break;
+        }
+        if (tokens[j].type === 'container_steps_close') {
+          break;
+        }
+        j--;
+      }
+      break;
+    }
+  }
+  
+  if (isInStepsList) {
+    return '<li class="step-item">';
+  }
+  
+  // Default behavior for non-step list items
+  return '<li>';
+};
+
+// Enhanced tabs renderers
+md.renderer.rules.tabs_open = (tokens, idx) => {
+  const token = tokens[idx];
+  return `<div class="${token.attrs.map(attr => attr[1]).join(' ')}">`;
+};
+
+md.renderer.rules.tabs_nav_open = () => '<div class="docmd-tabs-nav">';
+md.renderer.rules.tabs_nav_close = () => '</div>';
+
+md.renderer.rules.tabs_nav_item = (tokens, idx) => {
+  const token = tokens[idx];
+  return `<div class="${token.attrs[0][1]}">${token.content}</div>`;
+};
+
+md.renderer.rules.tabs_content_open = () => '<div class="docmd-tabs-content">';
+md.renderer.rules.tabs_content_close = () => '</div>';
+
+md.renderer.rules.tab_pane_open = (tokens, idx) => {
+  const token = tokens[idx];
+  return `<div class="${token.attrs[0][1]}">`;
+};
+
+md.renderer.rules.tab_pane_close = () => '</div>';
+
+md.renderer.rules.tabs_close = () => '</div>';
 
 // Override the default image renderer to properly handle attributes like {.class}.
 const defaultImageRenderer = md.renderer.rules.image;
@@ -80,257 +654,22 @@ md.use((md) => {
 
 // ===================================================================
 // --- SAFE CONTAINER WRAPPER (FOR SIMPLE CONTAINERS) ---
-// This wrapper creates a fence-aware version of the container plugin.
-// ===================================================================
-function safeContainer(mdInstance, name, options) {
-    const min_markers = 3;
-    const marker_str  = ':';
-    const marker_char = marker_str.charCodeAt(0);
-    const marker_len  = marker_str.length;
-
-    function containerRule(state, startLine, endLine, silent) {
-        let pos = state.bMarks[startLine] + state.tShift[startLine];
-        let max = state.eMarks[startLine];
-        let auto_closed = false;
-
-        if (marker_char !== state.src.charCodeAt(pos)) { return false; }
-
-        let marker_count = 1;
-        pos++;
-        while (pos < max && marker_char === state.src.charCodeAt(pos)) {
-            marker_count++;
-            pos++;
-        }
-
-        if (marker_count < min_markers) { return false; }
-
-        const markup = state.src.slice(pos - marker_count, pos);
-        const params = state.src.slice(pos, max);
-
-        if (options.validate && !options.validate(params)) { return false; }
-
-        if (silent) { return true; }
-
-        let nextLine = startLine;
-        for (;;) {
-            nextLine++;
-            if (nextLine >= endLine) {
-                break;
-            }
-
-            pos = state.bMarks[nextLine] + state.tShift[nextLine];
-            max = state.eMarks[nextLine];
-
-            // --- THIS IS THE FIREWALL ---
-            // If we find a code fence, stop parsing this container.
-            if (state.src.slice(pos, max).trim().startsWith('```')) {
-                break;
-            }
-            // --- END FIREWALL ---
-
-            if (pos < max && state.tShift[nextLine] < state.blkIndent) {
-                break;
-            }
-
-            if (marker_char !== state.src.charCodeAt(pos)) { continue; }
-
-            let pos_after_marker = state.skipChars(pos, marker_char);
-
-            if (pos_after_marker - pos < marker_count) { continue; }
-
-            pos = state.skipSpaces(pos_after_marker);
-
-            if (pos < max) { continue; }
-
-            auto_closed = true;
-            break;
-        }
-
-        const old_parent = state.parentType;
-        const old_line_max = state.lineMax;
-        state.parentType = 'container';
-        state.lineMax = nextLine;
-
-        const open_token = state.push('container_' + name + '_open', 'div', 1);
-        open_token.markup = markup;
-        open_token.block = true;
-        open_token.info = params;
-        open_token.map = [ startLine, nextLine ];
-
-        state.md.block.tokenize(state, startLine + 1, nextLine);
-
-        const close_token = state.push('container_' + name + '_close', 'div', -1);
-        close_token.markup = state.src.slice(state.bMarks[nextLine], state.eMarks[nextLine]);
-        close_token.block = true;
-
-        state.parentType = old_parent;
-        state.lineMax = old_line_max;
-        state.line = nextLine + (auto_closed ? 1 : 0);
-
-        return true;
-    }
-
-    mdInstance.block.ruler.before('fence', 'container_' + name, containerRule, {
-        alt: [ 'paragraph', 'reference', 'blockquote', 'list' ]
-    });
-
-    mdInstance.renderer.rules['container_' + name + '_open'] = options.render;
-    mdInstance.renderer.rules['container_' + name + '_close'] = options.render;
-}
+// The safeContainer function has been replaced by the advanced nested container system
+// which provides better nesting support and more robust parsing.
 
 // ===================================================================
-// --- IMPLEMENTING SIMPLE CONTAINERS WITH THE SAFE WRAPPER ---
+// --- ADVANCED NESTED CONTAINER SYSTEM IMPLEMENTATION ---
 // ===================================================================
 
-// Callouts
-safeContainer(md, 'callout', {
-  validate: params => params.trim().match(/^callout\s+(info|warning|tip|danger|success)$/),
-  render: (tokens, idx) => {
-    const token = tokens[idx];
-    if (token.nesting === 1) {
-      const type = token.info.trim().split(/\s+/)[1];
-      return `<div class="docmd-container callout callout-${type}"><div class="callout-content">`;
-    }
-    return `</div></div>`;
-  }
-});
+// The advanced nested container system is now implemented above
+// All containers (card, callout, button, steps, tabs) are handled by the new system
+// which supports seamless nesting of any container within any other container.
 
-// Cards
-safeContainer(md, 'card', {
-  validate: params => params.trim().startsWith('card'),
-  render: (tokens, idx) => {
-    const token = tokens[idx];
-    if (token.nesting === 1) {
-      const titleText = token.info.trim().substring('card'.length).trim();
-      let titleHtml = titleText ? `<div class="card-title">${md.renderInline(titleText)}</div>` : '';
-      return `<div class="docmd-container card">${titleHtml}<div class="card-content">`;
-    }
-    return `</div></div>`;
-  }
-});
-
-// Buttons (Self-closing)
-safeContainer(md, 'button', {
-    validate: params => params.trim().startsWith('button'),
-    render: (tokens, idx) => {
-        if (tokens[idx].nesting === 1) {
-            let info = tokens[idx].info.trim().substring('button'.length).trim();
-            let colorStyle = '';
-            const colorMatch = info.match(/color:(#?\w+)/);
-            if (colorMatch) {
-                info = info.replace(colorMatch[0], '').trim();
-                colorStyle = ` style="background-color: ${colorMatch[1]}"`;
-            }
-            const parts = info.split(/\s+/);
-            const url = parts.pop() || '#';
-            const text = parts.join(' ').replace(/_/g, ' ') || 'Button';
-            return `<a href="${url}" class="docmd-button"${colorStyle}>${md.renderInline(text)}</a>`;
-        }
-        return '';
-    }
-});
-
-// Steps
-safeContainer(md, 'steps', {
-  validate: params => params.trim() === 'steps',
-  render: (tokens, idx) => {
-    if (tokens[idx].nesting === 1) {
-      return `<div class="docmd-container steps">`;
-    }
-    return `</div>`;
-  }
-});
-
-
-// ===================================================================
-// --- TABS (CUSTOM BLOCK PARSER) ---
-// ===================================================================
-
-function tabsPlugin(md) {
-    function tabsRule(state, startLine, endLine, silent) {
-        let start = state.bMarks[startLine] + state.tShift[startLine];
-        let max = state.eMarks[startLine];
-
-        if (state.src.slice(start, max).trim() !== '::: tabs') {
-            return false;
-        }
-
-        if (silent) { return true; }
-
-        let nextLine = startLine;
-        let found = false;
-        while (nextLine < endLine) {
-            nextLine++;
-            let lineStr = state.getLines(nextLine, nextLine + 1, state.blkIndent, false);
-            if (lineStr.trim() === ':::') {
-                found = true;
-                break;
-            }
-        }
-
-        if (!found) { return false; }
-
-        const content = state.getLines(startLine + 1, nextLine, 0, true);
-        const tabRegex = /==\s+tab\s+"([^"]+)"/g;
-        let match;
-        const tabs = [];
-        let lastIndex = 0;
-
-        while ((match = tabRegex.exec(content)) !== null) {
-            if (tabs.length > 0) {
-                tabs[tabs.length - 1].content = content.slice(lastIndex, match.index).trim();
-            }
-            tabs.push({ title: match[1], content: '' });
-            lastIndex = tabRegex.lastIndex;
-        }
-        if (tabs.length > 0) {
-            tabs[tabs.length - 1].content = content.slice(lastIndex).trim();
-        }
-
-        state.line = nextLine + 1;
-
-        let token = state.push('tabs_open', 'div', 1);
-        token.attrs = [['class', 'docmd-tabs']];
-
-        token = state.push('tabs_nav_open', 'div', 1);
-        token.attrs = [['class', 'docmd-tabs-nav']];
-        tabs.forEach((tab, index) => {
-            let navItem = state.push('tabs_nav_item', 'div', 0);
-            navItem.attrs = [['class', 'docmd-tabs-nav-item ' + (index === 0 ? 'active' : '')]];
-            navItem.content = tab.title;
-        });
-        token = state.push('tabs_nav_close', 'div', -1);
-
-        token = state.push('tabs_content_open', 'div', 1);
-        token.attrs = [['class', 'docmd-tabs-content']];
-        tabs.forEach((tab, index) => {
-            token = state.push('tab_pane_open', 'div', 1);
-            token.attrs = [['class', 'docmd-tab-pane ' + (index === 0 ? 'active' : '')]];
-            
-            // Create a token to render the tab's markdown content
-            let contentToken = state.push('html_block', '', 0);
-            contentToken.content = md.render(tab.content);
-            
-            token = state.push('tab_pane_close', 'div', -1);
-        });
-        token = state.push('tabs_content_close', 'div', -1);
-
-        token = state.push('tabs_close', 'div', -1);
-        return true;
-    }
-    
-    md.block.ruler.before('fence', 'tabs', tabsRule);
-
-    md.renderer.rules.tabs_nav_item = (tokens, idx) => {
-        return `<div${md.renderer.renderAttrs(tokens[idx])}>${tokens[idx].content}</div>`;
-    };
-}
-md.use(tabsPlugin);
 
 // --- UTILITY AND PROCESSING FUNCTIONS ---
 
 function decodeHtmlEntities(html) {
-  return html.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, "'").replace(/ /g, ' ');
+  return html.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, "'").replace(/ /g, ' ');
 }
 
 function extractHeadingsFromHtml(htmlContent) {
@@ -363,8 +702,15 @@ async function processMarkdownFile(filePath, options = { isDev: false }, config)
     }
   }
 
-  const htmlContent = md.render(markdownContent);
-  const headings = extractHeadingsFromHtml(htmlContent);
+  // For no-style pages, skip markdown processing and treat content as raw HTML
+  let htmlContent, headings;
+  if (frontmatter.noStyle === true) {
+    htmlContent = markdownContent; // Use raw content as HTML
+    headings = []; // No headings extraction for no-style pages
+  } else {
+    htmlContent = md.render(markdownContent);
+    headings = extractHeadingsFromHtml(htmlContent);
+  }
 
   return {
     frontmatter,

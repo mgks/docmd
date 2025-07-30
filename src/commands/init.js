@@ -22,11 +22,18 @@ module.exports = {
   srcDir: 'docs',       // Source directory for Markdown files
   outputDir: 'site',    // Directory for generated static site
 
+  // Sidebar Configuration
+  sidebar: {
+    collapsible: true,        // or false to disable
+    defaultCollapsed: false,  // or true to start collapsed
+  },
+
   // Theme Configuration
   theme: {
     name: 'sky',            // Themes: 'default', 'sky'
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
+    positionMode: 'bottom', // 'top' or 'bottom' for the theme toggle
     customCss: [            // Array of paths to custom CSS files
       // '/assets/css/custom.css', // Custom TOC styles
     ]
@@ -37,6 +44,9 @@ module.exports = {
     // '/assets/js/custom-script.js', // Paths relative to outputDir root
     '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
+
+  // Content Processing
+  autoTitleFromH1: true, // Set to true to automatically use the first H1 as page title
 
   // Plugins Configuration
   // Plugins are configured here. docmd will look for these keys.
@@ -91,7 +101,15 @@ module.exports = {
       },
       // External links:
       { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
-  ],
+      { title: 'Support the Project', path: 'https://github.com/sponsors/mgks', icon: 'heart', external: true },
+    ],
+
+  // Sponsor Ribbon Configuration
+  Sponsor: {
+    enabled: false,
+    title: 'Support docmd',
+    link: 'https://github.com/sponsors/mgks',
+  },
 
   // Footer Configuration
   // Markdown is supported here.
