@@ -12,8 +12,8 @@ description: "An overview of the built-in themes provided by docmd."
 module.exports = {
   // ...
   theme: {
-    name: 'theme-name', // Options: 'default', 'sky', 'ruby'
-    defaultMode: 'light', // or 'dark'
+    name: 'theme-name', // Options: 'default', 'sky', 'ruby', 'retro'
+    defaultMode: 'light', // or 'dark' to set as landing mode
     // ...
   },
   // ...
@@ -52,6 +52,20 @@ module.exports = {
     *   Luxurious dark mode with deep, rich backgrounds and vibrant accent colors
 *   **When to use:** When you want your documentation to have a distinctive, premium feel with rich colors and elegant typography.
 
+## 4. `retro` Theme
+
+*   **`theme.name: 'retro'`**
+*   **Description:** A nostalgic theme inspired by 1980s-90s computing aesthetics. It features:
+    *   Terminal-style black backgrounds with phosphor green text in dark mode
+    *   Light mode with dark green text on light gray backgrounds
+    *   Monospace typography (Fira Code) for authentic retro feel
+    *   Neon accent colors (cyan, pink, amber) with glow effects
+    *   Animated scanlines and CRT flicker effects
+    *   Terminal-style code blocks with `[TERMINAL]` labels
+    *   Retro-styled containers with pixel-art inspired elements
+    *   Blinking cursor effects on links and active elements
+*   **When to use:** Perfect for developer tools, gaming documentation, tech blogs with vintage computing focus, or anyone wanting a unique, eye-catching retro aesthetic.
+
 ## How Themes Work
 
 Each theme consists of CSS files located within `docmd`'s internal assets. When you select a theme name, `docmd` links the corresponding stylesheet in your site's HTML:
@@ -59,5 +73,6 @@ Each theme consists of CSS files located within `docmd`'s internal assets. When 
 - `default` theme uses the base CSS with no additional theme stylesheet
 - `sky` theme loads `docmd-theme-sky.css` with its custom styling on top of the default CSS
 - `ruby` theme loads `docmd-theme-ruby.css` with its custom styling on top of the default CSS
+- `retro` theme loads `docmd-theme-retro.css` with its custom styling on top of the default CSS
 
 You can further customize any chosen theme using the `theme.customCss` option in your `config.js` to add your own overrides or additional styles. See [Custom CSS & JS](/theming/custom-css-js/) for details.

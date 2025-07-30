@@ -23,10 +23,16 @@ module.exports = {
   srcDir: 'docs',
   outputDir: 'site',
 
+  sidebar: {
+    collapsible: true,
+    defaultCollapsed: false,
+  },
+
   theme: {
-    name: 'sky',            // Name of the built-in theme to use (e.g., 'sky', 'default')
-    defaultMode: 'light',   // 'light' or 'dark'
-    enableModeToggle: true, // Show UI button to toggle light/dark modes
+    name: 'sky',
+    defaultMode: 'light',
+    enableModeToggle: true,
+    positionMode: 'bottom', // 'top' or 'bottom'
     customCss: [            // Array of paths to your custom CSS files
       // '/css/override-styles.css', // Paths are relative to the outputDir root
     ],
@@ -36,6 +42,14 @@ module.exports = {
   customJs: [               // Array of paths to your custom JS files
     // '/js/extra-functionality.js', // Loaded at the end of the body
   ],
+
+  autoTitleFromH1: true,
+
+  sponsor: {
+    enabled: true,
+    title: 'Sponsor the Project',
+    link: 'https://github.com/sponsors/mgks',
+  },
 
   plugins: {
     // SEO Plugin Configuration
@@ -110,6 +124,37 @@ module.exports = {
 *   **Default:** `'site'`
 *   **Description:** Directory where the static site will be generated.
 
+### `autoTitleFromH1`
+*   **Type:** `Boolean`
+*   **Default:** `true`
+*   **Description:** If `true`, `docmd` will automatically use the content of the first H1 tag (`# Title`) as the page title if no `title` is specified in the frontmatter. If set to `false` and a page has no `title` in its frontmatter, the page header will be hidden.
+*   **Example:** 
+    ```javascript
+    // With autoTitleFromH1: true (default)
+    // Markdown file with: # My Page Title
+    // Will automatically set the page title to "My Page Title"
+    
+    // With autoTitleFromH1: false
+    // You must explicitly set title in frontmatter:
+    // ---
+    // title: "My Page Title"
+    // ---
+    ```
+
+## `sidebar` (Object)
+
+Configures the behavior of the sidebar.
+
+### `sidebar.collapsible`
+*   **Type:** `Boolean`
+*   **Default:** `false`
+*   **Description:** If `true`, a toggle button is added to the header, allowing users to show or hide the sidebar. The user's preference is saved in `localStorage`.
+
+### `sidebar.defaultCollapsed`
+*   **Type:** `Boolean`
+*   **Default:** `false`
+*   **Description:** If `sidebar.collapsible` is `true`, this option sets the default state of the sidebar to collapsed. A user's saved preference will override this.
+
 ## `theme` (Object)
 
 Configures the visual theme of your site.
@@ -130,6 +175,13 @@ Configures the visual theme of your site.
 *   **Type:** `Boolean`
 *   **Default:** `true` (assuming it's now a core feature)
 *   **Description:** If `true`, a UI toggle button will be displayed allowing users to switch between light and dark modes. Their preference is typically saved in `localStorage`.
+
+### `theme.positionMode`
+*   **Type:** `String`
+*   **Default:** `'bottom'`
+*   **Values:** `'top'` or `'bottom'`
+*   **Description:** Sets the position of the light/dark mode toggle button. `'top'` places it in the page header (top right), while `'bottom'` places it at the bottom of the sidebar.
+*   **Example:** `positionMode: 'top'` - Useful for sites where you want the theme toggle to be more prominent and easily accessible.
 
 ### `theme.customCss`
 *   **Type:** `Array` of `String`
@@ -171,6 +223,23 @@ Configures the visual theme of your site.
 
 ## `footer` (String, Optional)
 *   **Description:** Custom footer text (Markdown supported).
+
+## `sponsor` (Object, Optional)
+*   **Type:** `Object`
+*   **Description:** Configures a sponsor ribbon that appears in the bottom-right corner of every page.
+*   **Properties:**
+    *   `enabled` (Boolean, Optional): Whether to show the sponsor ribbon. Defaults to `true` if the sponsor object is provided.
+    *   `title` (String, Optional): Text to display on the ribbon. Defaults to `'Sponsor the Project'`.
+    *   `link` (String, Required if enabled): URL for the sponsor link. Should open in a new tab.
+*   **Example:**
+    ```javascript
+    sponsor: {
+      enabled: true,
+      title: 'Sponsor the Project',
+      link: 'https://github.com/sponsors/mgks'
+    }
+    ```
+*   **Note:** The ribbon is positioned fixed in the bottom-right corner and includes a heart icon with a subtle animation.
 
 ## `favicon` (String, Optional)
 *   **Description:** Path to your favicon file, relative to `outputDir` root.

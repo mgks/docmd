@@ -16,9 +16,10 @@ You can set the default theme for your site in the `config.js` file:
 module.exports = {
   // ... other config ...
   theme: {
-    name: 'default', // or 'sky'
+    name: 'default', // or 'sky', 'ruby', 'retro'
     defaultMode: 'dark', // Can be 'light' or 'dark'
     enableModeToggle: true, // Enable the toggle button in the UI
+    positionMode: 'bottom', // 'top' or 'bottom' - where to show the toggle
   },
   // ...
 };
@@ -26,7 +27,9 @@ module.exports = {
 
 * `defaultMode: 'light'`: The site will initially render with the light color scheme.
 * `defaultMode: 'dark'`: The site will initially render with the dark color scheme.
-* `enableModeToggle: true`: Shows a toggle button in the sidebar for users to switch modes.
+* `enableModeToggle: true`: Shows a toggle button for users to switch modes.
+* `positionMode: 'bottom'`: Places the toggle button at the bottom of the sidebar (default).
+* `positionMode: 'top'`: Places the toggle button in the page header (top right).
 
 If `defaultMode` is not specified, it defaults to `'light'`.
 
@@ -62,15 +65,21 @@ body {
 
 ## User Preference Toggle
 
-When `enableModeToggle` is set to `true`, a toggle button appears in the sidebar that allows users to switch between light and dark modes:
+When `enableModeToggle` is set to `true`, a toggle button appears that allows users to switch between light and dark modes. The position of this button is controlled by the `positionMode` setting:
 
 ```javascript
 // config.js
 theme: {
   defaultMode: 'light',
   enableModeToggle: true, // Shows the toggle button
+  positionMode: 'bottom', // 'bottom' (sidebar) or 'top' (header)
 },
 ```
+
+### Toggle Button Positions
+
+- **`positionMode: 'bottom'`** (default): The toggle button appears at the bottom of the sidebar
+- **`positionMode: 'top'`**: The toggle button appears in the page header (top right corner)
 
 The toggle button uses Lucide icons (`sun` and `moon`) to indicate the current mode and what will happen when clicked.
 
