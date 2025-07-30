@@ -152,10 +152,11 @@ h4 {
 }
 
 a {
-  color: var(--link-color);
-  text-decoration: none;
-  transition: color 0.2s ease;
-  position: relative;
+    color: var(--link-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    position: relative;
+
 }
 
 a:hover {
@@ -177,8 +178,9 @@ a:hover {
 }
 
 .content-area a:not(.button):not(.no-underline):hover::after {
-  transform: scaleX(1);
-  transform-origin: bottom left;
+    transform: scaleX(1);
+    transform-origin: bottom left;
+
 }
 
 p {
@@ -285,13 +287,17 @@ tr:hover {
 
 /* Add gem-like facet to containers */
 .docmd-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: linear-gradient(90deg, var(--ruby-primary), var(--ruby-accent));
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--ruby-primary), var(--ruby-accent));
+
+}
+.docmd-container.steps::before{
+    height:initial !important
 }
 
 /* Callouts */
@@ -420,6 +426,11 @@ tr:hover {
   box-shadow: var(--shadow-sm);
 }
 
+.docmd-container.steps-reset ol.steps-list > li.step-item::before{
+    color: var(--ruby-primary);
+
+}
+
 /* Buttons */
 button, .button {
   background: linear-gradient(135deg, var(--ruby-primary) 0%, var(--ruby-accent) 100%);
@@ -432,6 +443,8 @@ button, .button {
   transition: all 0.3s ease;
   box-shadow: var(--shadow-sm);
 }
+
+.docmd-button:hover{color:#fff}
 
 button:hover, .button:hover {
   box-shadow: var(--shadow-md);
