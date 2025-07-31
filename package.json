@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    }
+  },
   "bin": {
     "docmd": "bin/docmd.js"
   },
