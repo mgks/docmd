@@ -9,7 +9,29 @@ components:
   theme: false
   scripts: false
 customHead: |
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Docmd",
+      "operatingSystem": "Any",
+      "applicationCategory": "DeveloperApplication",
+      "url": "https://docmd.mgks.dev",
+      "description": "Docmd is a Node.js-powered static site generator for Markdown documentation. It features custom containers, multiple themes, and zero client-side bloat.",
+      "creator": {
+        "@type": "Person",
+        "name": "Ghazi",
+        "sameAs": [
+          "https://github.com/mgks",
+          "https://mgks.dev"
+        ]
+      },
+      "codeRepository": "https://github.com/mgks/docmd",
+      "releaseNotes": "See GitHub Releases for changelog"
+      "programmingLanguage": "Node.js",
+      "installUrl": "https://www.npmjs.com/package/@mgks/docmd"
+    }
+  </script>
   <link rel="stylesheet" href="/assets/css/welcome.css">
   <script>
     // Initialize theme from localStorage or system preference
