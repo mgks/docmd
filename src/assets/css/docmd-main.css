@@ -1144,7 +1144,6 @@ img.lightbox, .docmd-container .image-gallery img {
   .sponsor-ribbon {
     bottom: 10px;
     right: 10px;
-    transform: rotate(45deg) scale(0.8);
   }
   
   .sponsor-link {
