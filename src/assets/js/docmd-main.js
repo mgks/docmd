@@ -1,3 +1,5 @@
+// src/assets/js/docmd-main.js
+
 /**
  * docmd-main.js
  * Main client-side script for docmd UI interactions.
@@ -7,36 +9,22 @@
  * 3. Tabs container interaction.
  */
 
-// --- 1. Theme Toggle Logic ---
-function initializeThemeToggle() {
+// --- Theme Toggle Logic ---
+function setupThemeToggleListener() {
   const themeToggleButton = document.getElementById('theme-toggle-button');
-
-  // Function to apply the theme to the body and save preference
-  const applyTheme = (theme, isInitial = false) => {
-    document.body.setAttribute('data-theme', theme);
-    if (!isInitial) {
-      localStorage.setItem('docmd-theme', theme);
-    }
-  };
-
-  // Set the initial theme on page load
-  const storedTheme = localStorage.getItem('docmd-theme');
-  const initialTheme = storedTheme || document.body.getAttribute('data-theme') || 'light';
-  applyTheme(initialTheme, true);
 
   // Add click listener to the toggle button
   if (themeToggleButton) {
     themeToggleButton.addEventListener('click', () => {
-      const currentTheme = document.body.getAttribute('data-theme');
-      const newTheme = currentTheme.includes('dark') 
-        ? currentTheme.replace('dark', 'light') 
-        : currentTheme.replace('light', 'dark');
-      applyTheme(newTheme);
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('docmd-theme', newTheme);
     });
   }
 }
 
-// --- 2. Sidebar Collapse Logic ---
+// --- Sidebar Collapse Logic ---
 function initializeSidebarToggle() {
   const toggleButton = document.getElementById('sidebar-toggle-button');
   const body = document.body;
@@ -68,7 +56,7 @@ function initializeSidebarToggle() {
   });
 }
 
-// --- 3. Tabs Container Logic ---
+// --- Tabs Container Logic ---
 function initializeTabs() {
   document.querySelectorAll('.docmd-tabs').forEach(tabsContainer => {
     const navItems = tabsContainer.querySelectorAll('.docmd-tabs-nav-item');
@@ -91,7 +79,7 @@ function initializeTabs() {
 
 // --- Main Execution ---
 document.addEventListener('DOMContentLoaded', () => {
-  initializeThemeToggle();
+  setupThemeToggleListener();
   initializeSidebarToggle();
   initializeTabs();
 });

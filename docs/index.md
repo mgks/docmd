@@ -7,6 +7,7 @@ components:
   favicon: true
   css: false
   theme: false
+  themeMode: true
   scripts: false
 customHead: |
   <script type="application/ld+json">
@@ -34,27 +35,12 @@ customHead: |
   </script>
   <link rel="stylesheet" href="/assets/css/welcome.css">
   <script>
-    // Initialize theme from localStorage or system preference
-    function initTheme() {
-      const storedTheme = localStorage.getItem('docmd-theme');
-      if (storedTheme) {
-        document.body.setAttribute('data-theme', storedTheme);
-      } else {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        document.body.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
-      }
-    }
-
-    // Toggle theme between light and dark
     function toggleTheme() {
-      const currentTheme = document.body.getAttribute('data-theme');
+      const currentTheme = document.documentElement.getAttribute('data-theme');
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      document.body.setAttribute('data-theme', newTheme);
+      document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('docmd-theme', newTheme);
     }
-
-    // Run on page load
-    document.addEventListener('DOMContentLoaded', initTheme);
   </script>
 ---
 
