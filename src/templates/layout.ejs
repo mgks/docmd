@@ -13,6 +13,8 @@
 
     <%- faviconLinkHtml || '' %> <%# Favicon %>
 
+    <%- themeInitScript %>
+
     <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
 
     <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">

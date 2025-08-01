@@ -16,6 +16,10 @@
         <%- faviconLinkHtml || '' %>
     <% } %>
 
+    <% if (frontmatter.components?.themeMode !== false) { %>
+        <%- themeInitScript %>
+    <% } %>
+
     <% if (frontmatter.components?.css !== false) { %>
         <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
         <% if (frontmatter.components?.highlight !== false) { %>

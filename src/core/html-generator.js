@@ -2,10 +2,19 @@
 const ejs = require('ejs');
 const path = require('path');
 const fs = require('fs-extra');
-const { mdInstance } = require('./file-processor'); // Import mdInstance for footer
+const { mdInstance } = require('./file-processor');
 const { generateSeoMetaTags } = require('../plugins/seo');
 const { generateAnalyticsScripts } = require('../plugins/analytics');
-const { renderIcon } = require('./icon-renderer'); // Import icon renderer
+const { renderIcon } = require('./icon-renderer');
+
+let themeInitScript = '';
+(async () => {
+    const themeInitPath = path.join(__dirname, '..', 'templates', 'partials', 'theme-init.js');
+    if (await fs.pathExists(themeInitPath)) {
+        const scriptContent = await fs.readFile(themeInitPath, 'utf8');
+        themeInitScript = `<script>${scriptContent}</script>`;
+    }
+})();
 
 async function processPluginHooks(config, pageData, relativePathToRoot) {
     let metaTagsHtml = '';
@@ -85,7 +94,8 @@ async function generateHtmlPage(templateData) {
 
     const ejsData = {
         content,
-        pageTitle, // Pass the potentially undefined title
+        pageTitle,
+        themeInitScript,
         description: frontmatter.description,
         siteTitle,
         navigationHtml,
