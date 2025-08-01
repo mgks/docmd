@@ -21,7 +21,7 @@
   --lightbox-text: #fff;
 }
 
-body[data-theme="dark"] {
+[data-theme="dark"] {
   --bg-color: #1a1a1a;
   --text-color: #e0e0e0;
   --sidebar-bg: #2c2c2c;
@@ -271,11 +271,11 @@ pre code {
   display: none;
 }
 
-body[data-theme="dark"] .logo-link img.logo-light {
+html[data-theme="dark"] .logo-link img.logo-light {
   display: none;
 }
 
-body[data-theme="dark"] .logo-link img.logo-dark {
+html[data-theme="dark"] .logo-link img.logo-dark {
   display: block;
 }
 
@@ -326,11 +326,11 @@ body[data-theme="dark"] .logo-link img.logo-dark {
   display: block;
 }
 
-body[data-theme="dark"] .theme-toggle-button .icon-moon {
+html[data-theme="dark"] .theme-toggle-button .icon-moon {
   display: block;
 }
 
-body[data-theme="dark"] .theme-toggle-button .icon-sun {
+html[data-theme="dark"] .theme-toggle-button .icon-sun {
   display: none;
 }
 
@@ -624,7 +624,7 @@ body[data-theme="dark"] .theme-toggle-button .icon-sun {
   text-decoration: none;
 }
 
-body[data-theme="dark"] .prev-page:hover, body[data-theme="dark"] .next-page:hover {
+[data-theme="dark"] .prev-page:hover, [data-theme="dark"] .next-page:hover {
   background-color: rgba(255, 255, 255, 0.05);
 }
 
@@ -1158,11 +1158,11 @@ img.lightbox, .docmd-container .image-gallery img {
 }
 
 /* Dark mode adjustments */
-body[data-theme="dark"] .sponsor-link {
+html[data-theme="dark"] .sponsor-link {
   background: linear-gradient(135deg, #ff6b6b, #c44569);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
 }
 
-body[data-theme="dark"] .sponsor-link:hover {
+html[data-theme="dark"] .sponsor-link:hover {
   box-shadow: 0 6px 20px rgba(255, 107, 107, 0.3);
 }

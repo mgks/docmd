@@ -1,6 +1,6 @@
 /* theme-sky.css - Sky theme for docmd */
 
-:root [data-theme="light"] {
+:root[data-theme="light"] {
   /* Font family */
   --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --font-family-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
@@ -48,7 +48,7 @@
 }
 
 /* Dark mode */
-:root [data-theme="dark"] {
+:root[data-theme="dark"] {
   /* Color palette dark */
   --sky-primary: #3b82f6;
   --sky-primary-light: #1e293b;

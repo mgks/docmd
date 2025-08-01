@@ -37,10 +37,10 @@ h1{font-size:3rem;font-weight:700;margin-bottom:1rem;letter-spacing:-.02em}
 .preview-image.top{z-index:3;transform:rotate(3deg) translateY(-10%) translateX(7%)}
 .preview-image.middle{z-index:2;transform:rotate(-3deg) translateY(1%) translateX(-2%)}
 .preview-image.bottom{z-index:1;transform:rotate(-8deg) translateY(10%) translateX(-10%)}
-body[data-theme="light"] .preview-image .light-img{display:block}
-body[data-theme="light"] .preview-image .dark-img{display:none}
-body[data-theme="dark"] .preview-image .light-img{display:none}
-body[data-theme="dark"] .preview-image .dark-img{display:block}
+[data-theme="light"] .preview-image .light-img{display:block}
+[data-theme="light"] .preview-image .dark-img{display:none}
+[data-theme="dark"] .preview-image .light-img{display:none}
+[data-theme="dark"] .preview-image .dark-img{display:block}
 @media (max-width: 1400px) {
 :root{--container-padding:3rem}
 .preview-stack{transform:translateX(15%)}
