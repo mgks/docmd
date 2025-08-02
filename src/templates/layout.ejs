@@ -17,7 +17,9 @@
 
     <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
 
-    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
+    <% if (config.theme?.codeHighlight !== false) { %>
+        <link rel="stylesheet" id="highlight-theme" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" data-base-href="<%= relativePathToRoot %>assets/css/">
+    <% } %>
 
     <%- themeCssLinkHtml || '' %> <%# For theme.name specific CSS %>
 
@@ -29,7 +31,9 @@
 
     <%- pluginHeadScriptsHtml || '' %> <%# Plugin specific head scripts (e.g., Analytics) %>
 </head>
-<body class="<%= sidebarConfig.collapsible ? 'sidebar-collapsible' : 'sidebar-not-collapsible' %>" data-theme="<%= defaultMode %>" data-default-collapsed="<%= sidebarConfig.defaultCollapsed %>">
+<body class="<%= sidebarConfig.collapsible ? 'sidebar-collapsible' : 'sidebar-not-collapsible' %>"
+    data-theme="<%= defaultMode %>" data-default-collapsed="<%= sidebarConfig.defaultCollapsed %>"
+    data-copy-code-enabled="<%= config.copyCode === true %>">
     <aside class="sidebar">
         <div class="sidebar-header">
             <% if (logo && logo.light && logo.dark) { %>

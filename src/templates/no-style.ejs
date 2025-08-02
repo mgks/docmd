@@ -49,7 +49,16 @@
         <%- frontmatter.customHead %>
     <% } %>
 </head>
-<body<% if (frontmatter.components?.theme !== false) { %> data-theme="<%= defaultMode %>"<% } %><% if (frontmatter.bodyClass) { %> class="<%= frontmatter.bodyClass %>"<% } %>>
+<body
+    <%
+    if (frontmatter.components?.theme !== false) {
+        %> data-theme="<%= defaultMode %>"<%
+    }
+    %><%
+    if (frontmatter.bodyClass) {
+        %> class="<%= frontmatter.bodyClass %>"<%
+    }
+    %> data-copy-code-enabled="<%= config.copyCode === true %>">
     <% if (frontmatter.components?.layout === true || frontmatter.components?.layout === 'full') { %>
         <div class="main-content-wrapper">
             <% if (frontmatter.components?.header !== false) { %>
@@ -140,18 +149,22 @@
         <%- content %>
     <% } %>
 
-    <% if (frontmatter.components?.scripts !== false) { %>
-        <% if (frontmatter.components?.themeToggle !== false) { %>
-            <script src="<%= relativePathToRoot %>assets/js/docmd-theme-toggle.js"></script>
+    <% if (frontmatter.components?.scripts === true) { %>
+        <% if (frontmatter.components?.mainScripts === true) { %>
+            <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
         <% } %>
         
-        <% if (frontmatter.components?.customJs !== false && customJsFiles && customJsFiles.length > 0) { %>
+        <% if (frontmatter.components?.lightbox === true && frontmatter.components?.mainScripts === true) { %>
+            <script src="<%= relativePathToRoot %>assets/js/docmd-image-lightbox.js"></script>
+        <% } %>
+        
+        <% if (frontmatter.components?.customJs === true && customJsFiles && customJsFiles.length > 0) { %>
             <% customJsFiles.forEach(jsFile => { %>
                 <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
             <% }); %>
         <% } %>
         
-        <% if (frontmatter.components?.pluginBodyScripts !== false) { %>
+        <% if (frontmatter.components?.pluginBodyScripts === true) { %>
             <%- pluginBodyScriptsHtml || '' %>
         <% } %>
     <% } %>
