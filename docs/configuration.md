@@ -44,6 +44,7 @@ module.exports = {
   ],
 
   autoTitleFromH1: true,
+  copyCode: true,
 
   sponsor: {
     enabled: true,
@@ -141,6 +142,11 @@ module.exports = {
     // ---
     ```
 
+### `copyCode`
+* **Type:** `Boolean`
+* **Default:** `true`
+* **Description:** If `true`, a "Copy" button will be added to the top-right corner of all code blocks, allowing users to easily copy the code to their clipboard with a single click. **Note:** This setting only applies to regular pages. For noStyle pages, copy code functionality must be explicitly enabled via the `components.mainScripts: true` setting.
+
 ## `sidebar` (Object)
 
 Configures the behavior of the sidebar.
@@ -186,7 +192,7 @@ Configures the visual theme of your site.
 ### `theme.customCss`
 *   **Type:** `Array` of `String`
 *   **Default:** `[]` (empty array)
-*   **Description:** An array of paths to your custom CSS files. These files will be linked in the `<head>` of every page *after* the main theme CSS, allowing you to override or extend styles.
+*   **Description:** An array of paths to your custom CSS files. These files will be linked in the `<head>` of every regular page *after* the main theme CSS, allowing you to override or extend styles. **Note:** For noStyle pages, custom CSS must be explicitly enabled via `components.customCss: true`.
 *   **Paths:** Should be relative to the `outputDir` root (e.g., `'/css/my-styles.css'`). You are responsible for ensuring these files exist at the specified location in your final `site/` output (e.g., by placing them in an assets folder that `docmd` copies, or in your project's static assets if your `srcDir` is part of a larger project).
 *   **Example:** `customCss: ['/assets/css/custom-branding.css']`
 
@@ -197,7 +203,7 @@ Configures the visual theme of your site.
 ## `customJs` (Array of String)
 *   **Type:** `Array` of `String`
 *   **Default:** `[]`
-*   **Description:** An array of paths to your custom JavaScript files. These files will be included as `<script>` tags just before the closing `</body>` tag on every page.
+*   **Description:** An array of paths to your custom JavaScript files. These files will be included as `<script>` tags just before the closing `</body>` tag on every regular page. **Note:** For noStyle pages, custom JavaScript must be explicitly enabled via `components.customJs: true`.
 *   **Paths:** Should be relative to the `outputDir` root (e.g., `'/js/my-analytics-alternative.js'`).
 *   **Example:** `customJs: ['/assets/js/interactive-component.js']`
 
@@ -222,11 +228,11 @@ Configures the visual theme of your site.
     *   `external` (Boolean, Optional): If set to `true`, the `path` is treated as an absolute external URL and the link will open in a new tab (`target="_blank"`). Defaults to `false`.
 
 ## `footer` (String, Optional)
-*   **Description:** Custom footer text (Markdown supported).
+*   **Description:** Custom footer text (Markdown supported). **Note:** For noStyle pages, the footer must be explicitly enabled via `components.footer: true`.
 
 ## `sponsor` (Object, Optional)
 *   **Type:** `Object`
-*   **Description:** Configures a sponsor ribbon that appears in the bottom-right corner of every page.
+*   **Description:** Configures a sponsor ribbon that appears in the bottom-right corner of every regular page. **Note:** For noStyle pages, the sponsor ribbon must be explicitly enabled via `components.branding: true`.
 *   **Properties:**
     *   `enabled` (Boolean, Optional): Whether to show the sponsor ribbon. Defaults to `true` if the sponsor object is provided.
     *   `title` (String, Optional): Text to display on the ribbon. Defaults to `'Sponsor the Project'`.
@@ -242,6 +248,6 @@ Configures the visual theme of your site.
 *   **Note:** The ribbon is positioned fixed in the bottom-right corner and includes a heart icon with a subtle animation.
 
 ## `favicon` (String, Optional)
-*   **Description:** Path to your favicon file, relative to `outputDir` root.
+*   **Description:** Path to your favicon file, relative to `outputDir` root. **Note:** For noStyle pages, the favicon must be explicitly enabled via `components.favicon: true`.
 
 This file needs significant detail for each new option, explaining its purpose, type, default value, and how to use it with examples.

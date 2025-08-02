@@ -36,46 +36,93 @@ module.exports = {
 
 ## Configuration Options
 
-All options for the `seo` plugin are optional. If an option is not provided, the plugin will attempt to use sensible defaults or derive values from page frontmatter or `config.siteTitle`.
-
-*   `defaultDescription` (String):
-    *   A fallback meta description used for pages that do not have a `description` specified in their YAML frontmatter.
-*   `openGraph` (Object): Configures [Open Graph](https://ogp.me/) meta tags, primarily used by Facebook, LinkedIn, Pinterest, etc.
-    *   `siteName` (String): The name of your website (e.g., "My Project Documentation"). If not provided, `config.siteTitle` is used.
-    *   `defaultImage` (String): Absolute path (from site root) to a default image for `og:image` when a page is shared, if the page itself doesn't specify an image in its frontmatter (e.g., via `image: /path/to/page-image.png` or `ogImage: ...`).
-    *   Other tags like `og:title`, `og:description`, `og:url`, and `og:type` are automatically generated based on page frontmatter and URL.
-*   `twitter` (Object): Configures [Twitter Card](https://developer.twitter.com/en/docs/twitter-for-websites/cards/overview/abouts-cards) meta tags.
-    *   `cardType` (String): The type of Twitter card. Common values: `'summary'`, `'summary_large_image'`. Defaults to `'summary'`.
-    *   `siteUsername` (String): The Twitter @username of the site/publisher (e.g., `@MyProjectAccount`).
-    *   `creatorUsername` (String): The default Twitter @username of the content creator. Can be overridden per page via frontmatter (e.g., `twitterCreator: @PageAuthorHandle`).
-    *   Twitter tags like `twitter:title`, `twitter:description`, and `twitter:image` are also derived from page frontmatter, similar to Open Graph tags.
+The options in `config.js` serve as site-wide defaults. For the best results, you should provide specific metadata for each page using frontmatter.
 
 ## Frontmatter for SEO
 
-For the best SEO results, provide specific metadata in each page's frontmatter. The `seo` plugin will prioritize these values.
+To control SEO on a per-page basis, add a nested `seo` object to your page's frontmatter. This keeps all SEO-related settings organized and prevents conflicts with other frontmatter keys.
 
 ```yaml
 ---
 title: "Advanced Widget Configuration"
-description: "A detailed guide on configuring advanced settings for the Super Widget, including performance tuning and security options."
-image: "/assets/images/widgets/super-widget-social.jpg" # Used for og:image and twitter:image
-ogType: "article" # Specify Open Graph type, e.g., article, website
-twitterCreator: "@widgetMaster"
-keywords: "widget, configuration, advanced, performance, security" # Optional, some argue keywords meta tag is less relevant now
-permalink: "https://example.com/docs/widgets/advanced-configuration" # Canonical URL
+description: "A detailed guide on configuring advanced settings for the Super Widget."
+seo:
+  description: "A more specific SEO description for search engines, overriding the main description if needed."
+  image: "/assets/images/widgets/super-widget-social.jpg"
+  ogType: "article"
+  twitterCard: "summary_large_image"
+  twitterCreator: "@widgetMaster"
+  keywords: ["widget", "configuration", "advanced", "performance"]
+  permalink: "https://example.com/docs/widgets/advanced-configuration"
+  noindex: false
 ---
-
-# Advanced Widget Configuration
-...
 ```
-Supported frontmatter fields that the `seo` plugin may look for:
-*   `title` (Used for `og:title`, `twitter:title`)
-*   `description` (Used for `<meta name="description">`, `og:description`, `twitter:description`)
-*   `image` or `ogImage` (Used for `og:image`, `twitter:image`)
-*   `ogType` (Overrides default `og:type`)
-*   `twitterCard` (Overrides `config.seo.twitter.cardType` for this page)
-*   `twitterCreator` (Overrides `config.seo.twitter.creatorUsername` for this page)
-*   `noindex` (Boolean): If `true`, adds `<meta name="robots" content="noindex">` to discourage search engines from indexing this specific page.
-*   `permalink` (String): If provided, sets a canonical URL for the page. This is useful when you have duplicate content across different URLs and want to indicate the preferred version. If not specified, the page's URL will be used as the canonical URL. (Note: `canonicalUrl` is also supported for backward compatibility)
 
-By configuring the `seo` plugin and utilizing frontmatter effectively, you can significantly improve how your documentation is presented and discovered online.
+::: callout info Backward Compatibility
+For backward compatibility, the plugin will still recognize top-level SEO fields like `image`, `ogType`, etc. However, the nested `seo:` structure is the recommended approach.
+:::
+
+### Supported Frontmatter Fields
+
+All fields should be placed inside the `seo:` object.
+
+*   `description` (String): Overrides the main page description for SEO meta tags.
+*   `image` or `ogImage` (String): Path to an image for `og:image` and `twitter:image`.
+*   `ogType` (String): Overrides the default Open Graph type (e.g., `article`, `website`).
+*   `twitterCard` (String): Overrides the default Twitter card type for this page.
+*   `twitterCreator` (String): The Twitter @username of the page's author.
+*   `keywords` (Array of Strings or String): Keywords for the `<meta name="keywords">` tag.
+*   `permalink` or `canonicalUrl` (String): The canonical URL for the page.
+*   `noindex` (Boolean): If `true`, adds `<meta name="robots" content="noindex">` to discourage search engines from indexing this page.
+
+## Structured Data (LD+JSON)
+
+The SEO plugin can generate [Structured Data](https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data) (LD+JSON), which can enable rich search results. This feature is enabled per-page in your frontmatter.
+
+### Enabling Structured Data
+
+To generate a default LD+JSON block, add `ldJson: true` inside your `seo` frontmatter object.
+
+```yaml
+---
+title: "My Article"
+description: "An article about something important."
+seo:
+  ldJson: true
+---
+```
+
+This generates a basic `Article` schema using your page's metadata.
+
+### Customizing Structured Data
+
+For more control, provide an object to `ldJson`. This object will be merged with the default data, allowing you to add or override any properties.
+
+**Example: Customizing schema type and adding an author**
+
+```yaml
+---
+title: "Advanced Widget Configuration"
+description: "A detailed guide on configuring advanced settings for the Super Widget."
+seo:
+  image: "/assets/images/widgets/super-widget-social.jpg"
+  ldJson:
+    "@type": "TechArticle"
+    author:
+      "@type": "Person"
+      name: "Jane Doe"
+      url: "https://example.com/authors/jane-doe"
+    datePublished: "2024-01-15"
+    review:
+      "@type": "Review"
+      reviewRating:
+        "@type": "Rating"
+        ratingValue: "5"
+        bestRating: "5"
+      author:
+        "@type": "Person"
+        name: "John Smith"
+---
+```
+
+In this example, the schema type is changed to `TechArticle`, and detailed `author`, `datePublished`, and `review` information is added, giving search engines a much richer understanding of your content.

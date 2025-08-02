@@ -9,30 +9,28 @@ components:
   theme: false
   themeMode: true
   scripts: false
+  mainScripts: false
+  lightbox: false
+seo:
+  ldJson:
+    "@context": "https://schema.org"
+    "@type": "SoftwareApplication"
+    name: "docmd"
+    operatingSystem: "Any"
+    applicationCategory: "DeveloperApplication"
+    url: "https://docmd.mgks.dev"
+    description: "docmd is a Node.js-powered static site generator for Markdown documentation. It features custom containers, multiple themes, and zero client-side bloat."
+    creator:
+      "@type": "Person"
+      name: "Ghazi"
+      sameAs:
+        - "https://github.com/mgks"
+        - "https://mgks.dev"
+    codeRepository: "https://github.com/mgks/docmd"
+    releaseNotes: "See GitHub Releases for changelog"
+    programmingLanguage: "Node.js"
+    installUrl: "https://www.npmjs.com/package/@mgks/docmd"
 customHead: |
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Docmd",
-      "operatingSystem": "Any",
-      "applicationCategory": "DeveloperApplication",
-      "url": "https://docmd.mgks.dev",
-      "description": "Docmd is a Node.js-powered static site generator for Markdown documentation. It features custom containers, multiple themes, and zero client-side bloat.",
-      "creator": {
-        "@type": "Person",
-        "name": "Ghazi",
-        "sameAs": [
-          "https://github.com/mgks",
-          "https://mgks.dev"
-        ]
-      },
-      "codeRepository": "https://github.com/mgks/docmd",
-      "releaseNotes": "See GitHub Releases for changelog"
-      "programmingLanguage": "Node.js",
-      "installUrl": "https://www.npmjs.com/package/@mgks/docmd"
-    }
-  </script>
   <link rel="stylesheet" href="/assets/css/welcome.css">
   <script>
     function toggleTheme() {
@@ -40,6 +38,19 @@ customHead: |
       const newTheme = currentTheme === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', newTheme);
       localStorage.setItem('docmd-theme', newTheme);
+    }
+    
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const button = event.target.closest('.copy-button');
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"></polyline></svg>';
+        button.style.color = '#10b981';
+        setTimeout(() => {
+          button.innerHTML = originalHTML;
+          button.style.color = '';
+        }, 2000);
+      });
     }
   </script>
 ---
@@ -102,6 +113,18 @@ customHead: |
           <strong>Highly Customizable</strong>
           Extend with plugins & containers
         </div>
+      </div>
+    </div>
+
+    <div class="install-section">
+      <div class="install-code">
+        <pre><code>npm install @mgks/docmd</code></pre>
+        <button class="copy-button" onclick="copyToClipboard('npm install @mgks/docmd')" aria-label="Copy npm install command">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+        </button>
       </div>
     </div>
 
