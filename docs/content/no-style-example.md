@@ -8,6 +8,8 @@ components:
   css: true
   theme: true
   scripts: true
+  mainScripts: true
+copyCode: true
 customHead: |
   <style>
     body {

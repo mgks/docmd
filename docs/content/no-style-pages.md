@@ -17,7 +17,9 @@ docmd offers a "no-style" page format that gives you maximum flexibility to crea
 
 To create a no-style page, add `noStyle: true` to your page's frontmatter. This tells docmd to use a special template that only includes the components you explicitly request.
 
-By default, a no-style page will render just your content with minimal HTML structure. You can then selectively enable specific components via the `components` object in frontmatter.
+By default, a no-style page will render just your content with minimal HTML structure. **All components are disabled by default** and must be explicitly enabled via the `components` object in frontmatter.
+
+> **Note:** This behavior changed in v0.2.0. Previously, some components were enabled by default and had to be disabled. Now all components are opt-in only.
 
 ## HTML Support
 
@@ -36,7 +38,7 @@ description: "Welcome to my project"
 noStyle: true
 components:
   meta: true  # Include meta tags, title, description
-  css: false  # Don't include default CSS
+  # css: false  # Not needed - CSS is disabled by default
 ---
 
 <div style="text-align: center; padding: 50px;">
@@ -48,32 +50,35 @@ components:
 
 ## Available Components
 
-You can control exactly which components are included in your page by setting them to `true` or `false` in the `components` object:
+You can control exactly which components are included in your page by setting them to `true` in the `components` object. **All components are disabled by default** and must be explicitly enabled:
 
-| Component | Description | Default |
-|-----------|-------------|---------|
-| `meta` | Meta tags, title, description | `true` |
-| `siteTitle` | Include site title after page title | `true` |
-| `favicon` | Include favicon | `true` |
-| `css` | Include main CSS | `false` |
-| `highlight` | Include syntax highlighting CSS | `false` |
-| `theme` | Include theme-specific CSS | `false` |
-| `customCss` | Include custom CSS files from config | `false` |
-| `pluginStyles` | Include plugin-specific CSS | `false` |
-| `pluginHeadScripts` | Include plugin scripts in head | `false` |
-| `layout` | Use main content layout (`true`, `'full'`, or `false`) | `false` |
-| `sidebar` | Include sidebar | `false` |
-| `header` | Include page header | `false` |
-| `pageTitle` | Include page title in header | `false` |
-| `footer` | Include page footer | `false` |
-| `branding` | Include docmd branding in footer | `false` |
-| `logo` | Include logo in sidebar | `false` |
-| `navigation` | Include navigation in sidebar | `false` |
-| `themeToggle` | Include theme toggle button | `false` |
-| `toc` | Include table of contents | `false` |
-| `scripts` | Include all scripts | `false` |
-| `customJs` | Include custom JS files from config | `false` |
-| `pluginBodyScripts` | Include plugin scripts at end of body | `false` |
+| Component | Description | Required Setting |
+|-----------|-------------|------------------|
+| `meta` | Meta tags, title, description | `meta: true` |
+| `siteTitle` | Include site title after page title | `siteTitle: true` |
+| `favicon` | Include favicon | `favicon: true` |
+| `css` | Include main CSS | `css: true` |
+| `highlight` | Include syntax highlighting CSS | `highlight: true` |
+| `theme` | Include theme-specific CSS | `theme: true` |
+| `themeMode` | Include theme mode toggle functionality | `themeMode: true` |
+| `customCss` | Include custom CSS files from config | `customCss: true` |
+| `pluginStyles` | Include plugin-specific CSS | `pluginStyles: true` |
+| `pluginHeadScripts` | Include plugin scripts in head | `pluginHeadScripts: true` |
+| `layout` | Use main content layout (`true`, `'full'`, or `false`) | `layout: true` or `layout: 'full'` |
+| `sidebar` | Include sidebar | `sidebar: true` |
+| `header` | Include page header | `header: true` |
+| `pageTitle` | Include page title in header | `pageTitle: true` |
+| `footer` | Include page footer | `footer: true` |
+| `branding` | Include docmd branding in footer | `branding: true` |
+| `logo` | Include logo in sidebar | `logo: true` |
+| `navigation` | Include navigation in sidebar | `navigation: true` |
+| `themeToggle` | Include theme toggle button | `themeToggle: true` |
+| `toc` | Include table of contents | `toc: true` |
+| `scripts` | Enable script loading (required for other script components) | `scripts: true` |
+| `mainScripts` | Include main JavaScript (copy code, theme toggle, etc.) | `mainScripts: true` |
+| `lightbox` | Include image lightbox functionality | `lightbox: true` |
+| `customJs` | Include custom JS files from config | `customJs: true` |
+| `pluginBodyScripts` | Include plugin scripts at end of body | `pluginBodyScripts: true` |
 
 ## Layout Options
 
@@ -82,6 +87,22 @@ The `components.layout` property has three possible values:
 - `false` (default): No layout wrapper, just your raw content
 - `true`: Use the main content layout with optional header and footer
 - `'full'`: Same as `true`, a full layout with content area
+
+## Script Components
+
+Script components work in a hierarchical manner:
+
+1. **`scripts: true`** - Enables script loading (required for all other script components)
+2. **`mainScripts: true`** - Includes main JavaScript functionality (copy code, theme toggle, etc.)
+3. **`lightbox: true`** - Includes image lightbox functionality (requires `mainScripts: true`)
+
+**Example:**
+```yaml
+components:
+  scripts: true      # Enable script loading
+  mainScripts: true  # Include main JavaScript
+  lightbox: true     # Include lightbox (requires mainScripts)
+```
 
 ## Sidebar Option
 
@@ -124,12 +145,15 @@ components:
   favicon: true
   css: true
   theme: true
+  themeMode: true
   layout: true
   header: true
   pageTitle: true
   footer: true
   branding: true
   scripts: true
+  mainScripts: true
+  lightbox: true
 customHead: |
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
