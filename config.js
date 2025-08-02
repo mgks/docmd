@@ -1,4 +1,6 @@
-// config.js (for docmd's own documentation)
+// Source file from the docmd project — https://github.com/mgks/docmd
+
+// Configuration for the docmd project's own documentation
 module.exports = {
   // Core Site Metadata
   siteTitle: 'docmd',
@@ -26,10 +28,11 @@ module.exports = {
 
   // Theme Configuration
   theme: {
-    name: 'sky',            // Themes: 'default', 'sky'
+    name: 'sky',            // Themes: 'default', 'sky', 'retro', 'ruby'
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
-    positionMode: 'top', // 'top' or 'bottom' for the theme toggle
+    positionMode: 'top',    // 'top' or 'bottom' for the theme toggle
+    codeHighlight: true,   // Enable/disable codeblock highlighting and import of highlight.js
     customCss: [            // Array of paths to custom CSS files
       // '/assets/css/custom.css', // Custom TOC styles
     ],
@@ -42,13 +45,15 @@ module.exports = {
 
   // Content Processing
   autoTitleFromH1: true, // Set to true to automatically use the first H1 as page title
+  copyCode: true, // Enable/disable the copy code button on code blocks
 
   // Plugins Configuration (Object format)
   // Plugins are configured here. docmd will look for these keys.
   plugins: {
     // SEO Plugin Configuration
-    // Most SEO data is pulled from page frontmatter (title, description, image, etc.)
-    // These are fallbacks or site-wide settings.
+    // These are site-wide fallbacks. For detailed per-page SEO controls,
+    // including structured data (LD+JSON), use the `seo` key in your page's frontmatter.
+    // See the SEO plugin documentation for all available frontmatter options.
     seo: {
       // Default meta description if a page doesn't have one in its frontmatter
       defaultDescription: 'docmd is a Node.js command-line tool for generating beautiful, lightweight static documentation sites from Markdown files.',
