@@ -1,5 +1,6 @@
-// src/core/icon-renderer.js
-const lucideStatic = require('lucide-static'); // Access the raw icon data
+// Source file from the docmd project — https://github.com/mgks/docmd
+
+const lucideStatic = require('lucide-static');
 
 // On first load, log debug information about a specific icon to understand its structure
 let debugRun = false;

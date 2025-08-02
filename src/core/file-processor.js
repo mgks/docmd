@@ -1,9 +1,9 @@
-// src/core/file-processor.js
+// Source file from the docmd project — https://github.com/mgks/docmd
+
 const fs = require('fs-extra');
 const MarkdownIt = require('markdown-it');
 const matter = require('gray-matter');
 const hljs = require('highlight.js');
-const container = require('markdown-it-container');
 const attrs = require('markdown-it-attrs');
 const path = require('path');
 const markdown_it_footnote = require('markdown-it-footnote');
@@ -23,59 +23,79 @@ function formatPathForDisplay(absolutePath) {
   return relativePath;
 }
 
-// Initialize MarkdownIt with plugins and options.
-const md = new MarkdownIt({
-  html: true,
-  linkify: true,
-  typographer: true,
-  breaks: true,
-  highlight: function (str, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return '<pre class="hljs"><code>' +
-               hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
-               '</code></pre>';
-      } catch (e) { console.error(`Error highlighting language ${lang}:`, e); }
-    }
-    // For non-language code blocks, preserve the original content without processing
-    return '<pre class="hljs"><code>' + str + '</code></pre>';
+function createMarkdownItInstance(config) {
+  const mdOptions = {
+    html: true,
+    linkify: true,
+    typographer: true,
+    breaks: true,
+  };
+   
+  // Conditionally enable highlighting
+  if (config.theme?.codeHighlight !== false) {
+    mdOptions.highlight = function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
+        } catch (e) { console.error(`Highlighting error for lang ${lang}:`, e); }
+      }
+      return `<pre class="hljs"><code>${new MarkdownIt().utils.escapeHtml(str)}</code></pre>`;
+    };
   }
-});
 
+  const md = new MarkdownIt(mdOptions);
 
+  // --- Attach all plugins and rules to this instance ---
+  md.use(attrs, { leftDelimiter: '{', rightDelimiter: '}' });
+  md.use(markdown_it_footnote);
+  md.use(markdown_it_task_lists);
+  md.use(markdown_it_abbr);
+  md.use(markdown_it_deflist);
 
-// Use standard markdown-it plugins for extended syntax support.
-md.use(attrs, { leftDelimiter: '{', rightDelimiter: '}' });
-md.use(markdown_it_footnote);
-md.use(markdown_it_task_lists);
-md.use(markdown_it_abbr);
-md.use(markdown_it_deflist);
+  // Register renderers for all containers
+  Object.keys(containers).forEach(containerName => {
+    const container = containers[containerName];
+    md.renderer.rules[`container_${containerName}_open`] = container.render;
+    md.renderer.rules[`container_${containerName}_close`] = container.render;
+  });
 
-// Override the default fence renderer to preserve original content for all code blocks
-const defaultFenceRenderer = md.renderer.rules.fence;
-md.renderer.rules.fence = function(tokens, idx, options, env, self) {
-  const token = tokens[idx];
+  // Register the enhanced rules
+  md.block.ruler.before('fence', 'steps_container', stepsContainerRule, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
+  md.block.ruler.before('fence', 'enhanced_tabs', enhancedTabsRule, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
+  md.block.ruler.before('paragraph', 'advanced_container', advancedContainerRule, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
+
+  // Register all custom renderers
+  md.renderer.rules.ordered_list_open = customOrderedListOpenRenderer;
+  md.renderer.rules.list_item_open = customListItemOpenRenderer;
+  md.renderer.rules.image = customImageRenderer;
   
-  // Escape HTML entities to prevent rendering
-  const escapedContent = token.content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  // Register tabs renderers
+  md.renderer.rules.tabs_open = tabsOpenRenderer;
+  md.renderer.rules.tabs_nav_open = tabsNavOpenRenderer;
+  md.renderer.rules.tabs_nav_close = tabsNavCloseRenderer;
+  md.renderer.rules.tabs_nav_item = tabsNavItemRenderer;
+  md.renderer.rules.tabs_content_open = tabsContentOpenRenderer;
+  md.renderer.rules.tabs_content_close = tabsContentCloseRenderer;
+  md.renderer.rules.tab_pane_open = tabPaneOpenRenderer;
+  md.renderer.rules.tab_pane_close = tabPaneCloseRenderer;
+  md.renderer.rules.tabs_close = tabsCloseRenderer;
   
-  // If no language is specified, preserve the original content without processing
-  if (!token.info || token.info.trim() === '') {
-    return '<pre class="hljs"><code>' + escapedContent + '</code></pre>';
-  }
+  // Register heading ID plugin
+  md.use(headingIdPlugin);
   
-  // For all language blocks, preserve the original content to avoid processing HTML or other content
-  // This ensures code blocks are treated as literal text only
-  const language = token.info.trim();
-  return '<pre class="hljs"><code class="language-' + language + '">' + escapedContent + '</code></pre>';
-};
+  // Register standalone closing rule
+  md.block.ruler.before('paragraph', 'standalone_closing', standaloneClosingRule, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  });
 
-
+  return md;
+}
 
 // ===================================================================
 // --- ADVANCED NESTED CONTAINER SYSTEM ---
@@ -452,7 +472,7 @@ function enhancedTabsRule(state, startLine, endLine, silent) {
                      '</code></pre>';
             } catch (e) { console.error(`Error highlighting language ${lang}:`, e); }
           }
-          return '<pre class="hljs"><code>' + str + '</code></pre>';
+          return '<pre class="hljs"><code>' + MarkdownIt.utils.escapeHtml(str) + '</code></pre>';
         }
       });
       
@@ -481,6 +501,30 @@ function enhancedTabsRule(state, startLine, endLine, silent) {
         alt: ['paragraph', 'reference', 'blockquote', 'list']
       });
       
+      // Register custom renderers for the tab markdown instance
+      tabMd.renderer.rules.ordered_list_open = customOrderedListOpenRenderer;
+      tabMd.renderer.rules.list_item_open = customListItemOpenRenderer;
+      tabMd.renderer.rules.image = customImageRenderer;
+      
+      // Register tabs renderers for the tab markdown instance
+      tabMd.renderer.rules.tabs_open = tabsOpenRenderer;
+      tabMd.renderer.rules.tabs_nav_open = tabsNavOpenRenderer;
+      tabMd.renderer.rules.tabs_nav_close = tabsNavCloseRenderer;
+      tabMd.renderer.rules.tabs_nav_item = tabsNavItemRenderer;
+      tabMd.renderer.rules.tabs_content_open = tabsContentOpenRenderer;
+      tabMd.renderer.rules.tabs_content_close = tabsContentCloseRenderer;
+      tabMd.renderer.rules.tab_pane_open = tabPaneOpenRenderer;
+      tabMd.renderer.rules.tab_pane_close = tabPaneCloseRenderer;
+      tabMd.renderer.rules.tabs_close = tabsCloseRenderer;
+      
+      // Register heading ID plugin for the tab markdown instance
+      tabMd.use(headingIdPlugin);
+      
+      // Register standalone closing rule for the tab markdown instance
+      tabMd.block.ruler.before('paragraph', 'standalone_closing', standaloneClosingRule, {
+        alt: ['paragraph', 'reference', 'blockquote', 'list']
+      });
+      
       // Render the tab content
       const renderedContent = tabMd.render(tabContent);
       const htmlToken = state.push('html_block', '', 0);
@@ -495,19 +539,8 @@ function enhancedTabsRule(state, startLine, endLine, silent) {
   return true;
 }
 
-// Register the enhanced rules
-md.block.ruler.before('fence', 'steps_container', stepsContainerRule, {
-  alt: ['paragraph', 'reference', 'blockquote', 'list']
-});
-md.block.ruler.before('fence', 'enhanced_tabs', enhancedTabsRule, {
-  alt: ['paragraph', 'reference', 'blockquote', 'list']
-});
-md.block.ruler.before('paragraph', 'advanced_container', advancedContainerRule, {
-  alt: ['paragraph', 'reference', 'blockquote', 'list']
-});
-
 // Add a rule to handle standalone closing tags
-md.block.ruler.before('paragraph', 'standalone_closing', (state, startLine, endLine, silent) => {
+const standaloneClosingRule = (state, startLine, endLine, silent) => {
   const start = state.bMarks[startLine] + state.tShift[startLine];
   const max = state.eMarks[startLine];
   const lineContent = state.src.slice(start, max).trim();
@@ -520,19 +553,10 @@ md.block.ruler.before('paragraph', 'standalone_closing', (state, startLine, endL
   }
   
   return false;
-}, {
-  alt: ['paragraph', 'reference', 'blockquote', 'list']
-});
-
-// Register renderers for all containers
-Object.keys(containers).forEach(containerName => {
-  const container = containers[containerName];
-  md.renderer.rules[`container_${containerName}_open`] = container.render;
-  md.renderer.rules[`container_${containerName}_close`] = container.render;
-});
+};
 
 // Custom renderer for ordered lists in steps containers
-md.renderer.rules.ordered_list_open = function(tokens, idx, options, env, self) {
+const customOrderedListOpenRenderer = function(tokens, idx, options, env, self) {
   const token = tokens[idx];
   // Check if we're inside a steps container by looking at the context
   let isInSteps = false;
@@ -561,7 +585,7 @@ md.renderer.rules.ordered_list_open = function(tokens, idx, options, env, self) 
 };
 
 // Custom renderer for list items in steps containers
-md.renderer.rules.list_item_open = function(tokens, idx, options, env, self) {
+const customListItemOpenRenderer = function(tokens, idx, options, env, self) {
   const token = tokens[idx];
   // Check if we're inside a steps container and this is a direct child
   let isInStepsList = false;
@@ -596,34 +620,34 @@ md.renderer.rules.list_item_open = function(tokens, idx, options, env, self) {
 };
 
 // Enhanced tabs renderers
-md.renderer.rules.tabs_open = (tokens, idx) => {
+const tabsOpenRenderer = (tokens, idx) => {
   const token = tokens[idx];
   return `<div class="${token.attrs.map(attr => attr[1]).join(' ')}">`;
 };
 
-md.renderer.rules.tabs_nav_open = () => '<div class="docmd-tabs-nav">';
-md.renderer.rules.tabs_nav_close = () => '</div>';
+const tabsNavOpenRenderer = () => '<div class="docmd-tabs-nav">';
+const tabsNavCloseRenderer = () => '</div>';
 
-md.renderer.rules.tabs_nav_item = (tokens, idx) => {
+const tabsNavItemRenderer = (tokens, idx) => {
   const token = tokens[idx];
   return `<div class="${token.attrs[0][1]}">${token.content}</div>`;
 };
 
-md.renderer.rules.tabs_content_open = () => '<div class="docmd-tabs-content">';
-md.renderer.rules.tabs_content_close = () => '</div>';
+const tabsContentOpenRenderer = () => '<div class="docmd-tabs-content">';
+const tabsContentCloseRenderer = () => '</div>';
 
-md.renderer.rules.tab_pane_open = (tokens, idx) => {
+const tabPaneOpenRenderer = (tokens, idx) => {
   const token = tokens[idx];
   return `<div class="${token.attrs[0][1]}">`;
 };
 
-md.renderer.rules.tab_pane_close = () => '</div>';
+const tabPaneCloseRenderer = () => '</div>';
 
-md.renderer.rules.tabs_close = () => '</div>';
+const tabsCloseRenderer = () => '</div>';
 
 // Override the default image renderer to properly handle attributes like {.class}.
-const defaultImageRenderer = md.renderer.rules.image;
-md.renderer.rules.image = function(tokens, idx, options, env, self) {
+const customImageRenderer = function(tokens, idx, options, env, self) {
+  const defaultImageRenderer = function(tokens, idx, options, env, self) { return self.renderToken(tokens, idx, options); };
   const renderedImage = defaultImageRenderer(tokens, idx, options, env, self);
   const nextToken = tokens[idx + 1];
   if (nextToken && nextToken.type === 'attrs_block') {
@@ -635,11 +659,11 @@ md.renderer.rules.image = function(tokens, idx, options, env, self) {
 };
 
 // Add IDs to headings for anchor links, used by the Table of Contents.
-md.use((md) => {
-  const defaultRender = md.renderer.rules.heading_open || function(tokens, idx, options, env, self) {
+const headingIdPlugin = (md) => {
+  const defaultRender = function(tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
   };
-  md.renderer.rules.heading_open = function(tokens, idx, options, env, self) {
+  const headingOpenRenderer = function(tokens, idx, options, env, self) {
     const token = tokens[idx];
     const contentToken = tokens[idx + 1];
     if (contentToken && contentToken.type === 'inline') {
@@ -648,8 +672,8 @@ md.use((md) => {
       if (id) { token.attrSet('id', id); }
     }
     return defaultRender(tokens, idx, options, env, self);
-  };
-});
+  }
+}
 
 
 // ===================================================================
@@ -685,13 +709,21 @@ function extractHeadingsFromHtml(htmlContent) {
   return headings;
 }
 
-async function processMarkdownFile(filePath, options = { isDev: false }, config) {
+async function processMarkdownFile(filePath, md, config) {
   const rawContent = await fs.readFile(filePath, 'utf8');
-  let { data: frontmatter, content: markdownContent } = matter(rawContent);
+  let frontmatter, markdownContent;
 
-  // Handle autoTitleFromH1
+  try {
+    ({ data: frontmatter, content: markdownContent } = matter(rawContent));
+  } catch (e) {
+    console.error(`❌ Error parsing frontmatter in ${formatPathForDisplay(filePath)}:`);
+    console.error(`   ${e.message}`);
+    console.error('   This page will be skipped. Please fix the YAML syntax.');
+    return null;
+  }
+
   if (!frontmatter.title) {
-    if (config.autoTitleFromH1 !== false) { // Default to true
+    if (config.autoTitleFromH1 !== false) {
         const h1Match = markdownContent.match(/^#\s+(.*)/m);
         if (h1Match && h1Match[1]) {
             frontmatter.title = h1Match[1].trim();
@@ -702,11 +734,12 @@ async function processMarkdownFile(filePath, options = { isDev: false }, config)
     }
   }
 
-  // For no-style pages, skip markdown processing and treat content as raw HTML
   let htmlContent, headings;
   if (frontmatter.noStyle === true) {
-    htmlContent = markdownContent; // Use raw content as HTML
-    headings = []; // No headings extraction for no-style pages
+    // For noStyle pages, NO markdown processing at all
+    // Pass the raw content directly as-is
+    htmlContent = markdownContent;
+    headings = [];
   } else {
     htmlContent = md.render(markdownContent);
     headings = extractHeadingsFromHtml(htmlContent);
@@ -735,7 +768,7 @@ async function findMarkdownFiles(dir) {
 
 module.exports = {
   processMarkdownFile,
-  mdInstance: md,
+  createMarkdownItInstance,
   extractHeadingsFromHtml,
   findMarkdownFiles
 };

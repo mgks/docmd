@@ -1,3 +1,5 @@
+// Source file from the docmd project — https://github.com/mgks/docmd
+
 const path = require('path');
 const fs = require('fs-extra');
 
