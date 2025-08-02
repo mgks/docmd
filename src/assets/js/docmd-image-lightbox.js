@@ -1,4 +1,8 @@
-// docmd-image-lightbox.js - Simple lightbox implementation for docmd images
+// Source file from the docmd project — https://github.com/mgks/docmd
+
+/* 
+ * A simple lightbox implementation for docmd images
+ */
 
 document.addEventListener('DOMContentLoaded', function() {
   // Create lightbox elements
