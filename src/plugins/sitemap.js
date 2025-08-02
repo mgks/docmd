@@ -1,3 +1,9 @@
+// Source file from the docmd project — https://github.com/mgks/docmd
+
+/*
+ * Generate sitemap.xml in the output directory root
+ */
+
 const fs = require('fs-extra');
 const path = require('path');
 

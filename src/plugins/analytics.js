@@ -1,4 +1,8 @@
-// src/plugins/analytics.js
+// Source file from the docmd project — https://github.com/mgks/docmd
+
+/*
+ * Generate analytics scripts for a page
+ */
 
 function generateAnalyticsScripts(config, pageData) {
     let headScriptsHtml = '';
