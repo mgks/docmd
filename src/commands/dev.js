@@ -1,4 +1,5 @@
-// src/commands/dev.js
+// Source file from the docmd project — https://github.com/mgks/docmd
+
 const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');

@@ -1,13 +1,16 @@
-// src/commands/build.js
+// Source file from the docmd project — https://github.com/mgks/docmd
+
 const fs = require('fs-extra');
 const path = require('path');
 const { loadConfig } = require('../core/config-loader');
-const { processMarkdownFile, findMarkdownFiles } = require('../core/file-processor');
+const { createMarkdownItInstance, processMarkdownFile, findMarkdownFiles } = require('../core/file-processor');
 const { generateHtmlPage, generateNavigationHtml } = require('../core/html-generator');
-const { renderIcon, clearWarnedIcons } = require('../core/icon-renderer'); // Update import
-const { generateSitemap } = require('../plugins/sitemap'); // Import our sitemap plugin
-const { version } = require('../../package.json'); // Import package version
-const matter = require('gray-matter'); // Use gray-matter instead of front-matter
+const { renderIcon, clearWarnedIcons } = require('../core/icon-renderer');
+const { generateSitemap } = require('../plugins/sitemap');
+const { version } = require('../../package.json');
+const matter = require('gray-matter');
+const MarkdownIt = require('markdown-it');
+const hljs = require('highlight.js');
 
 // Debug function to log navigation information
 function logNavigationPaths(pagePath, navPath, normalizedPath) {
@@ -55,7 +58,8 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   const CWD = process.cwd();
   const SRC_DIR = path.resolve(CWD, config.srcDir);
   const OUTPUT_DIR = path.resolve(CWD, config.outputDir);
-  const USER_ASSETS_DIR = path.resolve(CWD, 'assets'); // User's custom assets directory
+  const USER_ASSETS_DIR = path.resolve(CWD, 'assets');
+  const md = createMarkdownItInstance(config);
 
   if (!await fs.pathExists(SRC_DIR)) {
     throw new Error(`Source directory not found: ${formatPathForDisplay(SRC_DIR, CWD)}`);
@@ -171,38 +175,44 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   // Array to collect information about all processed pages for sitemap
   const processedPages = [];
 
+  // Set to track processed files for dev mode
+  const processedFiles = new Set();
+
   // Find all Markdown files in the source directory
   const markdownFiles = await findMarkdownFiles(SRC_DIR);
   if (!options.isDev) {
     console.log(`📄 Found ${markdownFiles.length} markdown files.`);
   }
-  
+
   // Process each Markdown file
-  const processedFiles = new Set(); // Track processed files to avoid double processing
-  
   for (const filePath of markdownFiles) {
     try {
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      const { data: frontmatter, content } = matter(fileContent);
-      
-      // Skip this file if it's already been processed and noDoubleProcessing is true
       const relativePath = path.relative(SRC_DIR, filePath);
+      
+      // Skip file if already processed in this dev build cycle
       if (options.noDoubleProcessing && processedFiles.has(relativePath)) {
         continue;
       }
       processedFiles.add(relativePath);
+
+      // Pass the md instance to the processor
+      const processedData = await processMarkdownFile(filePath, md, config);
+
+      // If processing failed (e.g., bad frontmatter), skip this file.
+      if (!processedData) {
+        continue;
+      }
       
-      // Pretty URL handling - properly handle index.md files in subfolders
+      // Destructure the valid data
+      const { frontmatter: pageFrontmatter, htmlContent, headings } = processedData;
+      
+      const isIndexFile = path.basename(relativePath) === 'index.md';
+      
       let outputHtmlPath;
-      const fileName = path.basename(relativePath);
-      const isIndexFile = fileName === 'index.md';
-      
       if (isIndexFile) {
-        // For any index.md file (in root or subfolder), convert to index.html in the same folder
         const dirPath = path.dirname(relativePath);
         outputHtmlPath = path.join(dirPath, 'index.html');
       } else {
-        // For non-index files, create a folder with index.html
         outputHtmlPath = relativePath.replace(/\.md$/, '/index.html');
       }
 
@@ -211,50 +221,25 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       const depth = outputHtmlPath.split(path.sep).length - 1;
       const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
 
-      const { frontmatter: pageFrontmatter, htmlContent, headings } = await processMarkdownFile(filePath, { isDev: options.isDev }, config);
-      
-      // Special handling for no-style pages
-      let finalHtmlContent = htmlContent;
-      if (pageFrontmatter.noStyle === true) {
-        // For no-style pages, ensure the HTML content is not escaped
-        // This is critical for the landing page and custom pages
-        finalHtmlContent = htmlContent;
-        
-        // Log a message for debugging - but only for non-dev mode or verbose logging
-        if (!options.isDev) {
-          console.log(`📄 Processing no-style page: ${path.relative(CWD, filePath)}`);
-        }
-      }
-
-      // Get the URL path for navigation
       let currentPagePathForNav;
       let normalizedPath;
       
       if (isIndexFile) {
-        // For index.md files, the nav path should be the directory itself with trailing slash
         const dirPath = path.dirname(relativePath);
         if (dirPath === '.') {
-          // Root index.md
           currentPagePathForNav = 'index.html';
           normalizedPath = '/';
         } else {
-          // Subfolder index.md - simple format: directory-name/
           currentPagePathForNav = dirPath + '/'; 
           normalizedPath = '/' + dirPath;
         }
       } else {
-        // For non-index files, the path should be the file name with trailing slash
         const pathWithoutExt = relativePath.replace(/\.md$/, '');
         currentPagePathForNav = pathWithoutExt + '/';
         normalizedPath = '/' + pathWithoutExt;
       }
       
-      // Convert Windows backslashes to forward slashes for web paths
       currentPagePathForNav = currentPagePathForNav.replace(/\\/g, '/');
-
-      // Log navigation paths for debugging
-      // Uncomment this line when debugging:
-      // logNavigationPaths(filePath, currentPagePathForNav, normalizedPath);
 
       const navigationHtml = await generateNavigationHtml(
         config.navigation,
@@ -263,123 +248,80 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
         config
       );
 
-      // Find current page in navigation for prev/next links
       let prevPage = null;
       let nextPage = null;
       let currentPageIndex = -1;
       
-      // Extract a flattened navigation array for prev/next links
       const flatNavigation = [];
       
-      // Helper function to create a normalized path for navigation matching
       function createNormalizedPath(item) {
         if (!item.path) return null;
         return item.path.startsWith('/') ? item.path : '/' + item.path;
       }
       
-      function extractNavigationItems(items, parentPath = '') {
+      function extractNavigationItems(items) {
         if (!items || !Array.isArray(items)) return;
         
         for (const item of items) {
-          if (item.external) continue; // Skip external links
+          if (item.external) continue;
           
-          // Only include items with paths (not section headers without links)
           if (item.path) {
-            // Normalize path - ensure leading slash
-            let normalizedPath = createNormalizedPath(item);
-            
-            // For parent items with children, ensure path ends with / (folders)
-            // This helps with matching in the navigation template
-            if (item.children && item.children.length > 0) {
-              // If path from config doesn't end with slash, add it
-              if (!item.path.endsWith('/') && !normalizedPath.endsWith('/')) {
-                normalizedPath += '/';
-              }
+            let normalizedItemPath = createNormalizedPath(item);
+            if (item.children && !normalizedItemPath.endsWith('/')) {
+              normalizedItemPath += '/';
             }
-            
             flatNavigation.push({
               title: item.title,
-              path: normalizedPath,
-              fullPath: item.path, // Original path as defined in config
-              isParent: item.children && item.children.length > 0 // Mark if it's a parent with children
+              path: normalizedItemPath,
             });
           }
           
-          // Process children (depth first to maintain document outline order)
           if (item.children && Array.isArray(item.children)) {
-            extractNavigationItems(item.children, item.path || parentPath);
+            extractNavigationItems(item.children);
           }
         }
       }
       
-      // Extract navigation items into flat array
       extractNavigationItems(config.navigation);
       
-      // Find the current page in flatNavigation
       currentPageIndex = flatNavigation.findIndex(item => {
-        // Direct path match
-        if (item.path === normalizedPath) {
-          return true;
-        }
-        
-        // Special handling for parent folders
+        if (item.path === normalizedPath) return true;
         if (isIndexFile && item.path.endsWith('/')) {
-          // Remove trailing slash for comparison
-          const itemPathWithoutSlash = item.path.slice(0, -1);
-          return itemPathWithoutSlash === normalizedPath;
+          return item.path.slice(0, -1) === normalizedPath;
         }
-        
         return false;
       });
       
       if (currentPageIndex >= 0) {
-        // Get previous and next pages if they exist
-        if (currentPageIndex > 0) {
-          prevPage = flatNavigation[currentPageIndex - 1];
-        }
-        
-        if (currentPageIndex < flatNavigation.length - 1) {
-          nextPage = flatNavigation[currentPageIndex + 1];
-        }
+        if (currentPageIndex > 0) prevPage = flatNavigation[currentPageIndex - 1];
+        if (currentPageIndex < flatNavigation.length - 1) nextPage = flatNavigation[currentPageIndex + 1];
       }
       
-      // Convert page paths to proper URLs for links
       if (prevPage) {
-        // Format the previous page URL, avoiding double slashes
-        if (prevPage.path === '/') {
-          prevPage.url = relativePathToRoot + 'index.html';
-        } else {
-          // Remove leading slash and ensure clean path
-          const cleanPath = prevPage.path.substring(1).replace(/\/+$/, '');
-          prevPage.url = relativePathToRoot + cleanPath + '/';
-        }
+        const cleanPath = prevPage.path.startsWith('/') ? prevPage.path.substring(1) : prevPage.path;
+        prevPage.url = relativePathToRoot + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
+        if (prevPage.path === '/') prevPage.url = relativePathToRoot;
       }
       
       if (nextPage) {
-        // Format the next page URL, avoiding double slashes
-        if (nextPage.path === '/') {
-          nextPage.url = relativePathToRoot + 'index.html';
-        } else {
-          // Remove leading slash and ensure clean path
-          const cleanPath = nextPage.path.substring(1).replace(/\/+$/, '');
-          nextPage.url = relativePathToRoot + cleanPath + '/';
-        }
+        const cleanPath = nextPage.path.startsWith('/') ? nextPage.path.substring(1) : nextPage.path;
+        nextPage.url = relativePathToRoot + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
+        if (nextPage.path === '/') nextPage.url = relativePathToRoot;
       }
 
       const pageDataForTemplate = {
-        content: finalHtmlContent,
+        content: htmlContent,
         pageTitle: pageFrontmatter.title || 'Untitled',
         siteTitle: config.siteTitle,
         navigationHtml,
         relativePathToRoot: relativePathToRoot,
-        config: config, // Pass full config
+        config: config,
         frontmatter: pageFrontmatter,
-        outputPath: outputHtmlPath, // Relative path from outputDir root
-        prettyUrl: true, // Flag to indicate we're using pretty URLs
-        prevPage: prevPage, // Previous page in navigation
-        nextPage: nextPage, // Next page in navigation
-        currentPagePath: normalizedPath, // Pass the normalized path for active state detection
-        headings: headings || [], // Pass headings for TOC
+        outputPath: outputHtmlPath.replace(/\\/g, '/'),
+        prevPage: prevPage,
+        nextPage: nextPage,
+        currentPagePath: normalizedPath,
+        headings: headings || [],
       };
 
       const pageHtml = await generateHtmlPage(pageDataForTemplate);
@@ -387,16 +329,16 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       await fs.ensureDir(path.dirname(finalOutputHtmlPath));
       await fs.writeFile(finalOutputHtmlPath, pageHtml);
 
-      // Add to processed pages for sitemap
-      const processedPage = {
-        outputPath: isIndexFile 
-          ? (path.dirname(relativePath) === '.' ? 'index.html' : path.dirname(relativePath) + '/')
-          : outputHtmlPath.replace(/\\/g, '/').replace(/\/index\.html$/, '/'),
+      const sitemapOutputPath = isIndexFile 
+          ? (path.dirname(relativePath) === '.' ? '' : path.dirname(relativePath) + '/')
+          : relativePath.replace(/\.md$/, '/');
+
+      processedPages.push({
+        outputPath: sitemapOutputPath.replace(/\\/g, '/'),
         frontmatter: pageFrontmatter
-      };
-      processedPages.push(processedPage);
+      });
     } catch (error) {
-      console.error(`Error processing file ${path.relative(CWD, filePath)}:`, error);
+      console.error(`❌ An unexpected error occurred while processing file ${path.relative(CWD, filePath)}:`, error);
     }
   }
 

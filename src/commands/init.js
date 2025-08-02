@@ -1,3 +1,5 @@
+// Source file from the docmd project — https://github.com/mgks/docmd
+
 const fs = require('fs-extra');
 const path = require('path');
 const readline = require('readline');
@@ -34,6 +36,7 @@ module.exports = {
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
     positionMode: 'bottom', // 'top' or 'bottom' for the theme toggle
+    codeHighlight: true,    // Enable/disable codeblock highlighting and import of highlight.js
     customCss: [            // Array of paths to custom CSS files
       // '/assets/css/custom.css', // Custom TOC styles
     ]
@@ -47,6 +50,7 @@ module.exports = {
 
   // Content Processing
   autoTitleFromH1: true, // Set to true to automatically use the first H1 as page title
+  copyCode: true, // Enable/disable the copy code button on code blocks
 
   // Plugins Configuration
   // Plugins are configured here. docmd will look for these keys.
