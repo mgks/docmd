@@ -1,107 +1,78 @@
-<%# src/templates/navigation.ejs %>
-
-<%# renderIcon is passed from html-generator.js %>
-
-<% 
-// Debug function - uncomment to troubleshoot paths
-function debugNavPaths(item, itemPath, currentPath, isActive, isParentActive) {
-  console.log('\nDEBUG NAV ITEM:');
-  console.log(`Title: ${item.title}`);
-  console.log(`Path: ${item.path}`);
-  console.log(`Computed item path: ${itemPath}`);
-  console.log(`Current page path: ${currentPath}`);
-  console.log(`Is directly active: ${isActive}`);
-  console.log(`Is parent active: ${isParentActive}`);
-}
-
-function renderNavItems(items, currentLevelPagePath, rootPath) { %>
+<%# navigation.ejs - Renders the sidebar navigation %>
+<nav class="sidebar-nav" aria-label="Main navigation">
   <ul>
-    <% items.forEach(item => { %>
-      <%
-        let itemHref = '#'; // Default for non-linking parents or error
-        let isCurrentPageActive = false;
-        let isActivePage = false; // For the direct page itself
-        const isExternal = item.external === true;
-        const targetBlank = isExternal ? 'target="_blank" rel="noopener noreferrer"' : '';
-        let iconHtml = '';
-        let externalLinkIconHtml = '';
-
-        if (item.icon) {
-          // Use custom class for nav icons for specific styling
-          iconHtml = renderIcon(item.icon, { class: 'nav-item-icon' });
-        }
-
-        if (isExternal) {
-          itemHref = item.path; // Full URL for external links
-          // Use a Lucide icon like 'arrow-up-right' or 'external-link'
-          externalLinkIconHtml = renderIcon('arrow-up-right', { class: 'nav-external-icon', width: '0.8em', height: '0.8em' });
+    <%
+      // A robust, centralized function to normalize navigation paths
+      function normalizePath(p) {
+        if (!p) return '#';
+        let path = p.replace(/\\/g, '/');
+        
+        if (path.endsWith('index.md')) {
+          path = path.slice(0, -'index.md'.length);
         } else {
-          // Path normalization for internal links
-          let cleanPath = item.path.startsWith('/') ? item.path : '/' + item.path; // Ensure leading slash
-
-          // Handle paths with pretty URLs
-          if (cleanPath === '/') {
-            // Root path goes to index.html
-            itemHref = rootPath + 'index.html';
-          } else {
-            // Remove any trailing slash for consistency
-            const pathWithoutTrailingSlash = cleanPath.endsWith('/') ? cleanPath.slice(0, -1) : cleanPath;
-            
-            // For all other paths, link to the directory (pretty URL)
-            // Remove leading slash and ensure clean path
-            const cleanedPath = pathWithoutTrailingSlash.substring(1);
-            itemHref = rootPath + cleanedPath + '/';
-          }
-
-          // SIMPLIFIED ACTIVE STATE LOGIC - START
-          // 1. Prepare the paths for comparison
-          // The item path in the format used in the navigation config
-          const normalizedItemPath = cleanPath.substring(1) || '';
-          
-          // Special handling for root path
-          if (cleanPath === '/') {
-            isActivePage = currentLevelPagePath === 'index.html';
-            isCurrentPageActive = isActivePage;
-          } 
-          // Parent folder with index.md
-          else if (cleanPath.endsWith('/')) {
-            // Direct match for folder/index.html pages
-            const folderPath = cleanPath.substring(1, cleanPath.length - 1); // Remove leading / and trailing /
-            isActivePage = currentLevelPagePath === folderPath + '/';
-            isCurrentPageActive = isActivePage;
-            
-            // Check if any children are active 
-            // If current path starts with this item's path, it's a parent of the active page
-            if (!isActivePage && currentLevelPagePath.startsWith(normalizedItemPath)) {
-              isCurrentPageActive = true;
-            }
-          } 
-          // Regular page
-          else {
-            const pagePath = cleanPath.substring(1) + '/';
-            isActivePage = currentLevelPagePath === pagePath;
-            isCurrentPageActive = isActivePage;
-          }
-          // SIMPLIFIED ACTIVE STATE LOGIC - END
+          path = path.replace(/\.md$/, '');
         }
-      %>
-      <li class="<%= isCurrentPageActive ? 'active-parent' : '' %>">
-        <a href="<%= itemHref %>"
-           class="<%= isActivePage ? 'active' : '' %>"
-           <%- targetBlank %>>
-          <% if (iconHtml) { %><%- iconHtml %><% } %>
-          <span><%- item.title %></span> <%# Wrap title in span for styling if needed %>
-          <% if (externalLinkIconHtml) { %><%- externalLinkIconHtml %><% } %>
-        </a>
 
-        <% if (item.children && item.children.length > 0) { %>
-          <%- renderNavItems(item.children, currentLevelPagePath, rootPath) %>
-        <% } %>
-      </li>
-    <% }); %>
+        if (!path.startsWith('/')) path = '/' + path;
+
+        if (path.length > 1 && !path.endsWith('/')) {
+          path += '/';
+        }
+        
+        // Handle root case where path might be "" after stripping index.md
+        if (path === '') path = '/';
+        
+        return path;
+      }
+
+      // Helper to check for active children recursively
+      function hasActiveChild(item, currentPagePath) {
+        if (!item.children || !Array.isArray(item.children)) return false;
+        return item.children.some(child => {
+          if (!child.path || child.external) return false;
+          const childPath = normalizePath(child.path);
+          if (currentPagePath === childPath) return true;
+          return hasActiveChild(child, currentPagePath);
+        });
+      }
+
+      // Recursive function to render navigation items
+      function renderNav(items) {
+        if (!items || !Array.isArray(items)) return;
+        items.forEach(item => {
+          const isExternal = item.external || false;
+          let itemPath = item.path || '#';
+          
+          const normalizedItemPath = isExternal ? itemPath : normalizePath(itemPath);
+
+          const isActive = !isExternal && currentPagePath === normalizedItemPath;
+          const isParentOfActive = !isActive && hasActiveChild(item, currentPagePath);
+          const isCollapsible = item.children && item.collapsible;
+
+          const liClasses = [];
+          if (isActive) liClasses.push('active');
+          if (isParentOfActive) liClasses.push('active-parent');
+          if (isCollapsible) liClasses.push('collapsible');
+          
+          const finalHref = isExternal ? item.path : (itemPath === '#' ? '#' : (relativePathToRoot + (item.path.startsWith('/') ? item.path.substring(1) : item.path)));
+    %>
+    <li class="<%= liClasses.join(' ') %>" <%- isCollapsible ? `data-nav-id="${item.path}"` : '' %>>
+      <a href="<%- finalHref %>" class="<%- isActive ? 'active' : '' %>" <%- isExternal ? 'target="_blank" rel="noopener"' : '' %>>
+        <% if (item.icon) { %> <%- renderIcon(item.icon) %> <% } %>
+        <span class="nav-item-title"><%= item.title %></span>
+        <% if (isCollapsible) { %> <%- renderIcon('chevron-right', { class: 'collapse-icon' }) %> <% } %>
+        <% if (isExternal) { %> <%- renderIcon('external-link', { class: 'nav-external-icon' }) %> <% } %>
+      </a>
+      <% if (item.children) { %>
+        <ul class="submenu">
+          <% renderNav(item.children); %>
+        </ul>
+      <% } %>
+    </li>
+    <%
+        });
+      }
+      renderNav(navItems);
+    %>
   </ul>
-<% } %>
-
-<nav class="sidebar-nav">
-  <%- renderNavItems(navItems, currentPagePath, relativePathToRoot) %>
 </nav>

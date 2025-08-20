@@ -51,6 +51,7 @@ function createMarkdownItInstance(config) {
   md.use(markdown_it_task_lists);
   md.use(markdown_it_abbr);
   md.use(markdown_it_deflist);
+  md.use(headingIdPlugin);
 
   // Register renderers for all containers
   Object.keys(containers).forEach(containerName => {
@@ -183,8 +184,6 @@ const containers = {
   //   }
   // }
 };
-
-
 
 // Advanced container rule with proper nesting support
 function advancedContainerRule(state, startLine, endLine, silent) {
@@ -660,21 +659,32 @@ const customImageRenderer = function(tokens, idx, options, env, self) {
 
 // Add IDs to headings for anchor links, used by the Table of Contents.
 const headingIdPlugin = (md) => {
-  const defaultRender = function(tokens, idx, options, env, self) {
+  const originalHeadingOpen = md.renderer.rules.heading_open || function(tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
   };
-  const headingOpenRenderer = function(tokens, idx, options, env, self) {
+
+  md.renderer.rules.heading_open = function(tokens, idx, options, env, self) {
     const token = tokens[idx];
     const contentToken = tokens[idx + 1];
-    if (contentToken && contentToken.type === 'inline') {
-      const headingText = contentToken.content;
-      const id = headingText.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
-      if (id) { token.attrSet('id', id); }
-    }
-    return defaultRender(tokens, idx, options, env, self);
-  }
-}
 
+    if (contentToken && contentToken.type === 'inline' && contentToken.content) {
+      const headingText = contentToken.content;
+      const id = headingText
+        .toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/[^\w-]+/g, '') // Remove all non-word chars
+        .replace(/--+/g, '-') // Replace multiple - with single -
+        .replace(/^-+/, '') // Trim - from start of text
+        .replace(/-+$/, ''); // Trim - from end of text
+      
+      if (id) {
+        token.attrSet('id', id);
+      }
+    }
+    
+    return originalHeadingOpen(tokens, idx, options, env, self);
+  };
+};
 
 // ===================================================================
 // --- SAFE CONTAINER WRAPPER (FOR SIMPLE CONTAINERS) ---
