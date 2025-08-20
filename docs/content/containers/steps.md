@@ -74,7 +74,7 @@ You can include cards, callouts, and buttons inside steps for richer content:
 3. **Initialize Project**
    Create the project structure and configuration files.
 
-   ::: button Create_Project external:https://github.com/new color:blue
+   ::: button Create_Project external:https://github.com/new color:#2564e4
 
 4. **Start Coding**
    Begin implementing your application features.
@@ -110,7 +110,7 @@ You can include cards, callouts, and buttons inside steps for richer content:
 3. **Initialize Project**
    Create the project structure and configuration files.
 
-   ::: button Create_Project external:https://github.com/new color:blue
+   ::: button Create_Project external:https://github.com/new color:#2564e4
 
 4. **Start Coding**
    Begin implementing your application features.

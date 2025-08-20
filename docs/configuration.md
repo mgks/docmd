@@ -32,7 +32,7 @@ module.exports = {
     name: 'sky',
     defaultMode: 'light',
     enableModeToggle: true,
-    positionMode: 'bottom', // 'top' or 'bottom'
+    positionMode: 'top', // 'top' or 'bottom'
     customCss: [            // Array of paths to your custom CSS files
       // '/css/override-styles.css', // Paths are relative to the outputDir root
     ],
@@ -84,6 +84,7 @@ module.exports = {
     {
       title: 'Guides',
       icon: 'book-open',
+      collapsible: true, // This makes the 'Guides' section collapsible
       children: [
         { title: 'Installation', path: '/guides/installation', icon: 'download' },
         { title: 'Project GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true }
@@ -225,7 +226,9 @@ Configures the visual theme of your site.
     *   `path` (String, Required for direct links)
     *   `children` (Array, Optional)
     *   `icon` (String, Optional): The name of an SVG icon to display next to the navigation item. `docmd` will look for an SVG file named `icon-name.svg` in its bundled assets (e.g., `home` for `home.svg`). Ensure the chosen icon name corresponds to an available SVG. See [Theming > Icons](/theming/icons/) for more details.
+    *   `collapsible` (Boolean, Optional): If set to `true` on a parent item (an item with `children`), the item will become a collapsible accordion. It will be collapsed by default unless one of its children is the currently active page. User interactions (opening/closing) are saved in `sessionStorage`. Defaults to `false`.
     *   `external` (Boolean, Optional): If set to `true`, the `path` is treated as an absolute external URL and the link will open in a new tab (`target="_blank"`). Defaults to `false`.
+    *   `collapsible` (Boolean, Optional): If set to `true` on a parent item (an item with `children`), the item will become a collapsible accordion. It will be collapsed by default unless one of its children is the currently active page. User interactions (opening/closing) are saved in `sessionStorage`. Defaults to `false`.
 
 ## `footer` (String, Optional)
 *   **Description:** Custom footer text (Markdown supported). **Note:** For noStyle pages, the footer must be explicitly enabled via `components.footer: true`.
