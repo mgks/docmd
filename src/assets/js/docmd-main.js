@@ -3,6 +3,79 @@
 /* 
  * Main client-side script for docmd UI interactions
  */
+// --- Collapsible Navigation Logic ---
+function initializeCollapsibleNav() {
+  const nav = document.querySelector('.sidebar-nav');
+  if (!nav) return;
+
+  let navStates = {};
+  try {
+    // Use sessionStorage to remember state only for the current session
+    navStates = JSON.parse(sessionStorage.getItem('docmd-nav-states')) || {};
+  } catch (e) { /* silent fail */ }
+
+  nav.querySelectorAll('li.collapsible').forEach(item => {
+    const navId = item.dataset.navId;
+    const anchor = item.querySelector('a');
+    const submenu = item.querySelector('.submenu');
+
+    if (!navId || !anchor || !submenu) return;
+    
+    const isParentActive = item.classList.contains('active-parent');
+    // Default to expanded if it's a parent of the active page, otherwise check stored state.
+    let isExpanded = isParentActive || (navStates[navId] === true);
+
+    const toggleSubmenu = (expand) => {
+      item.setAttribute('aria-expanded', expand);
+      submenu.style.display = expand ? 'block' : 'none';
+      navStates[navId] = expand;
+      sessionStorage.setItem('docmd-nav-states', JSON.stringify(navStates));
+    };
+
+    // Set initial state on page load
+    toggleSubmenu(isExpanded);
+
+    anchor.addEventListener('click', (e) => {
+      // If the click target is the icon, ALWAYS prevent navigation and toggle.
+      if (e.target.closest('.collapse-icon')) {
+        e.preventDefault();
+        toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
+      } 
+      // If the link is just a placeholder, also prevent navigation and toggle.
+      else if (anchor.getAttribute('href') === '#') {
+        e.preventDefault();
+        toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
+      }
+      // Otherwise, let the click proceed to navigate to the link.
+    });
+  });
+}
+
+// --- Sidebar Scroll Preservation ---
+function initializeSidebarScroll() {
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
+
+  setTimeout(() => {
+    const activeElement = sidebar.querySelector('a.active') || sidebar.querySelector('.active-parent > a');
+
+    if (activeElement) {
+      const sidebarRect = sidebar.getBoundingClientRect();
+      const elementRect = activeElement.getBoundingClientRect();
+
+      // Check if the element's top or bottom is outside the sidebar's visible area
+      const isNotInView = elementRect.top < sidebarRect.top || elementRect.bottom > sidebarRect.bottom;
+
+      if (isNotInView) {
+        activeElement.scrollIntoView({
+          behavior: 'auto',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }
+  }, 10);
+}
 
 // --- Theme Toggle Logic ---
 function setupThemeToggleListener() {
@@ -154,4 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeSidebarToggle();
   initializeTabs();
   initializeCopyCodeButtons();
+  initializeCollapsibleNav();
+  initializeSidebarScroll();
 });
