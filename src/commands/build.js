@@ -221,25 +221,24 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       const depth = outputHtmlPath.split(path.sep).length - 1;
       const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
 
-      let currentPagePathForNav;
-      let normalizedPath;
-      
-      if (isIndexFile) {
-        const dirPath = path.dirname(relativePath);
-        if (dirPath === '.') {
-          currentPagePathForNav = 'index.html';
-          normalizedPath = '/';
-        } else {
-          currentPagePathForNav = dirPath + '/'; 
-          normalizedPath = '/' + dirPath;
+      let normalizedPath = path.relative(SRC_DIR, filePath).replace(/\\/g, '/');
+      if (path.basename(normalizedPath) === 'index.md') {
+        normalizedPath = path.dirname(normalizedPath);
+        if (normalizedPath === '.') {
+          normalizedPath = '';
         }
       } else {
-        const pathWithoutExt = relativePath.replace(/\.md$/, '');
-        currentPagePathForNav = pathWithoutExt + '/';
-        normalizedPath = '/' + pathWithoutExt;
+        normalizedPath = normalizedPath.replace(/\.md$/, '');
       }
-      
-      currentPagePathForNav = currentPagePathForNav.replace(/\\/g, '/');
+
+      if (!normalizedPath.startsWith('/')) {
+        normalizedPath = '/' + normalizedPath;
+      }
+      if (normalizedPath.length > 1 && !normalizedPath.endsWith('/')) {
+        normalizedPath += '/';
+      }
+
+      const currentPagePathForNav = normalizedPath;
 
       const navigationHtml = await generateNavigationHtml(
         config.navigation,

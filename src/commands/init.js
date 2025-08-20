@@ -35,7 +35,7 @@ module.exports = {
     name: 'sky',            // Themes: 'default', 'sky'
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
-    positionMode: 'bottom', // 'top' or 'bottom' for the theme toggle
+    positionMode: 'top', // 'top' or 'bottom' for the theme toggle
     codeHighlight: true,    // Enable/disable codeblock highlighting and import of highlight.js
     customCss: [            // Array of paths to custom CSS files
       // '/assets/css/custom.css', // Custom TOC styles
@@ -96,6 +96,7 @@ module.exports = {
         title: 'Getting Started',
         icon: 'rocket',
         path: '#',
+        collapsible: true, // This makes the menu section collapsible
         children: [
           { title: 'Documentation', path: 'https://docmd.mgks.dev', icon: 'scroll', external: true },
           { title: 'Installation', path: 'https://docmd.mgks.dev/getting-started/installation', icon: 'download', external: true },
