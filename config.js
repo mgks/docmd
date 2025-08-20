@@ -28,7 +28,7 @@ module.exports = {
 
   // Theme Configuration
   theme: {
-    name: 'sky',            // Themes: 'default', 'sky', 'retro', 'ruby'
+    name: 'sky',          // Themes: 'default', 'sky', 'retro', 'ruby'
     defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
     enableModeToggle: true, // Show UI button to toggle light/dark modes
     positionMode: 'top',    // 'top' or 'bottom' for the theme toggle
@@ -107,6 +107,7 @@ module.exports = {
         title: 'Content',
         icon: 'layout-template',
         path: '/content/',
+        collapsible: true,
         children: [
           { title: 'Frontmatter', path: '/content/frontmatter', icon: 'file-text' },
           { title: 'Markdown Syntax', path: '/content/markdown-syntax', icon: 'code-2' },
@@ -115,6 +116,7 @@ module.exports = {
             title: 'Custom Containers',
             path: '/content/containers/',
             icon: 'box',
+            collapsible: true,
             children: [
               { title: 'Callouts', path: '/content/containers/callouts', icon: 'megaphone' },
               { title: 'Cards', path: '/content/containers/cards', icon: 'panel-top' },
@@ -133,6 +135,7 @@ module.exports = {
         title: 'Theming',
         icon: 'palette',
         path: '/theming/',
+        collapsible: true,
         children: [
           { title: 'Available Themes', path: '/theming/available-themes', icon: 'layout-grid' },
           { title: 'Light & Dark Mode', path: '/theming/light-dark-mode', icon: 'sun-moon' },
@@ -144,6 +147,7 @@ module.exports = {
         title: 'Plugins',
         icon: 'puzzle',
         path: '/plugins/',
+        collapsible: true,
         children: [
           { title: 'SEO & Meta Tags', path: '/plugins/seo', icon: 'search' },
           { title: 'Analytics', path: '/plugins/analytics', icon: 'bar-chart' },
