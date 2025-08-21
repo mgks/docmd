@@ -284,10 +284,17 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       extractNavigationItems(config.navigation);
       
       currentPageIndex = flatNavigation.findIndex(item => {
-        if (item.path === normalizedPath) return true;
-        if (isIndexFile && item.path.endsWith('/')) {
-          return item.path.slice(0, -1) === normalizedPath;
+        const itemPath = item.path;
+        const currentPagePath = normalizedPath;
+        if (itemPath === currentPagePath) {
+          return true;
         }
+        if (itemPath.endsWith('/') && itemPath.slice(0, -1) === currentPagePath) {
+          return true;
+        }
+        if (currentPagePath.endsWith('/') && currentPagePath.slice(0, -1) === itemPath) {
+          return true;
+        }        
         return false;
       });
       
