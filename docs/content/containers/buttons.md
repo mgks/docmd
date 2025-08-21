@@ -16,9 +16,9 @@ The button container is a self-contained component. You provide its text, URL, a
 :::
 
 **Syntax:**
-```markdown
-::: button Button_Text /path/to/link [color:#hexcode]
-::: button Button_Text external:/external-url [color:#hexcode]
+```bash
+::: button Button_Text /path/to/link color:#hexcode
+::: button Button_Text external:/external-url color:#hexcode
 ```
 
 -   **`Button_Text`**: The text to display on the button. Use underscores (`_`) for spaces.
@@ -35,7 +35,7 @@ The button container is a self-contained component. You provide its text, URL, a
 This button will use the default theme color and link to a section on the current page.
 
 **Code:**
-```markdown
+```bash
 ::: button View_Examples #examples
 ```
 
@@ -47,7 +47,7 @@ This button will use the default theme color and link to a section on the curren
 External links open in a new tab for better user experience.
 
 **Code:**
-```markdown
+```bash
 ::: button GitHub_Repository external:https://github.com/mgks/docmd
 ```
 
@@ -59,7 +59,7 @@ External links open in a new tab for better user experience.
 You can easily override the color for emphasis.
 
 **Code:**
-```markdown
+```bash
 ::: button Getting_Started #getting-started color:#28a745
 ```
 
@@ -72,7 +72,7 @@ Buttons are flexible and can be placed inside other containers, like cards or ca
 
 **Code:**
 
-```markdown
+```bash
 ::: card Feature Announcement
 Our latest feature is now available! Read the full documentation to learn more about how it works.
 ::: button Read_More /path/to/feature/docs/
