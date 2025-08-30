@@ -80,4 +80,4 @@ If you find `docmd` useful, please consider:
 - Sharing it with others who might benefit
 - Reporting issues or submitting pull requests
 
-**[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time GitHub sponsor to support docmd & other projects developed by [me](https://mgks.dev).**
+**[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time GitHub sponsor to support docmd & other projects developed by [@mgks](https://mgks.dev).**
