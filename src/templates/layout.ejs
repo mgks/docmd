@@ -79,7 +79,7 @@
                 <div class="main-content">
                     <%- content %>
                     
-                    <% if (prevPage || nextPage) { %>
+                    <% if (config.pageNavigation && (prevPage || nextPage)) { %>
                     <div class="page-navigation">
                         <% if (prevPage) { %>
                         <a href="<%= prevPage.url %>" class="prev-page">

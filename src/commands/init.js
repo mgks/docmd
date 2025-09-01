@@ -108,6 +108,8 @@ module.exports = {
       { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
       { title: 'Support the Project', path: 'https://github.com/sponsors/mgks', icon: 'heart', external: true },
     ],
+    
+  pageNavigation: true, // Enable previous / next page navigation at the bottom of each page
 
   // Sponsor Ribbon Configuration
   Sponsor: {

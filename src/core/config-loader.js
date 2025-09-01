@@ -20,6 +20,7 @@ async function loadConfig(configPath) {
     config.theme = config.theme || {};
     config.theme.defaultMode = config.theme.defaultMode || 'light';
     config.navigation = config.navigation || [{ title: 'Home', path: '/' }];
+    config.pageNavigation = config.pageNavigation ?? true;
 
     return config;
   } catch (e) {
