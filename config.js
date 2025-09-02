@@ -163,6 +163,8 @@ module.exports = {
       { title: 'Issues', path: 'https://github.com/mgks/docmd/issues', icon: 'badge-alert', external: true }
   ],
 
+  pageNavigation: true, // Enable previous / next page navigation at the bottom of each page
+
   // Sponsor Ribbon Configuration
   sponsor: {
     enabled: true,                    // Enable/disable the sponsor ribbon
