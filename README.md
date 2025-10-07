@@ -27,7 +27,7 @@ Docmd (`docmd`) is a Node.js command-line tool dedicated to generating beautiful
 - 🎭 **No-Style Pages** - Create custom standalone pages with complete HTML control
 - 🖌️ **Custom Styling** - Add custom CSS/JS and HTML directly in frontmatter
 - 💻 **Simple CLI** - Easy `init`, `dev`, and `build` commands
-- 🌐 **Deploy Anywhere** - Deploy the generated sites anywhere (GitHub Pages, Netlify, Vercel, etc.).
+- 🌐 **Deploy Anywhere** - Deploy the generated sites anywhere (GitHub Pages, Netlify, Vercel, etc.)
 
 ## Installation
 
