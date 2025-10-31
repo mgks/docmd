@@ -112,6 +112,7 @@ module.exports = {
           { title: 'Frontmatter', path: '/content/frontmatter', icon: 'file-text' },
           { title: 'Markdown Syntax', path: '/content/markdown-syntax', icon: 'code-2' },
           { title: 'Images', path: '/content/images', icon: 'image' },
+          { title: 'Mermaid Diagrams', path: '/content/mermaid', icon: 'network' },
           {
             title: 'Custom Containers',
             path: '/content/containers/',
