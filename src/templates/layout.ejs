@@ -129,6 +129,10 @@
     </div>
 
     <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
+    
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script src="<%= relativePathToRoot %>assets/js/docmd-mermaid.js"></script>
 
     <% (customJsFiles || []).forEach(jsFile => { %>
       <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
