@@ -34,12 +34,25 @@ function createMarkdownItInstance(config) {
   // Conditionally enable highlighting
   if (config.theme?.codeHighlight !== false) {
     mdOptions.highlight = function (str, lang) {
+      // Handle mermaid diagrams
+      if (lang === 'mermaid') {
+        return `<pre class="mermaid">${new MarkdownIt().utils.escapeHtml(str)}</pre>`;
+      }
+      
       if (lang && hljs.getLanguage(lang)) {
         try {
           return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`;
         } catch (e) { console.error(`Highlighting error for lang ${lang}:`, e); }
       }
       return `<pre class="hljs"><code>${new MarkdownIt().utils.escapeHtml(str)}</code></pre>`;
+    };
+  } else {
+    // Even if highlighting is disabled, we need to handle mermaid
+    mdOptions.highlight = function (str, lang) {
+      if (lang === 'mermaid') {
+        return `<pre class="mermaid">${new MarkdownIt().utils.escapeHtml(str)}</pre>`;
+      }
+      return `<pre><code>${new MarkdownIt().utils.escapeHtml(str)}</code></pre>`;
     };
   }
 
@@ -464,6 +477,11 @@ function enhancedTabsRule(state, startLine, endLine, silent) {
         typographer: true,
         breaks: true,
         highlight: function (str, lang) {
+          // Handle mermaid diagrams in tabs
+          if (lang === 'mermaid') {
+            return '<pre class="mermaid">' + MarkdownIt.utils.escapeHtml(str) + '</pre>';
+          }
+          
           if (lang && hljs.getLanguage(lang)) {
             try {
               return '<pre class="hljs"><code>' +
