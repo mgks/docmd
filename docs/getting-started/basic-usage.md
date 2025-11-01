@@ -26,9 +26,9 @@ This command sets up the basic structure for your `docmd` project:
 
 *   `docs/`: An empty directory where your Markdown source files will live.
     *   `docs/index.md`: A sample Markdown file to get you started.
-*   `config.js`: A configuration file for your site, pre-filled with sensible defaults.
+*   `docmd.config.js`: A configuration file for your site, pre-filled with sensible defaults.
 
-You'll typically edit `config.js` to set your site title and define the navigation structure, and then start adding your `.md` files to the `docs/` directory.
+You'll typically edit config file to set your site title and define the navigation structure, and then start adding your `.md` files to the `docs/` directory.
 
 ## 2. Add and Structure Content
 
@@ -45,7 +45,7 @@ my-awesome-docs/
 │   └── guides/
 │       ├── setup.md
 │       └── advanced.md
-└── config.js
+└── docmd.config.js
 ```
 
 Each Markdown file should start with YAML frontmatter to define metadata like the page title. See [Content > Frontmatter](/content/frontmatter/) for details.
@@ -63,10 +63,10 @@ docmd dev
 This will:
 1.  Perform an initial build of your site.
 2.  Start a web server, typically at `http://localhost:3000`.
-3.  Watch your `docs/` directory and `config.js` for changes.
+3.  Watch your `docs/` directory and `docmd.config.js` for changes.
 4.  Automatically rebuild the site and refresh your browser when changes are detected.
 
-Open `http://localhost:3000` in your web browser to see your site. Any changes you save to your Markdown files or `config.js` will be reflected live in the browser.
+Open `http://localhost:3000` in your web browser to see your site. Any changes you save to your Markdown files or config file will be reflected live in the browser.
 
 To stop the development server, press `Ctrl+C` in your terminal.
 
@@ -79,10 +79,10 @@ docmd build
 ```
 
 This command:
-1.  Reads your `config.js`.
+1.  Reads your `docmd.config.js`.
 2.  Processes all `.md` files in your `docs/` directory.
 3.  Generates the complete static HTML, CSS, and JavaScript assets.
-4.  Outputs the entire site into a `site/` directory (by default, configurable in `config.js`).
+4.  Outputs the entire site into a `site/` directory (by default, configurable in `docmd.config.js`).
 
 The contents of the `site/` directory are all you need to deploy your documentation. You can upload this folder to any static web hosting provider. See [Deployment](/deployment/) for more information.
 

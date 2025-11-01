@@ -5,10 +5,9 @@ description: "An overview of the built-in themes provided by docmd."
 
 # Available Themes
 
-`docmd` allows you to choose from a selection of built-in themes to quickly change the overall look and feel of your documentation site. You can specify the theme in your `config.js` file using the `theme.name` property.
+`docmd` allows you to choose from a selection of built-in themes to quickly change the overall look and feel of your documentation site. You can specify the theme in your config file using the `theme.name` property.
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   theme: {
@@ -75,4 +74,4 @@ Each theme consists of CSS files located within `docmd`'s internal assets. When 
 - `ruby` theme loads `docmd-theme-ruby.css` with its custom styling on top of the default CSS
 - `retro` theme loads `docmd-theme-retro.css` with its custom styling on top of the default CSS
 
-You can further customize any chosen theme using the `theme.customCss` option in your `config.js` to add your own overrides or additional styles. See [Custom CSS & JS](/theming/custom-css-js/) for details.
+You can further customize any chosen theme using the `theme.customCss` option in your config file to add your own overrides or additional styles. See [Custom CSS & JS](/theming/custom-css-js/) for details.

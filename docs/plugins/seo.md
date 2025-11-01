@@ -9,10 +9,9 @@ The `seo` plugin automatically generates important meta tags in the `<head>` of 
 
 ## Enabling the Plugin
 
-Add the `seo` plugin to the `plugins` object in your `config.js`:
+Add the `seo` plugin to the `plugins` object in your config file:
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   plugins: {
@@ -36,7 +35,7 @@ module.exports = {
 
 ## Configuration Options
 
-The options in `config.js` serve as site-wide defaults. For the best results, you should provide specific metadata for each page using frontmatter.
+The options in the config file serve as site-wide defaults. For the best results, you should provide specific metadata for each page using frontmatter.
 
 ## Frontmatter for SEO
 

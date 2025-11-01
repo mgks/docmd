@@ -9,10 +9,9 @@ description: "Extend docmd's functionality with built-in plugins."
 
 ## Enabling Plugins
 
-You enable and configure plugins in your `config.js` file within the `plugins` object. Each plugin is configured using its key with a corresponding configuration object.
+You enable and configure plugins in your config file within the `plugins` object. Each plugin is configured using its key with a corresponding configuration object.
 
 ```javascript
-// config.js
 module.exports = {
   // ... other config ...
   plugins: {
@@ -58,7 +57,7 @@ Plugins in `docmd` hook into various parts of the build process:
 * They can generate additional files in the output directory
 * They can modify the HTML output of pages
 
-All plugins are designed to be configurable through your `config.js` file, giving you control over their behavior.
+All plugins are designed to be configurable through your config file, giving you control over their behavior.
 
 ## Future Plugin Development
 

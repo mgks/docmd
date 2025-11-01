@@ -16,7 +16,7 @@ This very documentation site is built using `docmd`!
 ## Core Philosophy
 
 *   **Markdown First:** Your content lives in standard `.md` files with simple YAML frontmatter.
-*   **Minimal Configuration:** Sensible defaults with straightforward overrides via `config.js`.
+*   **Minimal Configuration:** Sensible defaults with straightforward overrides via `docmd.config.js`.
 *   **Lightweight Build:** Fast generation process using Node.js, no complex framework dependencies for the build itself.
 *   **Beautiful Defaults:** Clean, responsive design with light/dark themes and syntax highlighting out-of-the-box.
 *   **Static Output:** Deploy the generated `site/` folder anywhere (GitHub Pages, Netlify, Vercel, etc.).
@@ -26,7 +26,7 @@ This very documentation site is built using `docmd`!
 *   📝 **Standard Markdown & Frontmatter:** Write content naturally, define page metadata (title, description) easily.
 *   🎨 **Themeable:** Built-in light/dark modes, customizable via CSS variables. Uses `highlight.js` for code blocks.
 *   🧩 **Custom Containers:** Add richer components like callouts, cards, and steps using simple `::: name :::` syntax.
-*   ⚙️ **Config-Driven Navigation:** Define your site structure and sidebar navigation in `config.js`. Supports nested items.
+*   ⚙️ **Config-Driven Navigation:** Define your site structure and sidebar navigation in `docmd.config.js`. Supports nested items.
 *   🚀 **Fast Static Build:** Node.js script quickly processes files into optimized HTML & CSS.
 *   💻 **Simple CLI:** Easy-to-use commands (`docmd build`, `docmd init`, `docmd dev`) with clear feedback.
 *   🌐 **Deploy Anywhere:** Generates a standard static `site/` directory.

@@ -9,10 +9,9 @@ description: "How to configure and manage light and dark themes in your docmd do
 
 ## Setting the Default Theme
 
-You can set the default theme for your site in the `config.js` file:
+You can set the default theme for your site in the config file:
 
 ```javascript
-// config.js
 module.exports = {
   // ... other config ...
   theme: {
@@ -68,7 +67,6 @@ body {
 When `enableModeToggle` is set to `true`, a toggle button appears that allows users to switch between light and dark modes. The position of this button is controlled by the `positionMode` setting:
 
 ```javascript
-// config.js
 theme: {
   defaultMode: 'light',
   enableModeToggle: true, // Shows the toggle button

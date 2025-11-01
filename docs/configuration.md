@@ -1,16 +1,15 @@
 ---
 title: "Configuration"
-description: "Detailed explanation of all options available in the docmd config.js file, including logo, theming, plugins, and more."
+description: "Detailed explanation of all options available in the docmd config file, including logo, theming, plugins, and more."
 ---
 
-# Configuration (`config.js`)
+# Configuration (`docmd.config.js`)
 
-`docmd` uses a `config.js` file in the root of your documentation project to control various aspects of your site. This file should export a JavaScript object containing your configuration options.
+`docmd` uses a `docmd.config.js` file in the root of your project... For backward compatibility, it will fall back to using `config.js` if `docmd.config.js` is not found.
 
-## Example `config.js` Structure:
+## Example `docmd.config.js` Structure:
 
 ```javascript
-// config.js
 module.exports = {
   siteTitle: 'My Awesome Project Docs',
   logo: {
