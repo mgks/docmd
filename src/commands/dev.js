@@ -28,7 +28,7 @@ function formatPathForDisplay(absolutePath, cwd) {
   return relativePath;
 }
 
-async function startDevServer(configPathOption, options = { preserve: false }) {
+async function startDevServer(configPathOption, options = { preserve: false, port: undefined }) {
   let config = await loadConfig(configPathOption); // Load initial config
   const CWD = process.cwd(); // Current Working Directory where user runs `docmd dev`
 
@@ -264,9 +264,9 @@ async function startDevServer(configPathOption, options = { preserve: false }) {
   watcher.on('error', error => console.error(`Watcher error: ${error}`));
 
   // Try different ports if the default port is in use
-  const PORT = process.env.PORT || 3000;
+  const PORT = options.port || process.env.PORT || 3000;
   const MAX_PORT_ATTEMPTS = 10;
-  let currentPort = PORT;
+  let currentPort = parseInt(PORT, 10);
   
   // Function to try starting the server on different ports
   function tryStartServer(port, attempt = 1) {

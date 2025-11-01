@@ -9,12 +9,11 @@ description: "Integrate web analytics services like Google Analytics into your d
 
 ## Enabling Analytics Plugin
 
-You enable analytics by adding the analytics plugin and its configuration to the `plugins` object in your `config.js`.
+You enable analytics by adding the analytics plugin and its configuration to the `plugins` object in your config file.
 
 **Example:**
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   plugins: {

@@ -5,14 +5,13 @@ description: "Learn how to add your own custom CSS and JavaScript to your docmd 
 
 # Custom Styles & Scripts
 
-While `docmd` themes provide a solid foundation, you can further tailor the appearance and behavior of your site by injecting custom CSS and JavaScript files. This is configured in your `config.js` file.
+While `docmd` themes provide a solid foundation, you can further tailor the appearance and behavior of your site by injecting custom CSS and JavaScript files. This is configured in your config file.
 
 ## Custom CSS
 
-You can add one or more custom CSS files using the `theme.customCss` array in your `config.js`.
+You can add one or more custom CSS files using the `theme.customCss` array in your config file.
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   theme: {
@@ -54,10 +53,9 @@ module.exports = {
 
 ## Custom JavaScript
 
-You can add one or more custom JavaScript files using the top-level `customJs` array in your `config.js`.
+You can add one or more custom JavaScript files using the top-level `customJs` array in your config file.
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   customJs: [

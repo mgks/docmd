@@ -18,7 +18,7 @@ your-project/
 │   ├── js/           # Custom JavaScript files
 │   └── images/       # Custom images
 ├── docs/             # Markdown content
-├── config.js
+├── docmd.config.js
 └── ...
 ```
 
@@ -45,7 +45,7 @@ The simplest and recommended approach is to use the `assets/` directory in your 
    assets/images/logo.png
    ```
 
-2. Reference these files in your `config.js`:
+2. Reference these files in your config file:
    ```javascript
    module.exports = {
      // ...

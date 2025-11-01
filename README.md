@@ -17,6 +17,8 @@
 
 Docmd (`docmd`) is a Node.js command-line tool dedicated to generating beautiful, lightweight static documentation sites from standard Markdown files. It champions the philosophy of "zero clutter, just content," prioritizing ease of use for documentation authors and a clean, performant experience for readers.
 
+#### 🟢 [Live Preview](https://docmd.mgks.dev): Documentation site powered entirely by *Docmd*, serving as both the official docs and a live demo.
+
 ## Features
 
 - 📝 **Markdown First** - Standard Markdown with YAML frontmatter

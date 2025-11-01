@@ -4,7 +4,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const readline = require('readline');
 
-const defaultConfigContent = `// config.js: basic config for docmd
+const defaultConfigContent = `// docmd.config.js: basic config for docmd
 module.exports = {
   // Core Site Metadata
   siteTitle: 'docmd',
@@ -141,7 +141,7 @@ Start writing your Markdown content here.
 async function initProject() {
   const baseDir = process.cwd();
   const docsDir = path.join(baseDir, 'docs');
-  const configFile = path.join(baseDir, 'config.js');
+  const configFile = path.join(baseDir, 'docmd.config.js');
   const indexMdFile = path.join(docsDir, 'index.md');
   const assetsDir = path.join(baseDir, 'assets');
   const assetsCssDir = path.join(assetsDir, 'css');
@@ -156,6 +156,11 @@ async function initProject() {
   
   // Check each file individually
   if (await fs.pathExists(configFile)) {
+    existingFiles.push('docmd.config.js');
+  }
+  // Check for the config.js as well to warn the user
+  const oldConfigFile = path.join(baseDir, 'config.js');
+  if (await fs.pathExists(oldConfigFile)) {
     existingFiles.push('config.js');
   }
   
@@ -232,14 +237,11 @@ async function initProject() {
   }
   
   // Write config file if it doesn't exist or user confirmed override
-  if (!await fs.pathExists(configFile)) {
+  if (!await fs.pathExists(configFile) || shouldOverride) {
     await fs.writeFile(configFile, defaultConfigContent, 'utf8');
-    console.log('📄 Created `config.js`');
-  } else if (shouldOverride) {
-    await fs.writeFile(configFile, defaultConfigContent, 'utf8');
-    console.log('📄 Updated `config.js`');
+    console.log(`📄 ${shouldOverride ? 'Updated' : 'Created'} \`docmd.config.js\``);
   } else {
-    console.log('⏭️  Skipped existing `config.js`');
+    console.log('⏭️  Skipped existing `docmd.config.js`');
   }
   
   // Write index.md file if it doesn't exist or user confirmed override

@@ -37,13 +37,13 @@ GitHub Pages is a popular and free way to host static sites directly from your G
 The simplest approach is to choose one of:
 
 *   **Built site in the `docs/` folder on the main branch:**
-    *   Configure `docmd`'s `outputDir` to be `docs` in your `config.js` (e.g., `outputDir: 'docs'`).
+    *   Configure `docmd`'s `outputDir` to be `docs` in your `docmd.config.js` (e.g., `outputDir: 'docs'`).
     *   Select "Deploy from a branch" → "main" → "/docs"
-    
-If you set `outputDir: 'docs'`, your `config.js` for `docmd` itself (when building its own docs) would look like:
+
+If you set `outputDir: 'docs'`, your `docmd.config.js` for `docmd` itself (when building its own docs) would look like:
 
 ```javascript
-// config.js for docmd's own docs, deploying from /docs on main
+// docmd.config.js for docmd's own docs, deploying from /docs on main
 module.exports = {
   siteTitle: 'docmd Docs',
   srcDir: 'documentation', // Assuming actual source MD files are NOT in the output 'docs'
@@ -92,7 +92,7 @@ jobs:
         run: npm install -g @mgks/docmd
 
       - name: Build site with docmd
-        run: docmd build # Assumes config.js is in the root and correctly points to srcDir/outputDir
+        run: docmd build # Assumes docmd.config.js is in the root and correctly points to srcDir/outputDir
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

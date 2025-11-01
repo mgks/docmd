@@ -9,10 +9,9 @@ The `sitemap` plugin automatically generates a `sitemap.xml` file for your docum
 
 ## Enabling the Plugin
 
-Add the `sitemap` plugin to the `plugins` object in your `config.js`:
+Add the `sitemap` plugin to the `plugins` object in your config file:
 
 ```javascript
-// config.js
 module.exports = {
   // ...
   plugins: {
@@ -48,7 +47,7 @@ The sitemap plugin automatically:
 2. Creates a `sitemap.xml` file in the root of your site output directory
 3. Includes all pages with their URLs, last modification dates, and configured priorities
 
-The plugin uses your `siteUrl` property from the config.js file to create absolute URLs, which is required for a valid sitemap. Make sure you have a `siteUrl` defined:
+The plugin uses your `siteUrl` property from the config file to create absolute URLs, which is required for a valid sitemap. Make sure you have a `siteUrl` defined:
 
 ```javascript
 module.exports = {

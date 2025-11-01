@@ -52,6 +52,14 @@ Examples of custom fields you *might* add (these are not built-in features):
 *   `tags`: ["tag1", "tag2"]
 *   `permalink`: "https://example.com/your-canonical-url/" (Sets the canonical URL for SEO purposes)
 
+## Page-Specific Behavior Fields
+
+*   **`toc`** (Boolean, Optional)
+    *   **Purpose:** Controls the visibility of the "On This Page" table of contents sidebar.
+    *   **Default:** `true` (TOC is visible if the page has headings).
+    *   **Usage:** Set to `false` to completely hide the TOC sidebar for a specific page. This is useful for landing pages or pages with minimal content.
+    *   **Example:** `toc: false`
+
 ## Example Usage
 
 Consider a file named `docs/guides/installation.md`:

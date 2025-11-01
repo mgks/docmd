@@ -124,7 +124,7 @@ async function generateHtmlPage(templateData) {
         prevPage,
         nextPage,
         currentPagePath,
-        headings: headings || [],
+        headings: frontmatter.toc !== false ? (headings || []) : [],
         isActivePage,
         frontmatter,
         config: config,

@@ -9,10 +9,9 @@ description: "How to use Lucide icons in your docmd site navigation and content.
 
 ## Icons in Navigation
 
-You can specify an icon for each navigation item (including parent categories) in your `config.js` file using the `icon` property:
+You can specify an icon for each navigation item (including parent categories) in your config file using the `icon` property:
 
 ```javascript
-// config.js
 // ...
 navigation: [
   { title: 'Home', path: '/', icon: 'home' },
