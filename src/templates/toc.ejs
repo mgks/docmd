@@ -15,7 +15,7 @@ function decodeHtmlEntities(html) {
 const shouldShowToc = typeof isActivePage !== 'undefined' ? isActivePage : 
                       (typeof navigationHtml !== 'undefined' && navigationHtml && navigationHtml.includes('class="active"'));
 
-if (shouldShowToc) {
+if (shouldShowToc && !frontmatter?.toc || frontmatter?.toc !== 'false') {
   // If direct headings aren't available, we'll try to extract them from the content
   let tocHeadings = [];
   if (headings && headings.length > 0) {

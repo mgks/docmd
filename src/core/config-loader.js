@@ -14,7 +14,7 @@ async function loadConfig(configPath) {
     const config = require(absoluteConfigPath);
 
     // Basic validation and defaults
-    if (!config.siteTitle) throw new Error('`siteTitle` is missing in config.js');
+    if (!config.siteTitle) throw new Error('`siteTitle` is missing in config file');
     config.srcDir = config.srcDir || 'docs';
     config.outputDir = config.outputDir || 'site';
     config.theme = config.theme || {};
