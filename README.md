@@ -17,19 +17,18 @@
 
 Docmd (`docmd`) is a Node.js command-line tool dedicated to generating beautiful, lightweight static documentation sites from standard Markdown files. It champions the philosophy of "zero clutter, just content," prioritizing ease of use for documentation authors and a clean, performant experience for readers.
 
-#### 🟢 [Live Preview](https://docmd.mgks.dev): Documentation site powered entirely by *Docmd*, serving as both the official docs and a live demo.
+**🟢 [Live Preview](https://docmd.mgks.dev) : Website powered entirely by *docmd*, serving as both the official documentation for docmd and live demo with examples.**
 
 ## Features
-
-- 📝 **Markdown First** - Standard Markdown with YAML frontmatter
-- 🎨 **Beautiful Themes** - Multiple themes and light/dark modes with syntax highlighting
-- 🚀 **Fast & Lightweight** - Static site generation with minimal JS
-- 🧩 **Custom Components** - Callouts, cards, steps, and more
-- 🔌 **Built-in Plugins** - SEO, Analytics, and Sitemap support
-- 🎭 **No-Style Pages** - Create custom standalone pages with complete HTML control
-- 🖌️ **Custom Styling** - Add custom CSS/JS and HTML directly in frontmatter
-- 💻 **Simple CLI** - Easy `init`, `dev`, and `build` commands
-- 🌐 **Deploy Anywhere** - Deploy the generated sites anywhere (GitHub Pages, Netlify, Vercel, etc.)
+- **Markdown First** - Standard Markdown with YAML frontmatter
+- **Beautiful Themes** - Multiple themes and light/dark modes with syntax highlighting
+- **Fast & Lightweight** - Static site generation with minimal JS
+- **Custom Components** - Callouts, diagrams, cards, steps, and more
+- **Built-in Plugins** - SEO, analytics, and sitemap support
+- **No-Style Pages** - Create custom standalone pages with complete HTML control
+- **Custom Styling** - Add custom CSS/JS and HTML directly in frontmatter
+- **Simple CLI** - Easy `init`, `dev`, and `build` commands
+- **Deploy Anywhere** - Deploy the generated sites anywhere (GitHub Pages, Netlify, Vercel, etc.)
 
 ## Installation
 
@@ -70,10 +69,6 @@ Contributions are welcome! Please check our [contributing guidelines](https://do
 4. Make your changes and test them
 5. Submit a pull request
 
-## License
-
-`docmd` is licensed under the [MIT License](https://github.com/mgks/docmd/blob/main/LICENSE).
-
 ## Support the Project
 
 If you find `docmd` useful, please consider:
@@ -82,4 +77,10 @@ If you find `docmd` useful, please consider:
 - Sharing it with others who might benefit
 - Reporting issues or submitting pull requests
 
-**[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time GitHub sponsor to support docmd & other projects developed by [@mgks](https://mgks.dev).**
+❤️ **[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time sponsor to support docmd.**
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mgks/docmd&type=date&legend=top-left)](https://www.star-history.com/#mgks/docmd&type=date&legend=top-left)
+
+## License
+
+`docmd` is licensed under the [MIT License](https://github.com/mgks/docmd/blob/main/LICENSE).
