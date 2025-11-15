@@ -68,7 +68,7 @@ program
 
     } catch (error) {
       console.error('❌ Build failed:', error.message);
-      console.error(error.stack);
+      // console.error(error.stack);
       process.exit(1);
     }
   });
@@ -96,7 +96,7 @@ program
 
     } catch (error) {
       console.error('❌ Dev server failed:', error.message);
-      console.error(error.stack);
+      // console.error(error.stack);
       process.exit(1);
     }
   });
