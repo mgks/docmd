@@ -1,4 +1,4 @@
-//
+// Source file from the docmd project — https://github.com/mgks/docmd
 
 const ejs = require('ejs');
 const path = require('path');

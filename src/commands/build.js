@@ -6,6 +6,7 @@ const { loadConfig } = require('../core/config-loader');
 const { createMarkdownItInstance, processMarkdownFile, findMarkdownFiles } = require('../core/file-processor');
 const { generateHtmlPage, generateNavigationHtml } = require('../core/html-generator');
 const { renderIcon, clearWarnedIcons } = require('../core/icon-renderer');
+const { findPageNeighbors } = require('../core/navigation-helper');
 const { generateSitemap } = require('../plugins/sitemap');
 const { version } = require('../../package.json');
 const matter = require('gray-matter');
@@ -218,8 +219,12 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
 
       const finalOutputHtmlPath = path.join(OUTPUT_DIR, outputHtmlPath);
 
-      const depth = outputHtmlPath.split(path.sep).length - 1;
-      const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
+      let relativePathToRoot = path.relative(path.dirname(finalOutputHtmlPath), OUTPUT_DIR);
+      if (relativePathToRoot === '') {
+          relativePathToRoot = './';
+      } else {
+          relativePathToRoot = relativePathToRoot.replace(/\\/g, '/') + '/';
+      }
 
       let normalizedPath = path.relative(SRC_DIR, filePath).replace(/\\/g, '/');
       if (path.basename(normalizedPath) === 'index.md') {
@@ -247,74 +252,20 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
         config
       );
 
-      let prevPage = null;
-      let nextPage = null;
-      let currentPageIndex = -1;
-      
-      const flatNavigation = [];
-      
-      function createNormalizedPath(item) {
-        if (!item.path) return null;
-        return item.path.startsWith('/') ? item.path : '/' + item.path;
-      }
-      
-      function extractNavigationItems(items) {
-        if (!items || !Array.isArray(items)) return;
-        
-        for (const item of items) {
-          if (item.external) continue;
-          
-          if (item.path) {
-            let normalizedItemPath = createNormalizedPath(item);
-            if (item.children && !normalizedItemPath.endsWith('/')) {
-              normalizedItemPath += '/';
-            }
-            flatNavigation.push({
-              title: item.title,
-              path: normalizedItemPath,
-            });
-          }
-          
-          if (item.children && Array.isArray(item.children)) {
-            extractNavigationItems(item.children);
-          }
-        }
-      }
-      
-      extractNavigationItems(config.navigation);
-      
-      currentPageIndex = flatNavigation.findIndex(item => {
-        const itemPath = item.path;
-        const currentPagePath = normalizedPath;
-        if (itemPath === currentPagePath) {
-          return true;
-        }
-        if (itemPath.endsWith('/') && itemPath.slice(0, -1) === currentPagePath) {
-          return true;
-        }
-        if (currentPagePath.endsWith('/') && currentPagePath.slice(0, -1) === itemPath) {
-          return true;
-        }        
-        return false;
-      });
-      
-      if (currentPageIndex >= 0) {
-        if (currentPageIndex > 0) prevPage = flatNavigation[currentPageIndex - 1];
-        if (currentPageIndex < flatNavigation.length - 1) nextPage = flatNavigation[currentPageIndex + 1];
-      }
-      
+      // Find previous and next pages for navigation
+      const { prevPage, nextPage } = findPageNeighbors(config.navigation, normalizedPath);
+
       if (prevPage) {
-        const cleanPath = prevPage.path.startsWith('/') ? prevPage.path.substring(1) : prevPage.path;
-        prevPage.url = relativePathToRoot + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
-        if (prevPage.path === '/') prevPage.url = relativePathToRoot;
+        const cleanPath = prevPage.path.substring(1);
+        prevPage.url = relativePathToRoot + cleanPath;
       }
       
       if (nextPage) {
-        const cleanPath = nextPage.path.startsWith('/') ? nextPage.path.substring(1) : nextPage.path;
-        nextPage.url = relativePathToRoot + (cleanPath.endsWith('/') ? cleanPath : cleanPath + '/');
-        if (nextPage.path === '/') nextPage.url = relativePathToRoot;
+        const cleanPath = nextPage.path.substring(1);
+        nextPage.url = relativePathToRoot + cleanPath;
       }
 
+      // Log navigation paths for debugging
       const pageDataForTemplate = {
         content: htmlContent,
         pageTitle: pageFrontmatter.title || 'Untitled',

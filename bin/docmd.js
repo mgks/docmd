@@ -7,6 +7,7 @@ const { version } = require('../package.json');
 const { initProject } = require('../src/commands/init');
 const { buildSite } = require('../src/commands/build');
 const { startDevServer } = require('../src/commands/dev');
+const { printBanner } = require('../src/core/logger');
 
 // Helper function to find the config file
 const findConfigFile = () => {
@@ -52,6 +53,8 @@ program
   .option('--silent', 'Suppress log output')
   .action(async (options) => {
     try {
+      if (!options.silent) { printBanner(); }
+
       const originalLog = console.log;
       if (options.silent) { console.log = () => {}; }
 
@@ -68,7 +71,7 @@ program
 
     } catch (error) {
       console.error('❌ Build failed:', error.message);
-      console.error(error.stack);
+      // console.error(error.stack);
       process.exit(1);
     }
   });
@@ -83,6 +86,8 @@ program
   .option('--silent', 'Suppress log output')
   .action(async (options) => {
     try {
+      if (!options.silent) { printBanner(); }
+
       if (options.silent) {
         const originalLog = console.log;
         console.log = (message) => {
@@ -96,7 +101,7 @@ program
 
     } catch (error) {
       console.error('❌ Dev server failed:', error.message);
-      console.error(error.stack);
+      // console.error(error.stack);
       process.exit(1);
     }
   });

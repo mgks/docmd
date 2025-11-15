@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <b>Generate beautiful, lightweight static documentation sites from Markdown files.</b><br>
-  Zero clutter, just content.
+  <b>Generate beautiful, lightweight static documentation sites from Markdown files.</b>
+  <br>Zero clutter, just content.
 </p>
 
 <p align="center">
@@ -15,71 +15,94 @@
   <a href="https://github.com/mgks/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/mgks/docmd.svg" alt="license"></a>
 </p>
 
-Docmd (`docmd`) is a Node.js command-line tool dedicated to generating beautiful, lightweight static documentation sites from standard Markdown files. It champions the philosophy of "zero clutter, just content," prioritizing ease of use for documentation authors and a clean, performant experience for readers.
+Docmd is a Node.js command-line tool for generating fast, beautiful, and lightweight static documentation sites from standard Markdown files. It champions the philosophy of "zero clutter, just content," prioritizing a simple authoring experience and a clean, performant result for readers.
 
-#### 🟢 [Live Preview](https://docmd.mgks.dev): Documentation site powered entirely by *Docmd*, serving as both the official docs and a live demo.
+**:rocket: [Live Preview](https://docmd.mgks.dev): Official documentation site powered by `docmd`.**
 
-## Features
+## Key Features
 
-- 📝 **Markdown First** - Standard Markdown with YAML frontmatter
-- 🎨 **Beautiful Themes** - Multiple themes and light/dark modes with syntax highlighting
-- 🚀 **Fast & Lightweight** - Static site generation with minimal JS
-- 🧩 **Custom Components** - Callouts, cards, steps, and more
-- 🔌 **Built-in Plugins** - SEO, Analytics, and Sitemap support
-- 🎭 **No-Style Pages** - Create custom standalone pages with complete HTML control
-- 🖌️ **Custom Styling** - Add custom CSS/JS and HTML directly in frontmatter
-- 💻 **Simple CLI** - Easy `init`, `dev`, and `build` commands
-- 🌐 **Deploy Anywhere** - Deploy the generated sites anywhere (GitHub Pages, Netlify, Vercel, etc.)
+-   **Markdown First:** Write your content in standard Markdown with simple YAML frontmatter.
+-   **Beautiful Themes:** Comes with multiple built-in themes (`sky`, `ruby`, `retro`) and automatic light/dark mode support.
+-   **Fast & Lightweight:** Blazing fast static site generation with a minimal client-side footprint.
+-   **Rich Content:** Go beyond basic Markdown with custom components like callouts, cards, steps, tabs, and Mermaid diagrams.
+-   **Built-in Plugins:** SEO meta tags, sitemap, and analytics are all included out-of-the-box.
+-   **No-Style Pages:** Create completely custom pages (like landing pages) with full control over the HTML.
+-   **Customizable:** Easily extend or override styles with your own CSS and JavaScript.
+-   **Simple CLI:** A straightforward workflow with three main commands: `init`, `dev`, and `build`.
+-   **Deploy Anywhere:** The generated `site/` folder can be hosted on any static web host (GitHub Pages, Netlify, Vercel, etc.).
 
 ## Installation
+**Prerequisites:** [Node.js](https://nodejs.org/) (version 22.x or higher)
 
-### From npm
+### Quick Start: Your First Site in 60 Seconds
 
-```bash
-# Global installation (recommended)
-npm install -g @mgks/docmd
-
-# Local project installation
-npm install --save-dev @mgks/docmd
-```
-
-### Quick Start
+No global installation is required. You can create and run your site in a new folder with one command.
 
 ```bash
-# Initialize a new documentation project
-docmd init
+# Create a new project in 'my-docs' and navigate into it
+npx @mgks/docmd init my-docs && cd my-docs
 
 # Start the development server
-docmd dev
-
-# Build for production
-docmd build
+npm start
 ```
 
-### Documentation
+Your new documentation site is now running at `http://localhost:3000` *(or, at your selected or available port)*.
 
-For complete documentation, visit **[docmd.mgks.dev](https://docmd.mgks.dev)**
+### Global Installation
+
+For frequent use, or if you prefer to have the command available system-wide, you can install `docmd` globally using npm.
+
+```bash
+npm install -g @mgks/docmd
+```
+After installation, you can run the `docmd` commands from any directory.
+
+### Basic Workflow
+
+1.  **Initialize a Project:**
+    ```bash
+    docmd init
+    ```
+    This creates a `docs/` directory, a `docmd.config.js` file, and a sample `index.md` to get you started.
+
+2.  **Start the Dev Server:**
+    ```bash
+    docmd dev
+    ```
+    This starts a live-reloading server to preview your site as you write.
+
+3.  **Build for Production:**
+    ```bash
+    docmd build
+    ```
+    This generates the complete, optimized static site into the `site/` directory, ready for deployment.
+
+## Documentation
+
+For a complete guide covering all features, including theming, custom containers, and plugin configuration, please visit the official documentation website: **[docmd.mgks.dev](https://docmd.mgks.dev)**.
 
 ## Contributing
 
-Contributions are welcome! Please check our [contributing guidelines](https://docmd.mgks.dev/contributing/) to get started.
+We welcome contributions of all kinds! Whether it's reporting a bug, suggesting a feature, or submitting a pull request, your help is appreciated.
 
-1. Fork the repository
-2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/docmd.git`
-3. Install dependencies: `npm install`
-4. Make your changes and test them
-5. Submit a pull request
+1.  Fork the repository.
+2.  Clone your fork: `git clone https://github.com/YOUR_USERNAME/docmd.git`
+3.  Install dependencies: `npm install`
+4.  Make your changes and test them thoroughly.
+5.  Submit a pull request to the `main` branch.
 
-## License
-
-`docmd` is licensed under the [MIT License](https://github.com/mgks/docmd/blob/main/LICENSE).
+Please check our [contributing guidelines](https://docmd.mgks.dev/contributing/) for more detailed information.
 
 ## Support the Project
 
 If you find `docmd` useful, please consider:
 
-- Starring the repository on GitHub
-- Sharing it with others who might benefit
-- Reporting issues or submitting pull requests
+-   Starring the repository on GitHub.
+-   Sharing it with others who might benefit.
+-   Reporting issues or submitting pull requests.
 
-**[GitHub Sponsors](https://github.com/sponsors/mgks): Become a monthly or one-time GitHub sponsor to support docmd & other projects developed by [@mgks](https://mgks.dev).**
+❤️ **[GitHub Sponsors](https://github.com/sponsors/mgks): Become a sponsor to support the ongoing development of `docmd`.**
+
+## License
+
+Docmd is licensed under the [MIT License](https://github.com/mgks/docmd/blob/main/LICENSE).

@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "exports": {
@@ -15,6 +15,7 @@
   "scripts": {
     "start": "node ./bin/docmd.js dev",
     "build": "node ./bin/docmd.js build",
+    "postinstall": "node ./bin/postinstall.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -41,6 +42,8 @@
   },
   "homepage": "https://github.com/mgks/docmd#readme",
   "dependencies": {
+    "@mgks/docmd": "^0.2.5",
+    "chalk": "^4.1.2",
     "chokidar": "^4.0.3",
     "commander": "^14.0.0",
     "ejs": "^3.1.9",
