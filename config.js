@@ -169,7 +169,7 @@ module.exports = {
   // Sponsor Ribbon Configuration
   sponsor: {
     enabled: true,                    // Enable/disable the sponsor ribbon
-    title: 'Support docmd',     // Text to display on the ribbon
+    title: 'Sponsor',     // Text to display on the ribbon
     link: 'https://github.com/sponsors/mgks', // URL for the sponsor link
   },
 

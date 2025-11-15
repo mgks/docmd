@@ -3,7 +3,13 @@ title: "Minimalist Markdown Docs Generator"
 description: "Generate beautiful, lightweight static documentation sites directly from your Markdown files with docmd. Zero clutter, just content."
 ---
 
-# docmd
+```
+   _                 _ 
+ _| |___ ___ _____ _| |
+| . | . |  _|     | . |
+|___|___|___|_|_|_|___|
+
+```
 
 **Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.**
 
