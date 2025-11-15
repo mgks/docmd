@@ -41,6 +41,7 @@
   },
   "homepage": "https://github.com/mgks/docmd#readme",
   "dependencies": {
+    "@mgks/docmd": "^0.2.5",
     "chokidar": "^4.0.3",
     "commander": "^14.0.0",
     "ejs": "^3.1.9",
