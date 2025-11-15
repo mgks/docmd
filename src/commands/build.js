@@ -218,8 +218,12 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
 
       const finalOutputHtmlPath = path.join(OUTPUT_DIR, outputHtmlPath);
 
-      const depth = outputHtmlPath.split(path.sep).length - 1;
-      const relativePathToRoot = depth > 0 ? '../'.repeat(depth) : './';
+      let relativePathToRoot = path.relative(path.dirname(finalOutputHtmlPath), OUTPUT_DIR);
+      if (relativePathToRoot === '') {
+          relativePathToRoot = './';
+      } else {
+          relativePathToRoot = relativePathToRoot.replace(/\\/g, '/') + '/';
+      }
 
       let normalizedPath = path.relative(SRC_DIR, filePath).replace(/\\/g, '/');
       if (path.basename(normalizedPath) === 'index.md') {
