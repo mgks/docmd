@@ -2,83 +2,46 @@ name: Publish Package to NPM and GitHub Packages
 
 on:
   release:
-    types: [created] # [created, published] Triggers when a new GitHub Release is created or published
-  workflow_dispatch: # Allows manual triggering for testing
+    types: [published]
+  workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      packages: write # Required for GitHub Packages
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # Your package.json in the workspace should now have name: "@mgks/docmd"
 
-      - name: Set up Node.js (common for all steps)
+      - name: Set up Node.js v22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm' # Cache npm dependencies
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
-      # Optional: Run build script if you have one for the package itself
-      # - name: Build package
-      #   run: npm run build
-
-      # Optional: Run tests
-      # - name: Test package
-      #   run: npm test
-
+      # ------------------------------------------
       # --- Publish to NPM Registry (npmjs.com) ---
-      - name: Set up Node.js for npmjs.com
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22' # Redundant if already set, but harmless
-          registry-url: 'https://registry.npmjs.org/'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Configures .npmrc for npmjs.com
+      # ------------------------------------------
+      - name: Configure NPM for public registry
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
 
-      # No need to change package.json name if it's already @mgks/docmd
-      # Just ensure no GPR-specific publishConfig is present
-      - name: Prepare package.json for npmjs.com
-        run: |
-          echo "package.json for npmjs.com publishing (should be @mgks/docmd):"
-          cat package.json
-          # Remove publishConfig if it exists, just in case
-          if jq -e '.publishConfig' package.json > /dev/null; then
-            echo "Removing publishConfig for npmjs.com publish"
-            jq 'del(.publishConfig)' package.json > package_temp.json && mv package_temp.json package.json
-          else
-            echo "No publishConfig found, package.json is ready for npmjs.com."
-          fi
-          cat package.json
-
-      - name: Publish to NPM Registry (npmjs.com)
-        # For scoped packages on npmjs.com, --access=public is needed for the first publish
-        # and if it's intended to be a public package.
+      - name: Publish to NPM Registry
         run: npm publish --access=public
-
-      # --- Publish to GitHub Packages ---
-      - name: Set up Node.js for GitHub Packages
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22' # Redundant if already set, but harmless
-          registry-url: 'https://npm.pkg.github.com'
-          # scope: '@mgks' # Not strictly needed here if package.json name is already @mgks/docmd
-                           # but good for ensuring .npmrc is correctly configured for the @mgks scope.
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Configures .npmrc for GPR
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # The package name is already @mgks/docmd from checkout (and npmjs.com step didn't change it).
-      # No jq transformation of the name is needed.
-      - name: Verify package.json for GitHub Packages
-        run: |
-          echo "package.json for GPR publishing (should be @mgks/docmd):"
-          cat package.json
+      # ----------------------------------------
+      # --- Publish to GitHub Packages (GPR) ---
+      # ----------------------------------------
+      - name: Configure NPM for GitHub Packages registry
+        run: echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" > ~/.npmrc
 
       - name: Publish to GitHub Packages
         run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

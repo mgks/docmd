@@ -31,51 +31,58 @@ Docmd is a Node.js command-line tool for generating fast, beautiful, and lightwe
 -   **Simple CLI:** A straightforward workflow with three main commands: `init`, `dev`, and `build`.
 -   **Deploy Anywhere:** The generated `site/` folder can be hosted on any static web host (GitHub Pages, Netlify, Vercel, etc.).
 
-## Installation
-**Prerequisites:** [Node.js](https://nodejs.org/) (version 22.x or higher)
+## Installation and Usage
 
-### Quick Start: Your First Site in 60 Seconds
+**Prerequisites:** [Node.js](https://nodejs.org/) (version 22.x or higher) is required.
 
-No global installation is required. You can create and run your site in a new folder with one command.
+### Global Installation (Recommended)
 
-```bash
-# Create a new project in 'my-docs' and navigate into it
-npx @mgks/docmd init my-docs && cd my-docs
+This is the recommended approach for developers who will use `docmd` across multiple projects. It makes the `docmd` command available system-wide.
 
-# Start the development server
-npm start
-```
-
-Your new documentation site is now running at `http://localhost:3000` *(or, at your selected or available port)*.
-
-### Global Installation
-
-For frequent use, or if you prefer to have the command available system-wide, you can install `docmd` globally using npm.
-
+**1. Install Globally:**
 ```bash
 npm install -g @mgks/docmd
 ```
-After installation, you can run the `docmd` commands from any directory.
 
-### Basic Workflow
+**2. Basic Workflow:**
+Once installed, you can use the `docmd` command directly in any project folder.
 
-1.  **Initialize a Project:**
+*   **Initialize a Project:**
     ```bash
+    # This creates docs/, docmd.config.js, and a sample index.md
     docmd init
     ```
-    This creates a `docs/` directory, a `docmd.config.js` file, and a sample `index.md` to get you started.
 
-2.  **Start the Dev Server:**
+*   **Start the Dev Server:**
     ```bash
+    # Starts a live-reloading server at http://localhost:3000
     docmd dev
     ```
-    This starts a live-reloading server to preview your site as you write.
 
-3.  **Build for Production:**
+*   **Build for Production:**
     ```bash
+    # Generates the static site into the `site/` directory
     docmd build
     ```
-    This generates the complete, optimized static site into the `site/` directory, ready for deployment.
+
+### Quick Start (Alternative)
+
+If you prefer not to install packages globally, you can use `npx` to run `docmd` on-demand. This is a great way to try it out or use it in a single project.
+
+1.  **Create and Initialize Your Project:**
+    This command will download the latest version, create a `my-docs` folder, and set up the project files inside it.
+    ```bash
+    npx @mgks/docmd init my-docs
+    ```
+
+2.  **Start the Development Server:**
+    Navigate into your new project and use `npx` again to start the server.
+    ```bash
+    cd my-docs
+    npx @mgks/docmd dev
+    ```
+
+Your new documentation site is now running at `http://localhost:3000`.
 
 ## Documentation
 
