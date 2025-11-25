@@ -88,7 +88,15 @@ function createMarkdownItInstance(config) {
   md.renderer.rules.ordered_list_open = customOrderedListOpenRenderer;
   md.renderer.rules.list_item_open = customListItemOpenRenderer;
   md.renderer.rules.image = customImageRenderer;
-  
+
+  // Wrap tables in a container for horizontal scrolling
+  md.renderer.rules.table_open = function(tokens, idx, options, env, self) {
+    return '<div class="table-wrapper">' + self.renderToken(tokens, idx, options);
+  };
+  md.renderer.rules.table_close = function(tokens, idx, options, env, self) {
+    return self.renderToken(tokens, idx, options) + '</div>';
+  };
+
   // Register tabs renderers
   md.renderer.rules.tabs_open = tabsOpenRenderer;
   md.renderer.rules.tabs_nav_open = tabsNavOpenRenderer;

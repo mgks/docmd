@@ -2,19 +2,22 @@
 
 const path = require('path');
 const fs = require('fs-extra');
+const { validateConfig } = require('./config-validator');
 
 async function loadConfig(configPath) {
   const absoluteConfigPath = path.resolve(process.cwd(), configPath);
   if (!await fs.pathExists(absoluteConfigPath)) {
-    throw new Error(`Configuration file not found: ${absoluteConfigPath}`);
+    throw new Error(`Configuration file not found at: ${absoluteConfigPath}\nRun "docmd init" to create one.`);
   }
   try {
     // Clear require cache to always get the freshest config
     delete require.cache[require.resolve(absoluteConfigPath)];
     const config = require(absoluteConfigPath);
 
+    // Validate configuration call
+    validateConfig(config);
+
     // Basic validation and defaults
-    if (!config.siteTitle) throw new Error('`siteTitle` is missing in config file');
     config.srcDir = config.srcDir || 'docs';
     config.outputDir = config.outputDir || 'site';
     config.theme = config.theme || {};
@@ -24,7 +27,10 @@ async function loadConfig(configPath) {
 
     return config;
   } catch (e) {
-    throw new Error(`Error loading or parsing config file ${absoluteConfigPath}: ${e.message}`);
+    if (e.message === 'Invalid configuration file.') {
+      throw e;
+    }
+    throw new Error(`Error parsing config file: ${e.message}`);
   }
 }
 

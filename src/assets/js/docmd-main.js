@@ -36,6 +36,22 @@ function initializeCollapsibleNav() {
     toggleSubmenu(isExpanded);
 
     anchor.addEventListener('click', (e) => {
+      const currentExpanded = item.getAttribute('aria-expanded') === 'true';
+      const href = anchor.getAttribute('href');
+      const isPlaceholder = !href || href === '#' || href === '';
+
+      if (!currentExpanded) {
+        toggleSubmenu(true);
+      } else if (isPlaceholder || e.target.closest('.collapse-icon')) {
+        toggleSubmenu(false);
+      }
+
+      if (isPlaceholder || e.target.closest('.collapse-icon')) {
+        e.preventDefault();
+      }
+    });
+
+/*    anchor.addEventListener('click', (e) => {
       // If the click target is the icon, ALWAYS prevent navigation and toggle.
       if (e.target.closest('.collapse-icon')) {
         e.preventDefault();
@@ -47,7 +63,7 @@ function initializeCollapsibleNav() {
         toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
       }
       // Otherwise, let the click proceed to navigate to the link.
-    });
+    });*/
   });
 }
 
