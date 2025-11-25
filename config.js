@@ -155,9 +155,21 @@ module.exports = {
           { title: 'Sitemap', path: '/plugins/sitemap', icon: 'map' },
         ],
       },
+      {
+        title: 'Recipes',
+        icon: 'chef-hat',
+        path: '/recipes/',
+        collapsible: true,
+        children: [
+          { title: 'Landing Page', path: '/recipes/landing-page', icon: 'panel-top' },
+          { title: 'Custom Fonts', path: '/recipes/custom-fonts', icon: 'type-outline' },
+          { title: 'Favicon', path: '/recipes/favicon', icon: 'circle-dashed' },
+        ],
+      },
       { title: 'CLI Commands', path: '/cli-commands', icon: 'terminal' },
       { title: 'Deployment', path: '/deployment', icon: 'upload-cloud' },
       { title: 'Contributing', path: '/contributing', icon: 'users-2' },
+      { title: 'Comparison', path: '/comparison', icon: 'shapes' },
 
       { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
       { title: 'Discussions', path: 'https://github.com/mgks/docmd/discussions', icon: 'message-square', external: true },
