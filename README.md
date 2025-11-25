@@ -28,7 +28,7 @@ Docmd is a Node.js command-line tool for generating fast, beautiful, and lightwe
 -   **Built-in Plugins:** SEO meta tags, sitemap, and analytics are all included out-of-the-box.
 -   **No-Style Pages:** Create completely custom pages (like landing pages) with full control over the HTML.
 -   **Customizable:** Easily extend or override styles with your own CSS and JavaScript.
--   **Simple CLI:** A straightforward workflow with three main commands: `init`, `dev`, and `build`.
+-   **Smart CLI:** Intelligent configuration validation catches typos and errors early. Simple workflow with `init`, `dev`, and `build`.
 -   **Deploy Anywhere:** The generated `site/` folder can be hosted on any static web host (GitHub Pages, Netlify, Vercel, etc.).
 
 ## Installation and Usage
@@ -86,7 +86,15 @@ Your new documentation site is now running at `http://localhost:3000`.
 
 ## Documentation
 
-For a complete guide covering all features, including theming, custom containers, and plugin configuration, please visit the official documentation website: **[docmd.mgks.dev](https://docmd.mgks.dev)**.
+For a complete guide, visit the official documentation: **[docmd.mgks.dev](https://docmd.mgks.dev)**.
+
+### Essential Topics
+-   **[Getting Started](https://docmd.mgks.dev/getting-started/installation/):** Installation and basic CLI usage.
+-   **[Custom Containers](https://docmd.mgks.dev/content/containers/):** How to use Callouts, Cards, Tabs, and Steps.
+-   **[Theming](https://docmd.mgks.dev/theming/):** Customizing colors, dark mode, and adding your logo.
+-   **[Plugins](https://docmd.mgks.dev/plugins/):** SEO, Analytics, and Sitemap configuration.
+-   **[Recipes](https://docmd.mgks.dev/recipes/):** Step-by-step guides for common tasks like Custom Fonts and Landing Pages.
+-   **[Comparison](https://docmd.mgks.dev/comparison/):** How `docmd` stacks up against Docusaurus, MkDocs, and others.
 
 ## Contributing
 
