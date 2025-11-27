@@ -509,6 +509,131 @@ tr:last-child td {
     content: "" !important
 }
 
+.mermaid-container {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    text-align:center
+}
+
+.mermaid-container svg {
+    max-width: 100%;
+    height: auto;
+    display:inline-block
+}
+
+.mermaid-error {
+    color: #e74c3c;
+    padding: 1rem;
+    margin: 0;
+    background-color: rgba(231, 76, 60, .07);
+    border-left: 4px solid #e74c3c;
+    border-radius: 4px;
+    font-size:.9rem
+}
+
+pre.mermaid {
+    background-color: transparent;
+    padding: 0;
+    margin: 0;
+    border: none;
+    display: none
+}
+
+/* --- Collapsible (Accordion) Container --- */
+.docmd-container.collapsible {
+  padding: 0;
+  background-color: var(--card-bg, var(--bg-color));
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.docmd-container.collapsible[open] {
+  border-color: var(--link-color);
+}
+
+.collapsible-summary {
+  list-style: none;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  background-color: var(--sidebar-bg);
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.collapsible-summary:hover {
+  background-color: var(--sidebar-link-active-bg);
+}
+
+.collapsible-summary::-webkit-details-marker { display: none; }
+
+.collapsible-arrow svg {
+  width: 1.2em;
+  height: 1.2em;
+  transition: transform 0.2s ease;
+  opacity: 0.7;
+}
+
+details[open] > .collapsible-summary .collapsible-arrow svg {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* --- Changelog Timeline (Mintlify Style) --- */
+.docmd-container.changelog-timeline {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-top: 2rem;
+  box-shadow: none; /* Remove default container shadow */
+}
+
+.changelog-entry {
+  display: grid;
+  grid-template-columns: 180px 1fr; /* Date width | Content width */
+  gap: 2rem;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.changelog-meta {
+  text-align: right;
+  padding-top: 0.5rem;
+}
+
+.changelog-date {
+  display: inline-block;
+  background-color: var(--sidebar-bg);
+  color: var(--accent-color, var(--link-color));
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: var(--font-family-mono);
+}
+
+.changelog-body {
+  border-left: 2px solid var(--border-color);
+  padding-left: 2rem;
+  padding-bottom: 1rem;
+}
+
+/* Reset top margin for the first element in the body */
+.changelog-body > :first-child {
+  margin-top: 0;
+}
+
 :focus-visible {
     outline: 2px solid var(--link-color);
     outline-offset:2px
@@ -1066,6 +1191,22 @@ img.with-shadow {
         width: .875rem;
         height:.875rem
     }
+
+    .changelog-entry {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .changelog-meta {
+        text-align: left;
+        padding-top: 0;
+    }
+    
+    .changelog-body {
+        border-left: 2px solid var(--border-color);
+        padding-left: 1.5rem;
+        margin-left: 0.5rem;
+    }
 }
 
 html[data-theme=dark] .sponsor-link {
@@ -1124,35 +1265,4 @@ html[data-theme=dark] .sponsor-link:hover {
 hr {
     color: rgba(245, 245, 245, .27);
     border-top-width: 1px
-}
-
-/* Mermaid diagram styles */
-.mermaid-container {
-    margin: 1.5rem 0;
-    overflow-x: auto;
-    text-align:center
-}
-
-.mermaid-container svg {
-    max-width: 100%;
-    height: auto;
-    display:inline-block
-}
-
-.mermaid-error {
-    color: #e74c3c;
-    padding: 1rem;
-    margin: 0;
-    background-color: rgba(231, 76, 60, .07);
-    border-left: 4px solid #e74c3c;
-    border-radius: 4px;
-    font-size:.9rem
-}
-
-pre.mermaid {
-    background-color: transparent;
-    padding: 0;
-    margin: 0;
-    border: none;
-    display: none
 }
