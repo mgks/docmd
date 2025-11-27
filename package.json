@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "exports": {
@@ -42,7 +42,6 @@
   },
   "homepage": "https://github.com/mgks/docmd#readme",
   "dependencies": {
-    "@mgks/docmd": "^0.2.5",
     "chalk": "^4.1.2",
     "chokidar": "^4.0.3",
     "commander": "^14.0.0",

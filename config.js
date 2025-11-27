@@ -123,6 +123,8 @@ module.exports = {
               { title: 'Cards', path: '/content/containers/cards', icon: 'panel-top' },
               { title: 'Steps', path: '/content/containers/steps', icon: 'list-ordered' },
               { title: 'Tabs', path: '/content/containers/tabs', icon: 'columns-3' },
+              { title: 'Collapsible', path: '/content/containers/collapsible', icon: 'chevrons-down' },
+              { title: 'Changelogs', path: '/content/containers/changelogs', icon: 'logs' },
               { title: 'Buttons', path: '/content/containers/buttons', icon: 'mouse-pointer-click' },
               { title: 'Nested Containers', path: '/content/containers/nested-containers', icon: 'folder-tree' },
             ]
