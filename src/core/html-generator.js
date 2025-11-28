@@ -100,6 +100,27 @@ async function generateHtmlPage(templateData) {
 
     const isActivePage = currentPagePath && content && content.trim().length > 0;
 
+    // Calculate Edit Link
+    let editUrl = null;
+    let editLinkText = 'Edit this page';
+    
+    if (config.editLink && config.editLink.enabled && config.editLink.baseUrl) {
+        // Normalize URL (remove trailing slash)
+        const baseUrl = config.editLink.baseUrl.replace(/\/$/, '');
+
+        // Get the source file path relative to srcDir
+        let relativeSourcePath = outputPath
+            .replace(/\/index\.html$/, '.md') // folder/index.html -> folder.md
+            .replace(/\\/g, '/'); // fix windows slashes
+
+        // Special case: The root index.html comes from index.md
+        if (relativeSourcePath === 'index.html') relativeSourcePath = 'index.md';
+
+        // Let's assume a standard 1:1 mapping for v0.2.x        
+        editUrl = `${baseUrl}/${relativeSourcePath}`;
+        editLinkText = config.editLink.text || editLinkText;
+    }
+
     const ejsData = {
         content,
         pageTitle,
@@ -107,6 +128,8 @@ async function generateHtmlPage(templateData) {
         description: frontmatter.description,
         siteTitle,
         navigationHtml,
+        editUrl,
+        editLinkText,
         defaultMode: config.theme?.defaultMode || 'light',
         relativePathToRoot,
         logo: config.logo,

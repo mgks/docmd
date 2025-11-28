@@ -19,6 +19,7 @@ module.exports = {
   // Directory Configuration
   srcDir: 'docs',       // Source directory for Markdown files
   outputDir: 'site',    // Directory for generated static site
+  minify: true,         // Enable/disable HTML/CSS/JS minification
 
   // Sidebar Configuration
   sidebar: {
@@ -88,6 +89,15 @@ module.exports = {
     // Add other future plugin configurations here by their key
   },
 
+  // "Edit this page" Link Configuration
+  editLink: {
+    enabled: true,
+    // The URL to the folder containing your docs in the git repo
+    // Note: It usually ends with /edit/main/docs or /blob/main/docs
+    baseUrl: 'https://github.com/mgks/docmd/edit/main/docs',
+    text: 'Edit this page on GitHub'
+  },
+
   // Navigation Structure (Sidebar)
   // Icons are kebab-case names from Lucide Icons (https://lucide.dev/)
   navigation: [
@@ -103,6 +113,7 @@ module.exports = {
           { title: 'Basic Usage', path: '/getting-started/basic-usage', icon: 'play' },
         ],
       },
+      { title: 'Configuration', path: '/configuration', icon: 'settings' },
       {
         title: 'Content',
         icon: 'layout-template',
@@ -133,7 +144,6 @@ module.exports = {
           { title: 'No-Style Example', path: '/content/no-style-example', icon: 'sparkles' },
         ],
       },
-      { title: 'Configuration', path: '/configuration', icon: 'settings' },
       {
         title: 'Theming',
         icon: 'palette',
