@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "exports": {
@@ -44,8 +44,10 @@
   "dependencies": {
     "chalk": "^4.1.2",
     "chokidar": "^4.0.3",
+    "clean-css": "^5.3.3",
     "commander": "^14.0.0",
     "ejs": "^3.1.9",
+    "esbuild": "^0.27.0",
     "express": "^5.1.0",
     "fs-extra": "^11.2.0",
     "gray-matter": "^4.0.3",
