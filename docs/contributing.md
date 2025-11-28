@@ -65,6 +65,14 @@ To enable live change tracking for internal files during development, set the DO
 - **Temporarily:** Run `export DOCMD_DEV=true` in your terminal before starting the dev server.
 - **Permanently:** Add `export DOCMD_DEV=true` to your `~/.zshrc` file and run `source ~/.zshrc`.
 
+### Debugging Build Issues
+
+If you are working on the build process and need to see detailed logs about asset processing or minification, you can run:
+
+```bash
+DOCMD_DEBUG=true docmd build
+```
+
 ## Pull Request Process
 
 Once you're satisfied with your changes:

@@ -20,7 +20,7 @@ function initializeCollapsibleNav() {
     const submenu = item.querySelector('.submenu');
 
     if (!navId || !anchor || !submenu) return;
-    
+
     const isParentActive = item.classList.contains('active-parent');
     // Default to expanded if it's a parent of the active page, otherwise check stored state.
     let isExpanded = isParentActive || (navStates[navId] === true);
@@ -51,19 +51,19 @@ function initializeCollapsibleNav() {
       }
     });
 
-/*    anchor.addEventListener('click', (e) => {
-      // If the click target is the icon, ALWAYS prevent navigation and toggle.
-      if (e.target.closest('.collapse-icon')) {
-        e.preventDefault();
-        toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
-      } 
-      // If the link is just a placeholder, also prevent navigation and toggle.
-      else if (anchor.getAttribute('href') === '#') {
-        e.preventDefault();
-        toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
-      }
-      // Otherwise, let the click proceed to navigate to the link.
-    });*/
+    /*    anchor.addEventListener('click', (e) => {
+          // If the click target is the icon, ALWAYS prevent navigation and toggle.
+          if (e.target.closest('.collapse-icon')) {
+            e.preventDefault();
+            toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
+          } 
+          // If the link is just a placeholder, also prevent navigation and toggle.
+          else if (anchor.getAttribute('href') === '#') {
+            e.preventDefault();
+            toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
+          }
+          // Otherwise, let the click proceed to navigate to the link.
+        });*/
   });
 }
 
@@ -101,7 +101,7 @@ function setupThemeToggleListener() {
     document.documentElement.setAttribute('data-theme', theme);
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('docmd-theme', theme);
-    
+
     // Switch highlight.js theme
     const highlightThemeLink = document.getElementById('highlight-theme');
     if (highlightThemeLink) {
@@ -131,7 +131,7 @@ function initializeSidebarToggle() {
 
   const defaultConfigCollapsed = body.dataset.defaultCollapsed === 'true';
   let isCollapsed = localStorage.getItem('docmd-sidebar-collapsed');
-  
+
   if (isCollapsed === null) {
     isCollapsed = defaultConfigCollapsed;
   } else {
@@ -161,8 +161,8 @@ function initializeTabs() {
         tabPanes.forEach(pane => pane.classList.remove('active'));
 
         navItem.classList.add('active');
-        if(tabPanes[index]) {
-            tabPanes[index].classList.add('active');
+        if (tabPanes[index]) {
+          tabPanes[index].classList.add('active');
         }
       });
     });
@@ -186,16 +186,16 @@ function initializeCopyCodeButtons() {
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.style.display = 'block';
-    
+
     // Insert the wrapper before the pre element
     preElement.parentNode.insertBefore(wrapper, preElement);
-    
+
     // Move the pre element into the wrapper
     wrapper.appendChild(preElement);
-    
+
     // Remove the relative positioning from pre since wrapper handles it
     preElement.style.position = 'static';
-    
+
     const copyButton = document.createElement('button');
     copyButton.className = 'copy-code-button';
     copyButton.innerHTML = copyIconSvg;
@@ -224,7 +224,7 @@ function syncBodyTheme() {
   if (currentTheme && document.body) {
     document.body.setAttribute('data-theme', currentTheme);
   }
-  
+
   // Also ensure highlight CSS matches the current theme
   const highlightThemeLink = document.getElementById('highlight-theme');
   if (highlightThemeLink && currentTheme) {

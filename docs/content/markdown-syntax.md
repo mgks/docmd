@@ -197,6 +197,38 @@ docmd supports GitHub Flavored Markdown extensions including:
   
   Renders emoji symbols like: I ❤️ documentation! 🚀 😄
 
+## Custom Attributes (IDs and Classes)
+
+You can add custom IDs and CSS classes to headers, images, and links using curly braces `{}`.
+
+### Custom IDs
+By default, `docmd` generates IDs for headers automatically. You can override this:
+
+```markdown
+## My Header {#custom-id}
+```
+
+### Custom Classes
+Add styling classes to elements:
+
+```markdown
+## Styled Header {.text-center .text-red}
+```
+
+### Links and Buttons
+Create buttons using standard links and classes:
+
+```markdown
+[Download Now](/download){.btn .btn-primary}
+```
+
+### Images
+Control image styling directly:
+
+```markdown
+![Screenshot](image.png){width="100%" .shadow-lg}
+```
+
 ## Footnotes
 
 You can add footnotes to your content for references or additional information[^1].

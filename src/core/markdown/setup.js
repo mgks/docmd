@@ -17,20 +17,36 @@ const headingIdPlugin = (md) => {
   const originalHeadingOpen = md.renderer.rules.heading_open || function(tokens, idx, options, env, self) {
     return self.renderToken(tokens, idx, options);
   };
+
   md.renderer.rules.heading_open = function(tokens, idx, options, env, self) {
     const token = tokens[idx];
-    const contentToken = tokens[idx + 1];
-    if (contentToken && contentToken.type === 'inline' && contentToken.content) {
-      const headingText = contentToken.content;
-      const id = headingText
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^\w-]+/g, '')
-        .replace(/--+/g, '-')
-        .replace(/^-+/, '')
-        .replace(/-+$/, '');
-      if (id) token.attrSet('id', id);
+    
+    // Check if an ID was already set by markdown-it-attrs (e.g. {#my-id})
+    const existingId = token.attrGet('id');
+
+    // If NO ID exists, generate one automatically from the text content
+    if (!existingId) {
+      const contentToken = tokens[idx + 1];
+      if (contentToken && contentToken.type === 'inline' && contentToken.content) {
+        const headingText = contentToken.content;
+        
+        // Note: markdown-it-attrs strips the curly braces content from .content 
+        // BEFORE this rule runs, so headingText should be clean.
+        
+        const id = headingText
+          .toLowerCase()
+          .replace(/\s+/g, '-')       // Replace spaces with -
+          .replace(/[^\w\u4e00-\u9fa5-]+/g, '') // Remove all non-word chars (keeping hyphens). Added unicode support implies keeping more chars if needed.
+          .replace(/--+/g, '-')       // Replace multiple - with single -
+          .replace(/^-+/, '')         // Trim - from start of text
+          .replace(/-+$/, '');        // Trim - from end of text
+
+        if (id) {
+          token.attrSet('id', id);
+        }
+      }
     }
+    
     return originalHeadingOpen(tokens, idx, options, env, self);
   };
 };

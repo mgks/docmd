@@ -12,6 +12,8 @@ const { version } = require('../../package.json');
 const matter = require('gray-matter');
 const MarkdownIt = require('markdown-it');
 const hljs = require('highlight.js');
+const CleanCSS = require('clean-css');
+const esbuild = require('esbuild');
 
 // Debug function to log navigation information
 function logNavigationPaths(pagePath, navPath, normalizedPath) {
@@ -42,12 +44,12 @@ const ASSET_VERSIONS = {
 function formatPathForDisplay(absolutePath, cwd) {
   // Get the relative path from CWD
   const relativePath = path.relative(cwd, absolutePath);
-  
+
   // If it's not a subdirectory, prefix with ./ for clarity
   if (!relativePath.startsWith('..') && !path.isAbsolute(relativePath)) {
     return `./${relativePath}`;
   }
-  
+
   // Return the relative path
   return relativePath;
 }
@@ -61,6 +63,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   const OUTPUT_DIR = path.resolve(CWD, config.outputDir);
   const USER_ASSETS_DIR = path.resolve(CWD, 'assets');
   const md = createMarkdownItInstance(config);
+  const shouldMinify = !options.isDev && config.minify !== false;
 
   if (!await fs.pathExists(SRC_DIR)) {
     throw new Error(`Source directory not found: ${formatPathForDisplay(SRC_DIR, CWD)}`);
@@ -85,27 +88,70 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   const preservedFiles = [];
   const userAssetsCopied = [];
 
+  // Function to process and copy a single asset
+  const processAndCopyAsset = async (srcPath, destPath) => {
+    const ext = path.extname(srcPath).toLowerCase();
+
+    if (process.env.DOCMD_DEBUG) {
+      console.log(`[Asset Debug] Processing: ${path.basename(srcPath)} | Minify: ${shouldMinify} | Ext: ${ext}`);
+    }
+
+    if (shouldMinify && ext === '.css') {
+      try {
+        const content = await fs.readFile(srcPath, 'utf8');
+        const output = new CleanCSS({}).minify(content);
+        if (output.errors.length > 0) {
+          console.warn(`⚠️ CSS Minification error for ${path.basename(srcPath)}, using original.`, output.errors);
+          await fs.copyFile(srcPath, destPath);
+        } else {
+          await fs.writeFile(destPath, output.styles);
+        }
+      } catch (e) {
+        console.warn(`⚠️ CSS processing failed: ${e.message}`);
+        await fs.copyFile(srcPath, destPath);
+      }
+    }
+    else if (shouldMinify && ext === '.js') {
+      try {
+        const content = await fs.readFile(srcPath, 'utf8');
+        // Simple minification transform
+        const result = await esbuild.transform(content, {
+          minify: true,
+          loader: 'js',
+          target: 'es2015' // Ensure compatibility
+        });
+        await fs.writeFile(destPath, result.code);
+      } catch (e) {
+        console.warn(`⚠️ JS Minification failed: ${e.message}`);
+        await fs.copyFile(srcPath, destPath);
+      }
+    }
+    else {
+      // Images, fonts, or dev mode -> standard copy
+      await fs.copyFile(srcPath, destPath);
+    }
+  };
+
   // Copy user assets from root assets/ directory if it exists
   if (await fs.pathExists(USER_ASSETS_DIR)) {
     const assetsDestDir = path.join(OUTPUT_DIR, 'assets');
     await fs.ensureDir(assetsDestDir);
-    
+
     if (!options.isDev) {
       console.log(`📂 Copying user assets from ${formatPathForDisplay(USER_ASSETS_DIR, CWD)} to ${formatPathForDisplay(assetsDestDir, CWD)}...`);
     }
-    
+
     const userAssetFiles = await getAllFiles(USER_ASSETS_DIR);
-    
     for (const srcFile of userAssetFiles) {
       const relativePath = path.relative(USER_ASSETS_DIR, srcFile);
       const destFile = path.join(assetsDestDir, relativePath);
-      
-      // Ensure directory exists
+
       await fs.ensureDir(path.dirname(destFile));
-      await fs.copyFile(srcFile, destFile);
+      await processAndCopyAsset(srcFile, destFile);
+
       userAssetsCopied.push(relativePath);
     }
-    
+
     if (!options.isDev && userAssetsCopied.length > 0) {
       console.log(`📦 Copied ${userAssetsCopied.length} user assets`);
     }
@@ -114,41 +160,34 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   // Copy assets
   const assetsSrcDir = path.join(__dirname, '..', 'assets');
   const assetsDestDir = path.join(OUTPUT_DIR, 'assets');
-  
+
   if (await fs.pathExists(assetsSrcDir)) {
     if (!options.isDev) {
       console.log(`📂 Copying docmd assets to ${formatPathForDisplay(assetsDestDir, CWD)}...`);
     }
-    
+
     // Create destination directory if it doesn't exist
     await fs.ensureDir(assetsDestDir);
-    
+
     // Get all files from source directory recursively
     const assetFiles = await getAllFiles(assetsSrcDir);
-    
-    // Copy each file individually, checking for existing files if preserve flag is set
     for (const srcFile of assetFiles) {
       const relativePath = path.relative(assetsSrcDir, srcFile);
       const destFile = path.join(assetsDestDir, relativePath);
-      
-      // Check if destination file already exists
       const fileExists = await fs.pathExists(destFile);
-      
-      // Skip if the file exists and either:
-      // 1. The preserve flag is set, OR
-      // 2. The file was copied from user assets (user assets take precedence)
+
       if (fileExists && (options.preserve || userAssetsCopied.includes(relativePath))) {
-        // Skip file and add to preserved list
         preservedFiles.push(relativePath);
         if (!options.isDev && options.preserve) {
           console.log(`  Preserving existing file: ${relativePath}`);
         }
+
       } else {
-        // Copy file (either it doesn't exist or we're not preserving)
         await fs.ensureDir(path.dirname(destFile));
-        await fs.copyFile(srcFile, destFile);
+        await processAndCopyAsset(srcFile, destFile);
       }
     }
+
   } else {
     console.warn(`⚠️  Assets source directory not found: ${formatPathForDisplay(assetsSrcDir, CWD)}`);
   }
@@ -189,7 +228,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   for (const filePath of markdownFiles) {
     try {
       const relativePath = path.relative(SRC_DIR, filePath);
-      
+
       // Skip file if already processed in this dev build cycle
       if (options.noDoubleProcessing && processedFiles.has(relativePath)) {
         continue;
@@ -203,12 +242,12 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       if (!processedData) {
         continue;
       }
-      
+
       // Destructure the valid data
       const { frontmatter: pageFrontmatter, htmlContent, headings } = processedData;
-      
+
       const isIndexFile = path.basename(relativePath) === 'index.md';
-      
+
       let outputHtmlPath;
       if (isIndexFile) {
         const dirPath = path.dirname(relativePath);
@@ -221,9 +260,9 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
 
       let relativePathToRoot = path.relative(path.dirname(finalOutputHtmlPath), OUTPUT_DIR);
       if (relativePathToRoot === '') {
-          relativePathToRoot = './';
+        relativePathToRoot = './';
       } else {
-          relativePathToRoot = relativePathToRoot.replace(/\\/g, '/') + '/';
+        relativePathToRoot = relativePathToRoot.replace(/\\/g, '/') + '/';
       }
 
       let normalizedPath = path.relative(SRC_DIR, filePath).replace(/\\/g, '/');
@@ -259,7 +298,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
         const cleanPath = prevPage.path.substring(1);
         prevPage.url = relativePathToRoot + cleanPath;
       }
-      
+
       if (nextPage) {
         const cleanPath = nextPage.path.substring(1);
         nextPage.url = relativePathToRoot + cleanPath;
@@ -286,9 +325,9 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       await fs.ensureDir(path.dirname(finalOutputHtmlPath));
       await fs.writeFile(finalOutputHtmlPath, pageHtml);
 
-      const sitemapOutputPath = isIndexFile 
-          ? (path.dirname(relativePath) === '.' ? '' : path.dirname(relativePath) + '/')
-          : relativePath.replace(/\.md$/, '/');
+      const sitemapOutputPath = isIndexFile
+        ? (path.dirname(relativePath) === '.' ? '' : path.dirname(relativePath) + '/')
+        : relativePath.replace(/\.md$/, '/');
 
       processedPages.push({
         outputPath: sitemapOutputPath.replace(/\\/g, '/'),
@@ -314,7 +353,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
     preservedFiles.forEach(file => console.log(`  - assets/${file}`));
     console.log(`\nTo update these files in future builds, run without the --preserve flag.`);
   }
-  
+
   if (userAssetsCopied.length > 0 && !options.isDev) {
     console.log(`\n📋 User Assets: ${userAssetsCopied.length} files were copied from your assets/ directory:`);
     if (userAssetsCopied.length <= 10) {
@@ -336,10 +375,10 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
 async function findFilesToCleanup(dir) {
   const filesToRemove = [];
   const items = await fs.readdir(dir, { withFileTypes: true });
-  
+
   for (const item of items) {
     const fullPath = path.join(dir, item.name);
-    
+
     if (item.isDirectory()) {
       // Don't delete the assets directory
       if (item.name !== 'assets') {
@@ -347,13 +386,13 @@ async function findFilesToCleanup(dir) {
         filesToRemove.push(...subDirFiles);
       }
     } else if (
-      item.name.endsWith('.html') || 
+      item.name.endsWith('.html') ||
       item.name === 'sitemap.xml'
     ) {
       filesToRemove.push(fullPath);
     }
   }
-  
+
   return filesToRemove;
 }
 
@@ -361,7 +400,7 @@ async function findFilesToCleanup(dir) {
 async function getAllFiles(dir) {
   const files = [];
   const items = await fs.readdir(dir, { withFileTypes: true });
-  
+
   for (const item of items) {
     const fullPath = path.join(dir, item.name);
     if (item.isDirectory()) {
@@ -370,7 +409,7 @@ async function getAllFiles(dir) {
       files.push(fullPath);
     }
   }
-  
+
   return files;
 }
 
