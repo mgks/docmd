@@ -125,6 +125,14 @@ module.exports = {
 *   **Default:** `'site'`
 *   **Description:** Directory where the static site will be generated.
 
+## `minify`
+*   **Type:** `Boolean`
+*   **Optional**
+*   **Default:** `true` when running `docmd build`, `false` when running `docmd dev`.
+*   **Description:** Controls whether CSS and JavaScript assets are minified (compressed) during the build.
+*   **Usage:** You can force this to `false` if you need to debug production builds.
+*   **Example:** `minify: false`
+
 ### `autoTitleFromH1`
 *   **Type:** `Boolean`
 *   **Default:** `true`
@@ -145,7 +153,9 @@ module.exports = {
 ### `copyCode`
 * **Type:** `Boolean`
 * **Default:** `true`
-* **Description:** If `true`, a "Copy" button will be added to the top-right corner of all code blocks, allowing users to easily copy the code to their clipboard with a single click. **Note:** This setting only applies to regular pages. For noStyle pages, copy code functionality must be explicitly enabled via the `components.mainScripts: true` setting.
+* **Description:** If `true`, a "Copy" button will be added to the top-right corner of all code blocks, allowing users to easily copy the code to their clipboard with a single click.
+
+**Note:** This setting only applies to regular pages. For noStyle pages, copy code functionality must be explicitly enabled via the `components.mainScripts: true` setting.
 
 ## `sidebar` (Object)
 
@@ -217,6 +227,24 @@ Configures the visual theme of your site.
     *   `analytics: { googleV4: { measurementId: 'G-XXXXXXXXXX' } }`
     *   `sitemap: { defaultChangefreq: 'weekly', defaultPriority: 0.8 }`
 *   **See Also:** [Plugins](/plugins/)
+
+## `editLink` (Object, Optional)
+*   **Type:** `Object`
+*   **Description:** Configures a link in the page footer that points to the source file on GitHub (or GitLab/Bitbucket), allowing users to propose changes.
+*   **Properties:**
+    *   `enabled` (Boolean): Set to `true` to show the link.
+    *   `baseUrl` (String): The base URL to your repository's documentation source folder.
+        *   *GitHub Example:* `https://github.com/USERNAME/REPO/edit/main/docs`
+        *   *Note:* Do not include a trailing slash. `docmd` appends the file path automatically.
+    *   `text` (String, Optional): The text to display. Defaults to "Edit this page".
+*   **Example:**
+    ```javascript
+    editLink: {
+      enabled: true,
+      baseUrl: 'https://github.com/mgks/docmd/edit/main/docs',
+      text: 'Edit on GitHub'
+    }
+    ```
 
 ## `navigation` (Array of Objects)
 *   **Description:** Defines the sidebar navigation. (Content mostly same as before, but add the `icon` property explanation).
