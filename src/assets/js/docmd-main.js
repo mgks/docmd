@@ -3,6 +3,7 @@
 /* 
  * Main client-side script for docmd UI interactions
  */
+
 // --- Collapsible Navigation Logic ---
 function initializeCollapsibleNav() {
   const nav = document.querySelector('.sidebar-nav');

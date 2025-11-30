@@ -1,5 +1,8 @@
 // Source file from the docmd project — https://github.com/mgks/docmd
-// Mermaid diagram integration with theme support
+
+/*
+ * Mermaid diagram integration with theme support
+ */
 
 (function () {
   'use strict';

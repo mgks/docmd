@@ -3,6 +3,7 @@
 /* 
  * Main CSS file for docmd
  */
+
 .docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list>li.step-item::before,
 .docmd-container.steps-reset ol.steps-list>li.step-item::before,
 .docmd-container.steps-reset ol.steps-list[start]>li.step-item::before {
@@ -44,7 +45,9 @@ img {
     --image-caption-bg: #f8f8f8;
     --image-caption-text: #666;
     --lightbox-bg: rgba(0, 0, 0, 0.9);
-    --lightbox-text: #fff
+    --lightbox-text: #fff;
+    --accent-color: #858585;
+
 }
 
 [data-theme=dark] {
@@ -244,9 +247,11 @@ body.sidebar-collapsed .main-content-wrapper {
     transition: .2s
 }
 
+.docmd-search-trigger:hover,
 .theme-toggle-header:hover {
     background: var(--sidebar-bg);
-    border-color: var(--accent-color)
+    border-color: var(--accent-color);
+
 }
 
 .card .card-title,
@@ -373,18 +378,20 @@ html[data-theme=dark] .theme-toggle-button .icon-sun,
     opacity: .7
 }
 
+.docmd-search-trigger,
 .theme-toggle-button {
-    background: 0 0;
+    background-color: var(--sidebar-bg);
     border: 1px solid var(--border-color);
     color: var(--sidebar-text);
     padding: 8px;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: .5em;
+    /* margin-top: .5em; */
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100%
+    width: 100%;
+
 }
 
 .next-page,
@@ -640,13 +647,11 @@ details[open]>.collapsible-summary .collapsible-arrow svg {
     padding: 0;
     margin-top: 2rem;
     box-shadow: none;
-    /* Remove default container shadow */
 }
 
 .changelog-entry {
     display: grid;
     grid-template-columns: 180px 1fr;
-    /* Date width | Content width */
     gap: 2rem;
     margin-bottom: 3rem;
     position: relative;
@@ -675,7 +680,6 @@ details[open]>.collapsible-summary .collapsible-arrow svg {
     padding-bottom: 1rem;
 }
 
-/* Reset top margin for the first element in the body */
 .changelog-body> :first-child {
     margin-top: 0;
 }
@@ -1126,13 +1130,13 @@ img.lightbox {
 
 .sponsor-ribbon {
     position: fixed;
-    bottom: 75px;
-    right: 10px;
+    bottom: 4.5em;
+    right: 0;
     z-index: 1000;
     transform: rotate(0);
     transform-origin: center center;
-    opacity: .75;
-    transition: .5s
+    opacity: .85;
+    transition: .5s;
 }
 
 .sponsor-ribbon:hover {
@@ -1143,19 +1147,18 @@ img.lightbox {
     display: flex;
     align-items: center;
     gap: .5rem;
-    background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-    padding: .75rem 1.5rem;
-    border-radius: 5px;
-    box-shadow: rgba(255, 107, 107, .3) 0 4px 12px;
-    font-weight: 600;
-    font-size: .875rem;
+    background: linear-gradient(to bottom right, #ff6b6b, #ee5a24);
+    padding: .5rem .5em .5em .75rem;
+    border-radius: 20px 0 0 20px;
+    font-weight: 700;
+    font-size: .85em;
     transition: .3s;
-    white-space: nowrap
+    white-space: nowrap;
 }
 
 .sponsor-link:hover {
     transform: scale(1.02);
-    box-shadow: rgba(255, 107, 107, .4) 0 6px 20px
+    box-shadow: rgba(255, 107, 107, .4) 0 0 25px
 }
 
 .sponsor-icon {
@@ -1253,6 +1256,214 @@ hr {
     height: 1em;
 }
 
+/* --- Search UI Styles --- */
+
+/* Trigger Button in Header */
+.docmd-search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--sidebar-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    color: var(--text-muted, #666);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    margin-right: 0.75rem;
+}
+
+.search-label {
+    margin-right: 1rem;
+}
+
+.search-keys {
+    display: flex;
+    gap: 2px;
+}
+
+.docmd-kbd {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    font-family: var(--font-family-mono);
+    font-size: 0.7rem;
+    padding: 0 4px;
+    box-shadow: 0 1px 0 var(--border-color);
+    color: var(--text-muted, var(--accent-color));
+    min-width: 1.2em;
+    text-align: center;
+
+}
+
+/* Mobile adjustment for trigger */
+@media (max-width: 768px) {
+
+    .search-label,
+    .search-keys {
+        display: none;
+    }
+
+    .docmd-search-trigger {
+        padding: 0.5rem;
+        margin-right: 0.5rem;
+    }
+}
+
+/* Modal Overlay */
+.docmd-search-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 10vh;
+}
+
+/* Search Box Container */
+.docmd-search-box {
+    width: 100%;
+    max-width: 600px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: searchSlideIn 0.2s ease-out;
+}
+
+@keyframes searchSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98) translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Header & Input */
+.docmd-search-header {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.docmd-search-header svg {
+    color: var(--link-color);
+}
+
+#docmd-search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    outline: none;
+}
+
+.docmd-search-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted, #888);
+    padding: 0;
+    display: flex;
+}
+
+/* Results List */
+.docmd-search-results {
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+.search-result-item {
+    display: block;
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--text-color);
+    margin-bottom: 2px;
+    border-left: 3px solid transparent;
+}
+
+.search-result-item:hover,
+.search-result-item:focus,
+.search-result-item.selected {
+    background-color: var(--sidebar-bg);
+    border-left-color: var(--link-color);
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.search-result-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+    color: var(--link-color);
+}
+
+.search-result-preview {
+    font-size: 0.8rem;
+    color: var(--text-muted, #666);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.search-no-results,
+.search-error {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted, #666);
+}
+
+.search-initial,
+.search-no-results,
+.search-error {
+    padding: 3rem 2rem;
+    text-align: center;
+    color: var(--text-muted, #666);
+    font-size: 0.95rem;
+}
+
+.search-result-preview mark {
+    background-color: rgba(255, 235, 59, 0.4);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 2px;
+}
+
+[data-theme="dark"] .search-result-preview mark {
+    background-color: rgba(255, 235, 59, 0.25);
+    color: #fff;
+}
+
+.docmd-search-footer {
+    padding: 0.75rem 1.5rem;
+    background-color: var(--sidebar-bg);
+    border-top: 1px solid var(--border-color);
+    font-size: 0.75rem;
+    color: var(--text-muted, #888);
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
 @keyframes heartbeat {
 
     0%,
@@ -1331,6 +1542,37 @@ hr {
 
     .docmd-container .image-gallery {
         grid-template-columns: 1fr
+    }
+
+    .docmd-search-modal {
+        padding-top: 0;
+        background-color: var(--bg-color);
+        align-items: flex-start;
+    }
+
+    .docmd-search-box {
+        max-width: 100%;
+        height: 100%;
+        border-radius: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    .docmd-search-header {
+        padding: 1rem;
+    }
+
+    #docmd-search-input {
+        font-size: 1rem;
+    }
+
+    .docmd-search-footer {
+        display: none;
+    }
+
+    .docmd-search-results {
+        max-height: none;
+        flex: 1;
     }
 
     .sponsor-ribbon {
