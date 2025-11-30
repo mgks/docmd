@@ -152,8 +152,8 @@
         </footer>
     </div>
 
-    <!-- Search Modal -->
     <% if (config.search !== false) { %>
+    <!-- Search Modal -->
     <div id="docmd-search-modal" class="docmd-search-modal" style="display: none;">
         <div class="docmd-search-box">
             <div class="docmd-search-header">
@@ -176,9 +176,11 @@
 
     <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
 
+    <% if (config.search !== false) { %>
     <!-- Search Scripts -->
     <script src="<%= relativePathToRoot %>assets/js/minisearch.js"></script>
     <script src="<%= relativePathToRoot %>assets/js/docmd-search.js"></script>
+    <% } %>
 
     <!-- Mermaid.js for diagram rendering -->
     <script src="<%= relativePathToRoot %>assets/js/mermaid.min.js"></script>
