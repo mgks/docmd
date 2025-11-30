@@ -23,6 +23,11 @@ module.exports = {
   // Directory Configuration
   srcDir: 'docs',       // Source directory for Markdown files
   outputDir: 'site',    // Directory for generated static site
+
+  // Search Configuration
+  search: true,        // Enable/disable search functionality
+
+  // Build Options
   minify: true,        // Enable/disable HTML/CSS/JS minification
 
   // Sidebar Configuration
