@@ -28,7 +28,7 @@
 <br>
 
 <p align="center">
-  <img width="2856" height="1558" alt="519536477-8d948e18-8e2d-420d-8902-96e1aafab1ba-modified" src="https://github.com/user-attachments/assets/5b883c80-8357-46e8-9adb-84e38a0da64c" />
+  <img width="2856" height="1558" alt="519536477-8d948e18-8e2d-420d-8902-96e1aafab1ba-modified" src="https://docmd.mgks.dev/assets/images/preview-dark-welcome.png" />
   <sup><i>docmd noStyle page preview in dark mode</i></sup>
 </p>
 
@@ -39,6 +39,7 @@ Most documentation tools today are too heavy (React hydration, massive bundles) 
 **docmd** fills the gap. It is a native Node.js tool that generates **pure, static HTML**.
 
 *   ⚡ **Blazing Fast:** No hydration delay. Instant page loads.
+*   🔍 **Offline Search:** Powerful full-text search included automatically.
 *   🛠 **Zero Config:** Works out of the box with sensible defaults.
 *   🎨 **Theming:** Built-in light/dark modes and multiple themes (`sky`, `ruby`, `retro`).
 *   📦 **Node.js Native:** No Python, no Gemfiles. Just `npm install`.
@@ -92,6 +93,7 @@ Live reload is active. Browser will refresh automatically when files change.
 | **Markdown First** | Standard Markdown + Frontmatter. No proprietary syntax to learn. |
 | **Smart CLI** | Intelligent config validation catches typos before they break your build. |
 | **Custom Containers** | Use `::: callout`, `::: card`, `::: steps`, `::: tabs`, `::: collapsible`, `::: changelog`, and more to enrich content. |
+| **Smart Search** | Built-in, offline-capable full-text search with fuzzy matching and highlighting. No API keys required. |
 | **Diagrams** | Create flowcharts, relationship diagrams, journey, piecharts, graphs, timelines and more with Mermaid. |
 | **No-Style Pages** | Create custom landing pages (highly customizable custom HTML pages) without theme constraints. |
 | **Auto Dark Mode** | Respects system preference and saves user choice. |
