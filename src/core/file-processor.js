@@ -4,6 +4,7 @@ const fs = require('fs-extra');
 const path = require('path');
 const matter = require('gray-matter');
 const { createMarkdownItInstance } = require('./markdown/setup');
+const striptags = require('striptags');
 
 function decodeHtmlEntities(html) {
     return html.replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, "'").replace(/ /g, ' ');
@@ -56,8 +57,18 @@ async function processMarkdownFile(filePath, md, config) {
       htmlContent = md.render(markdownContent);
       headings = extractHeadingsFromHtml(htmlContent);
     }
+
+    let searchData = null;
+    if (!frontmatter.noindex) {
+        const rawText = decodeHtmlEntities(striptags(htmlContent));
+        searchData = {
+            title: frontmatter.title || 'Untitled',
+            content: rawText.slice(0, 5000), // Safety cap to prevent massive JSON
+            headings: headings.map(h => h.text)
+        };
+    }
   
-    return { frontmatter, htmlContent, headings };
+    return { frontmatter, htmlContent, headings, searchData };
 }
   
 async function findMarkdownFiles(dir) {

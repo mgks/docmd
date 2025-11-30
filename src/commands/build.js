@@ -14,6 +14,7 @@ const MarkdownIt = require('markdown-it');
 const hljs = require('highlight.js');
 const CleanCSS = require('clean-css');
 const esbuild = require('esbuild');
+const MiniSearch = require('minisearch');
 
 // Debug function to log navigation information
 function logNavigationPaths(pagePath, navPath, normalizedPath) {
@@ -64,6 +65,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   const USER_ASSETS_DIR = path.resolve(CWD, 'assets');
   const md = createMarkdownItInstance(config);
   const shouldMinify = !options.isDev && config.minify !== false;
+  const searchIndexData = [];
 
   if (!await fs.pathExists(SRC_DIR)) {
     throw new Error(`Source directory not found: ${formatPathForDisplay(SRC_DIR, CWD)}`);
@@ -244,7 +246,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       }
 
       // Destructure the valid data
-      const { frontmatter: pageFrontmatter, htmlContent, headings } = processedData;
+      const { frontmatter: pageFrontmatter, htmlContent, headings, searchData } = processedData;
 
       const isIndexFile = path.basename(relativePath) === 'index.md';
 
@@ -333,9 +335,27 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
         outputPath: sitemapOutputPath.replace(/\\/g, '/'),
         frontmatter: pageFrontmatter
       });
+
+      // Collect Search Data
+      if (searchData) {
+        let pageUrl = outputHtmlPath.replace(/\\/g, '/');
+        if (pageUrl.endsWith('/index.html')) {
+          pageUrl = pageUrl.substring(0, pageUrl.length - 10); // remove index.html
+        }
+
+        // Add to index array
+        searchIndexData.push({
+          id: pageUrl, // URL is the ID
+          title: searchData.title,
+          text: searchData.content,
+          headings: searchData.headings.join(' ')
+        });
+      }
+
     } catch (error) {
       console.error(`❌ An unexpected error occurred while processing file ${path.relative(CWD, filePath)}:`, error);
     }
+
   }
 
   // Generate sitemap if enabled in config
@@ -344,6 +364,33 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       await generateSitemap(config, processedPages, OUTPUT_DIR, { isDev: options.isDev });
     } catch (error) {
       console.error(`❌ Error generating sitemap: ${error.message}`);
+    }
+  }
+
+  // Generate search index if enabled
+  if (config.search !== false) {
+    console.log('🔍 Generating search index...');
+
+    // Create MiniSearch instance
+    const miniSearch = new MiniSearch({
+      fields: ['title', 'headings', 'text'], // fields to index for full-text search
+      storeFields: ['title', 'id', 'text'], // fields to return with search results (don't store full text to keep JSON small)
+      searchOptions: {
+        boost: { title: 2, headings: 1.5 }, // title matches are more important
+        fuzzy: 0.2
+      }
+    });
+
+    // Add documents
+    miniSearch.addAll(searchIndexData);
+
+    // Serialize to JSON
+    const jsonIndex = JSON.stringify(miniSearch.toJSON());
+    const searchIndexPath = path.join(OUTPUT_DIR, 'search-index.json');
+    await fs.writeFile(searchIndexPath, jsonIndex);
+
+    if (!options.isDev) {
+      console.log(`✅ Search index generated (${(jsonIndex.length / 1024).toFixed(1)} KB)`);
     }
   }
 
@@ -363,6 +410,74 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       console.log(`  - ... and ${userAssetsCopied.length - 5} more files`);
     }
   }
+
+  // Bundle third-party libraries into assets
+  const copyLibrary = async (packageName, fileToBundle, destFileName) => {
+    try {
+      let srcPath;
+
+      // 1. Resolve Source Path
+      try {
+        srcPath = require.resolve(`${packageName}/${fileToBundle}`);
+      } catch (e) {
+        const mainPath = require.resolve(packageName);
+        let currentDir = path.dirname(mainPath);
+        let packageRoot = null;
+        
+        for (let i = 0; i < 5; i++) {
+          if (await fs.pathExists(path.join(currentDir, 'package.json'))) {
+            packageRoot = currentDir;
+            break;
+          }
+          currentDir = path.dirname(currentDir);
+        }
+
+        if (packageRoot) {
+          srcPath = path.join(packageRoot, fileToBundle);
+        }
+      }
+
+      // 2. Process and Write
+      if (srcPath && await fs.pathExists(srcPath)) {
+        const destPath = path.join(OUTPUT_DIR, 'assets/js', destFileName);
+        
+        // Read content
+        let content = await fs.readFile(srcPath, 'utf8');
+        
+        // This prevents the browser from looking for index.js.map or similar files we didn't copy
+        content = content.replace(/\/\/# sourceMappingURL=.*$/gm, '');
+        
+        // Minify if production build
+        if (shouldMinify) {
+            try {
+                const result = await esbuild.transform(content, {
+                    minify: true,
+                    loader: 'js',
+                    target: 'es2015'
+                });
+                await fs.writeFile(destPath, result.code);
+            } catch (minErr) {
+                console.warn(`⚠️ Minification failed for ${packageName}, using sanitized original.`, minErr.message);
+                await fs.writeFile(destPath, content);
+            }
+        } else {
+            // Write sanitized original in dev mode
+            await fs.writeFile(destPath, content);
+        }
+
+      } else {
+        console.warn(`⚠️ Could not locate ${fileToBundle} in ${packageName}`);
+      }
+    } catch (e) {
+      console.warn(`⚠️ Failed to bundle ${packageName}: ${e.message}`);
+    }
+  };
+
+  // Bundle MiniSearch 
+  await copyLibrary('minisearch', 'dist/umd/index.js', 'minisearch.js');
+
+  // Bundle Mermaid
+  await copyLibrary('mermaid', 'dist/mermaid.min.js', 'mermaid.min.js');
 
   return {
     config,

@@ -22,6 +22,8 @@ module.exports = {
   srcDir: 'docs',
   outputDir: 'site',
 
+  search: true,
+
   sidebar: {
     collapsible: true,
     defaultCollapsed: false,
@@ -125,13 +127,17 @@ module.exports = {
 *   **Default:** `'site'`
 *   **Description:** Directory where the static site will be generated.
 
+### `search`
+*   **Type:** `Boolean`
+*   **Default:** `true`
+*   **Description:** Controls the visibility of the full-text search bar in the header and the generation of the search index. Set to `false` to disable search capabilities entirely.
+
 ## `minify`
 *   **Type:** `Boolean`
 *   **Optional**
 *   **Default:** `true` when running `docmd build`, `false` when running `docmd dev`.
 *   **Description:** Controls whether CSS and JavaScript assets are minified (compressed) during the build.
 *   **Usage:** You can force this to `false` if you need to debug production builds.
-*   **Example:** `minify: false`
 
 ### `autoTitleFromH1`
 *   **Type:** `Boolean`

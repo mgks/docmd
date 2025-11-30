@@ -60,6 +60,7 @@ figure img {
 :root[data-theme=light] {
     --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     --font-family-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --accent-color: #0097ff;
     --sky-primary: #0097ff;
     --sky-primary-light: #e5f4ff;
     --sky-primary-dark: #0078cc;
@@ -92,7 +93,8 @@ figure img {
     --image-hover-transform: translateY(-2px);
     --image-hover-shadow: var(--shadow-lg);
     --image-border-radius: 8px;
-    --image-transition: all 0.3s ease
+    --image-transition: all 0.3s ease;
+
 }
 
 :root[data-theme=dark] {
@@ -469,6 +471,7 @@ button:hover {
     background-color: var(--sky-primary-dark)
 }
 
+.docmd-search-trigger,
 .theme-toggle-button {
     background-color: var(--sky-background-alt);
     border-color: var(--sky-border-light);
@@ -476,6 +479,7 @@ button:hover {
     transition: .2s
 }
 
+.docmd-search-trigger:hover,
 .theme-toggle-button:hover {
     background-color: var(--sky-primary-light)
 }
