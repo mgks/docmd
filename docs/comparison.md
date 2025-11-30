@@ -16,11 +16,16 @@ Choosing the right tool depends on your specific needs. `docmd` was built to fil
 | **Setup Time** | ~2 minutes | ~15 minutes | ~10 mins (Python env) | Instant (SaaS) | Instant |
 | **Client JS Size** | **Tiny (< 15kb)** | Heavy (React Bundle) | Minimal | Medium | Medium |
 | **Customization** | Standard CSS/JS | React Components | Python/Jinja2 | JSON Config | Vue/Plugins |
+| **Search** | **Built-in (Offline)** | Algolia (Requires Setup) | Built-in (Lunr) | Built-in | Client-side Plugin |
 | **SEO** | **Excellent** | Excellent | Excellent | Excellent | **Poor** |
 | **Hosting** | **Anywhere** | Anywhere | Anywhere | **Vendor Locked** | Anywhere |
 | **Cost** | **100% Free OSS** | 100% Free OSS | 100% Free OSS | Freemium | 100% Free OSS |
 
 ## Detailed Breakdown
+
+### The Search Advantage
+*   **Docusaurus and others** rely on 3rd party services like Algolia and others. This is great for enterprise scale, but for most projects, it's a hassle. You have to apply for an account, manage API keys, and configure crawlers.
+*   **docmd** includes a production-grade search engine out of the box. It generates a local index during the build. This means your documentation is **searchable even offline** (perfect for Intranets or air-gapped networks) and respects user privacy completely.
 
 ### vs. Docusaurus
 **Docusaurus** is the gold standard for large-scale React projects (like Meta's own docs).

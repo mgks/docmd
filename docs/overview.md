@@ -30,6 +30,7 @@ This very documentation site is built using `docmd`!
 ## Key Features
 
 *   📝 **Standard Markdown & Frontmatter:** Write content naturally, define page metadata (title, description) easily.
+*   🔍 **Smart Search:** Built-in, offline-capable full-text search with fuzzy matching and highlighting. No API keys required.
 *   🎨 **Themeable:** Built-in light/dark modes, customizable via CSS variables. Uses `highlight.js` for code blocks.
 *   🧩 **Custom Containers:** Add richer components like callouts, cards, and steps using simple `::: name :::` syntax.
 *   ⚙️ **Config-Driven Navigation:** Define your site structure and sidebar navigation in `docmd.config.js`. Supports nested items.
