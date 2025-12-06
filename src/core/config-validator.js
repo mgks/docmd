@@ -6,7 +6,8 @@ const chalk = require('chalk');
 const KNOWN_KEYS = [
   'siteTitle', 'siteUrl', 'srcDir', 'outputDir', 'logo', 
   'sidebar', 'theme', 'customJs', 'autoTitleFromH1', 
-  'copyCode', 'plugins', 'navigation', 'footer', 'sponsor', 'favicon'
+  'copyCode', 'plugins', 'navigation', 'footer', 'sponsor', 'favicon',
+  'search', 'minify', 'editLink', 'pageNavigation'
 ];
 
 // Common typos mapping
