@@ -13,6 +13,8 @@
     const searchInput = document.getElementById('docmd-search-input');
     const searchResults = document.getElementById('docmd-search-results');
 
+    const ROOT_PATH = window.DOCMD_ROOT || './';
+
     if (!searchModal) return;
 
     const emptyStateHtml = '<div class="search-initial">Type to start searching...</div>';
@@ -102,8 +104,9 @@
     // 3. Index Loading Logic
     async function loadIndex() {
         try {
-            const basePath = document.documentElement.getAttribute('data-base-url') || '/';
-            const response = await fetch(`${basePath}search-index.json`);
+
+            const indexUrl = `${ROOT_PATH}search-index.json`;
+            const response = await fetch(indexUrl);
             if (!response.ok) throw new Error(response.status);
 
             const jsonString = await response.text();
@@ -188,9 +191,12 @@
 
         const html = results.slice(0, 10).map((result, index) => {
             const snippet = getSnippet(result.text, query);
+
+            const linkHref = `${ROOT_PATH}${result.id}`;
+
             // Add data-index for mouse interaction tracking if needed
             return `
-                <a href="/${result.id}" class="search-result-item" data-index="${index}" onclick="window.closeDocmdSearch()">
+                <a href="${linkHref}" class="search-result-item" data-index="${index}" onclick="window.closeDocmdSearch()">
                     <div class="search-result-title">${result.title}</div>
                     <div class="search-result-preview">${snippet}</div>
                 </a>

@@ -32,8 +32,8 @@ jobs:
 
       - name: Publish to NPM Registry
         run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # env:
+        #  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # ----------------------------------------
       # --- Publish to GitHub Packages (GPR) ---
