@@ -17,7 +17,7 @@
     <% } %>
 
     <% if (frontmatter.components?.themeMode !== false) { %>
-        <%- themeInitScript %>
+        <script>window.DOCMD_DEFAULT_MODE = "<%= defaultMode %>";</script>
     <% } %>
 
     <% if (frontmatter.components?.css !== false) { %>
@@ -25,6 +25,10 @@
         <% if (frontmatter.components?.highlight !== false) { %>
             <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
         <% } %>
+    <% } %>
+
+    <% if (frontmatter.components?.themeMode !== false) { %>
+        <%- themeInitScript %>
     <% } %>
 
     <% if (frontmatter.components?.theme !== false) { %>

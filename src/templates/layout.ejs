@@ -13,14 +13,19 @@
 
     <%- faviconLinkHtml || '' %> <%# Favicon %>
 
-    <%- themeInitScript %>
+    <!-- Define Default Mode (Variable for script) -->
+    <script>
+      window.DOCMD_DEFAULT_MODE = "<%= defaultMode %>";
+    </script>
 
-    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
-
+    <!-- Highlight.js Theme -->
     <% if (config.theme?.codeHighlight !== false) { %>
         <link rel="stylesheet" id="highlight-theme" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" data-base-href="<%= relativePathToRoot %>assets/css/">
     <% } %>
 
+    <!-- Main Theme -->
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
+    
     <%- themeCssLinkHtml || '' %> <%# For theme.name specific CSS %>
 
     <% (customCssFiles || []).forEach(cssFile => { %>
@@ -29,10 +34,13 @@
 
     <%- pluginStylesHtml || '' %> <%# Plugin specific CSS %>
 
-    <%- pluginHeadScriptsHtml || '' %> <%# Plugin specific head scripts (e.g., Analytics) %>
+    <!-- This checks storage and updates HTML attr + Highlight CSS before final paint -->
+    <%- themeInitScript %>
+
+    <%- pluginHeadScriptsHtml || '' %> <%# Plugin specific head scripts %>
 </head>
 <body class="<%= sidebarConfig.collapsible ? 'sidebar-collapsible' : 'sidebar-not-collapsible' %>"
-    data-theme="<%= defaultMode %>" data-default-collapsed="<%= sidebarConfig.defaultCollapsed %>"
+    data-default-collapsed="<%= sidebarConfig.defaultCollapsed %>"
     data-copy-code-enabled="<%= config.copyCode === true %>">
     <aside class="sidebar">
         <div class="sidebar-header">

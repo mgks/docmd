@@ -47,10 +47,11 @@ img {
     --lightbox-bg: rgba(0, 0, 0, 0.9);
     --lightbox-text: #fff;
     --accent-color: #858585;
+    --white: #ffffff;
 
 }
 
-[data-theme=dark] {
+:root[data-theme=dark] {
     --bg-color: #1a1a1a;
     --text-color: #e0e0e0;
     --sidebar-bg: #2c2c2c;
@@ -86,6 +87,7 @@ pre {
     font-family: var(--font-family-mono);
     background-color: var(--code-bg)
 }
+a:any-link{color:var(--link-color) }
 
 .sidebar {
     width: 260px;
@@ -733,8 +735,8 @@ details[open]>.collapsible-summary .collapsible-arrow svg {
     text-decoration: none
 }
 
-[data-theme=dark] .next-page:hover,
-[data-theme=dark] .prev-page:hover {
+:root[data-theme=dark] .next-page:hover,
+:root[data-theme=dark] .prev-page:hover {
     background-color: rgba(255, 255, 255, .05)
 }
 
@@ -1098,9 +1100,9 @@ img.with-shadow {
     color: #ddd
 }
 
-.docmd-button,
-.sponsor-link,
-.sponsor-link:hover {
+a.docmd-button,
+a.sponsor-link,
+a.sponsor-link:hover {
     color: #fff;
     text-decoration: none
 }
@@ -1119,7 +1121,8 @@ img.lightbox {
     font-weight: 500;
     transition: background-color .2s, transform .2s;
     border: none;
-    cursor: pointer
+    cursor: pointer;
+
 }
 
 .docmd-button:hover {
@@ -1154,6 +1157,8 @@ img.lightbox {
     font-size: .85em;
     transition: .3s;
     white-space: nowrap;
+    color: var(--white) !important;
+
 }
 
 .sponsor-link:hover {
@@ -1448,7 +1453,7 @@ hr {
     border-radius: 2px;
 }
 
-[data-theme="dark"] .search-result-preview mark {
+:root[data-theme="dark"] .search-result-preview mark {
     background-color: rgba(255, 235, 59, 0.25);
     color: #fff;
 }
