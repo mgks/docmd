@@ -25,11 +25,11 @@ body:
   - type: dropdown
     id: os
     attributes:
-      label: OS
+      label: OS/Browser
       options:
-        - macOS
-        - Windows
-        - Linux
+        - macOS / Safari
+        - Windows / Edge
+        - Linux / Chrome
     validations:
       required: true
   - type: textarea
