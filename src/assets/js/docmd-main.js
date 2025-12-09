@@ -68,6 +68,41 @@ function initializeCollapsibleNav() {
   });
 }
 
+// --- Mobile Menu Logic ---
+function initializeMobileMenus() {
+  // 1. Sidebar Toggle
+  const sidebarBtn = document.querySelector('.sidebar-menu-button');
+  const sidebar = document.querySelector('.sidebar');
+  
+  if (sidebarBtn && sidebar) {
+    sidebarBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent bubbling
+      sidebar.classList.toggle('mobile-expanded');
+    });
+  }
+
+  // 2. TOC Toggle
+  const tocBtn = document.querySelector('.toc-menu-button');
+  const tocContainer = document.querySelector('.toc-container');
+  // Also allow clicking the title text to toggle
+  const tocTitle = document.querySelector('.toc-title');
+
+  const toggleToc = (e) => {
+    // Only engage on mobile view (check if button is visible)
+    if (window.getComputedStyle(tocBtn).display === 'none') return;
+    
+    e.stopPropagation();
+    tocContainer.classList.toggle('mobile-expanded');
+  };
+
+  if (tocBtn && tocContainer) {
+    tocBtn.addEventListener('click', toggleToc);
+    if (tocTitle) {
+      tocTitle.addEventListener('click', toggleToc);
+    }
+  }
+}
+
 // --- Sidebar Scroll Preservation ---
 function initializeSidebarScroll() {
   const sidebar = document.querySelector('.sidebar');
@@ -245,5 +280,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeTabs();
   initializeCopyCodeButtons();
   initializeCollapsibleNav();
+  initializeMobileMenus();
   initializeSidebarScroll();
 });
