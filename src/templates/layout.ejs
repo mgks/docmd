@@ -52,11 +52,13 @@
             <% } else { %>
                 <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
             <% } %>
+                <span class="mobile-view sidebar-menu-button float-right">
+                    <%- renderIcon("ellipsis-vertical") %>
+                </span>
         </div>
         <%- navigationHtml %>
         <% if (theme && theme.enableModeToggle && theme.positionMode !== 'top') { %>
           <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button">
-            <%# renderIcon is available in the global EJS scope from html-generator %>
             <%- renderIcon('sun', { class: 'icon-sun' }) %>
             <%- renderIcon('moon', { class: 'icon-moon' }) %>
           </button>
