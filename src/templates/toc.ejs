@@ -54,7 +54,7 @@ if (shouldShowToc && !frontmatter?.toc || frontmatter?.toc !== 'false') {
   if (tocHeadings.length > 1) { 
 %>
   <div class="toc-container">
-    <h2 class="toc-title">On This Page</h2>
+    <h2 class="toc-title">On This Page<span class="mobile-view toc-menu-button float-right"><%- renderIcon("chevrons-down-up") %></span></h2>
     <ul class="toc-list">
       <% tocHeadings.forEach(heading => { %>
         <li class="toc-item toc-level-<%= heading.level %>">
