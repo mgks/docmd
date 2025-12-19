@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "exports": {
@@ -18,29 +18,8 @@
     "postinstall": "node ./bin/postinstall.js",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"No tests specified currently\" && exit 0"
   },
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mgks/docmd.git"
-  },
-  "keywords": [
-    "markdown",
-    "static-site-generator",
-    "documentation",
-    "ssg",
-    "docs",
-    "generator"
-  ],
-  "author": "Ghazi <hello@mgks.dev>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/mgks/docmd/issues"
-  },
-  "homepage": "https://github.com/mgks/docmd#readme",
   "dependencies": {
     "chalk": "^4.1.2",
     "chokidar": "^4.0.3",
@@ -72,5 +51,30 @@
   },
   "directories": {
     "doc": "docs"
-  }
+  },
+  "keywords": [
+    "markdown",
+    "static-site-generator",
+    "documentation",
+    "ssg",
+    "docs",
+    "generator"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": {
+    "name": "Ghazi",
+    "url": "https://mgks.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mgks/docmd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mgks/docmd/issues"
+  },
+  "homepage": "https://github.com/mgks/docmd#readme",
+  "funding": "https://github.com/sponsors/mgks",
+  "license": "MIT"
 }
