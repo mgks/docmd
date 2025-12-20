@@ -6,6 +6,7 @@
 genctx.config.json
 genctx.context.md
 docs/
-assets/
+assets/css/welcome.css
+assets/images/preview-*
 preview.gif
 docmd-preview.png
