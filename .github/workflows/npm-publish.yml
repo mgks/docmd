@@ -1,4 +1,4 @@
-name: Publish Package to NPM and GitHub Packages
+name: Publish package to npm
 
 on:
   release:
@@ -32,23 +32,7 @@ jobs:
       - name: Run tests (optional)
         run: npm test --if-present
 
-      # ------------------------------------------
-      # --- Publish to NPM Registry (npmjs.com) ---
-      # ------------------------------------------
       - name: Publish to npm
         run: npm publish --access public
         # env:
         #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # ----------------------------------------
-      # --- Publish to GitHub Packages (GPR) ---
-      # ----------------------------------------
-      - name: Configure NPM for GitHub Packages registry
-        run: |
-          echo "@mgks:registry=https://npm.pkg.github.com" > ~/.npmrc
-          echo "//npm.pkg.github.com/:_authToken=${{ secrets.GITHUB_TOKEN }}" >> ~/.npmrc
-
-      - name: Publish to GitHub Packages
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
