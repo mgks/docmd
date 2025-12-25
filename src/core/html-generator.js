@@ -13,10 +13,12 @@ let mdInstance = null;
 
 let themeInitScript = '';
 (async () => {
-    const themeInitPath = path.join(__dirname, '..', 'templates', 'partials', 'theme-init.js');
-    if (await fs.pathExists(themeInitPath)) {
-        const scriptContent = await fs.readFile(themeInitPath, 'utf8');
-        themeInitScript = `<script>${scriptContent}</script>`;
+    if (typeof __dirname !== 'undefined') {
+        const themeInitPath = path.join(__dirname, '..', 'templates', 'partials', 'theme-init.js');
+        if (await fs.pathExists(themeInitPath)) {
+            const scriptContent = await fs.readFile(themeInitPath, 'utf8');
+            themeInitScript = `<script>${scriptContent}</script>`;
+        }
     }
 })();
 
@@ -96,8 +98,6 @@ async function generateHtmlPage(templateData) {
     if (!await fs.pathExists(layoutTemplatePath)) {
         throw new Error(`Template not found: ${layoutTemplatePath}`);
     }
-    const layoutTemplate = await fs.readFile(layoutTemplatePath, 'utf8');
-
     const isActivePage = currentPagePath && content && content.trim().length > 0;
 
     // Calculate Edit Link
@@ -154,13 +154,20 @@ async function generateHtmlPage(templateData) {
         ...pluginOutputs,
     };
 
+    const layoutTemplate = await fs.readFile(layoutTemplatePath, 'utf8');
+    
+    return renderHtmlPage(layoutTemplate, ejsData, layoutTemplatePath);
+}
+
+function renderHtmlPage(templateContent, ejsData, filename = 'template.ejs', options = {}) {
     try {
-        return ejs.render(layoutTemplate, ejsData, {
-            filename: layoutTemplatePath
+        return ejs.render(templateContent, ejsData, {
+            filename: filename,
+            ...options
         });
     } catch (e) {
-        console.error(`❌ Error rendering EJS template for ${outputPath}: ${e.message}`);
-        console.error("EJS Data:", JSON.stringify(ejsData, null, 2).substring(0, 1000) + "...");
+        console.error(`❌ Error rendering EJS template: ${e.message}`);
+        console.error("EJS Data snippet:", JSON.stringify(ejsData, null, 2).substring(0, 500));
         throw e;
     }
 }
@@ -185,4 +192,4 @@ async function generateNavigationHtml(navItems, currentPagePath, relativePathToR
     });
 }
 
-module.exports = { generateHtmlPage, generateNavigationHtml };
+module.exports = { generateHtmlPage, generateNavigationHtml, renderHtmlPage };
