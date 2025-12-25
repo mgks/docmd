@@ -34,12 +34,16 @@ function formatPathForDisplay(absolutePath) {
 
 async function processMarkdownFile(filePath, md, config) {
     const rawContent = await fs.readFile(filePath, 'utf8');
+    return processMarkdownContent(rawContent, md, config, filePath);
+}
+
+function processMarkdownContent(rawContent, md, config, filePath = 'memory') {
     let frontmatter, markdownContent;
   
     try {
       ({ data: frontmatter, content: markdownContent } = matter(rawContent));
     } catch (e) {
-      console.error(`❌ Error parsing frontmatter in ${formatPathForDisplay(filePath)}:`);
+      console.error(`❌ Error parsing frontmatter in ${filePath === 'memory' ? 'content' : formatPathForDisplay(filePath)}:`);
       console.error(`   ${e.message}`);
       return null;
     }
@@ -70,7 +74,7 @@ async function processMarkdownFile(filePath, md, config) {
   
     return { frontmatter, htmlContent, headings, searchData };
 }
-  
+
 async function findMarkdownFiles(dir) {
     let files = [];
     const items = await fs.readdir(dir, { withFileTypes: true });
@@ -87,6 +91,7 @@ async function findMarkdownFiles(dir) {
 
 module.exports = {
   processMarkdownFile,
+  processMarkdownContent,
   createMarkdownItInstance,
   extractHeadingsFromHtml,
   findMarkdownFiles
