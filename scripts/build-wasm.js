@@ -112,6 +112,15 @@ module.exports = templates;
             ]
         });
         console.log('✅ Bundled dist/docmd-wasm.js');
+
+        // 3. Copy Demo HTML
+        const demoSrc = path.join(__dirname, '../src/wasm/wasm-demo.html');
+        const demoDest = path.join(__dirname, '../dist/wasm-demo.html');
+        if (fs.existsSync(demoSrc)) {
+            fs.copyFileSync(demoSrc, demoDest);
+            console.log('✅ Copied wasm-demo.html to dist/');
+        }
+
     } catch (e) {
         console.error('❌ Build failed:', e);
         process.exit(1);
