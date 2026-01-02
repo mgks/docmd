@@ -137,3 +137,5 @@ ROADMAP.md
 
 .DS_Store
 genctx.json
+genctx.config.json
+genctx.context.md

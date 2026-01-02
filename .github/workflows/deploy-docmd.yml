@@ -2,8 +2,8 @@ name: deploy docmd
 
 on:
   push:
-    branches: [main] # Your default branch
-  workflow_dispatch: # Allows manual triggering
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -26,11 +26,20 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Update NPM to Latest 🆕
+        run: npm install -g npm@latest
+
       - name: Install Dependencies 📦
         run: npm ci
-
+      
       - name: Build docmd's Own Docs 🛠️
         run: node ./bin/docmd.js build
+
+      - name: Build Live Editor ⚡
+        run: node scripts/build-live.js
+
+      - name: Inject Live Editor into Site
+        run: mv dist site/live
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
