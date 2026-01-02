@@ -116,6 +116,7 @@ module.exports = {
           ]
         },
         { title: 'No-Style Pages', path: '/content/no-style-pages', icon: 'layout' },
+        { title: 'Live Preview', path: '/content/live-preview', icon: 'monitor-play' },
       ],
     },
 
