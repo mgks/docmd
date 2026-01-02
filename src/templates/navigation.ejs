@@ -2,36 +2,46 @@
 <nav class="sidebar-nav" aria-label="Main navigation">
   <ul>
     <%
-      // A robust, centralized function to normalize navigation paths
+      // Helper: Normalize paths for comparison
       function normalizePath(p) {
         if (!p) return '#';
         let path = p.replace(/\\/g, '/');
         
+        // Strip leading ./ if present
+        if (path.startsWith('./')) {
+            path = path.substring(2);
+        }
+
+        // Handle file extensions
         if (path.endsWith('index.md')) {
           path = path.slice(0, -'index.md'.length);
         } else {
           path = path.replace(/\.md$/, '');
         }
 
+        // Ensure leading slash
         if (!path.startsWith('/')) path = '/' + path;
 
+        // Ensure trailing slash
         if (path.length > 1 && !path.endsWith('/')) {
           path += '/';
         }
         
-        // Handle root case where path might be "" after stripping index.md
+        // Handle root
         if (path === '') path = '/';
         
         return path;
       }
 
-      // Helper to check for active children recursively
+      // Helper: Recursively check if an item contains the active page
       function hasActiveChild(item, currentPagePath) {
         if (!item.children || !Array.isArray(item.children)) return false;
         return item.children.some(child => {
           if (!child.path || child.external) return false;
           const childPath = normalizePath(child.path);
+          
           if (currentPagePath === childPath) return true;
+          
           return hasActiveChild(child, currentPagePath);
         });
       }
@@ -39,24 +49,76 @@
       // Recursive function to render navigation items
       function renderNav(items) {
         if (!items || !Array.isArray(items)) return;
+        
         items.forEach(item => {
           const isExternal = item.external || false;
           let itemPath = item.path || '#';
-          
           const normalizedItemPath = isExternal ? itemPath : normalizePath(itemPath);
 
+          // 1. Determine State
           const isActive = !isExternal && currentPagePath === normalizedItemPath;
           const isParentOfActive = !isActive && hasActiveChild(item, currentPagePath);
           const isCollapsible = item.children && item.collapsible;
+          
+          // 2. Open State (Server-Side Calculation)
+          const shouldBeOpen = isParentOfActive || (isActive && item.children && item.children.length > 0);
 
+          // 3. Build Attributes String
           const liClasses = [];
           if (isActive) liClasses.push('active');
           if (isParentOfActive) liClasses.push('active-parent');
           if (isCollapsible) liClasses.push('collapsible');
           
-          const finalHref = isExternal ? item.path : (itemPath === '#' ? '#' : (relativePathToRoot + (item.path.startsWith('/') ? item.path.substring(1) : item.path)));
+          let liAttributes = `class="${liClasses.join(' ')}"`;
+          if (isCollapsible) {
+              liAttributes += ` data-nav-id="${item.path}"`;
+              if (shouldBeOpen) {
+                  liAttributes += ` aria-expanded="true"`;
+              }
+          }
+
+          // 4. Build Link URL
+          let finalHref = item.path;
+          
+          if (!isExternal) {
+             if (!itemPath || itemPath === '#') {
+                 finalHref = '#';
+             } else {
+                 let cleanPath = item.path;
+                 if (cleanPath.startsWith('/')) cleanPath = cleanPath.substring(1);
+                 
+                 finalHref = relativePathToRoot + cleanPath;
+
+                 const offline = (typeof locals !== 'undefined' && locals.isOfflineMode) === true;
+
+                 if (offline) {
+                     // Offline Mode Logic
+                     if (finalHref.endsWith('/')) {
+                         finalHref += 'index.html';
+                     } else if (finalHref === './') {
+                         finalHref = './index.html';
+                     } else if (!finalHref.includes('#')) {
+                         // FIX: Check only the last segment for a dot (extension)
+                         // e.g. "../../guide" -> last segment "guide" (no dot) -> add index.html
+                         // e.g. "../../guide.html" -> last segment "guide.html" (has dot) -> skip
+                         
+                         const parts = finalHref.split('?')[0].split('/'); // Remove query, split by slash
+                         const lastSegment = parts[parts.length - 1];
+                         
+                         if (!lastSegment.includes('.')) {
+                             finalHref += '/index.html';
+                         }
+                     }
+                 } else {
+                     // Clean URL Mode
+                     if (finalHref.endsWith('/index.html')) {
+                         finalHref = finalHref.substring(0, finalHref.length - 10);
+                     }
+                 }
+             }
+          }
     %>
-    <li class="<%= liClasses.join(' ') %>" <%- isCollapsible ? `data-nav-id="${item.path}"` : '' %>>
+    <li <%- liAttributes %>>
       <a href="<%- finalHref %>" class="<%- isActive ? 'active' : '' %>" <%- isExternal ? 'target="_blank" rel="noopener"' : '' %>>
         <% if (item.icon) { %> <%- renderIcon(item.icon) %> <% } %>
         <span class="nav-item-title"><%= item.title %></span>
@@ -64,7 +126,7 @@
         <% if (isExternal) { %> <%- renderIcon('external-link', { class: 'nav-external-icon' }) %> <% } %>
       </a>
       <% if (item.children) { %>
-        <ul class="submenu">
+        <ul class="submenu" style="display: <%= (isCollapsible && shouldBeOpen) ? 'block' : 'none' %>;">
           <% renderNav(item.children); %>
         </ul>
       <% } %>

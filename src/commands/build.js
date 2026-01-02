@@ -66,6 +66,7 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
   const md = createMarkdownItInstance(config);
   const shouldMinify = !options.isDev && config.minify !== false;
   const searchIndexData = [];
+  const isOfflineMode = options.offline === true;
 
   if (!await fs.pathExists(SRC_DIR)) {
     throw new Error(`Source directory not found: ${formatPathForDisplay(SRC_DIR, CWD)}`);
@@ -287,10 +288,11 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
       const currentPagePathForNav = normalizedPath;
 
       const navigationHtml = await generateNavigationHtml(
-        config.navigation,
-        currentPagePathForNav,
-        relativePathToRoot,
-        config
+          config.navigation,
+          normalizedPath,
+          relativePathToRoot,
+          config,
+          isOfflineMode
       );
 
       // Find previous and next pages for navigation
@@ -320,9 +322,10 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
         nextPage: nextPage,
         currentPagePath: normalizedPath,
         headings: headings || [],
+        isOfflineMode,
       };
 
-      const pageHtml = await generateHtmlPage(pageDataForTemplate);
+      const pageHtml = await generateHtmlPage(pageDataForTemplate, isOfflineMode);
 
       await fs.ensureDir(path.dirname(finalOutputHtmlPath));
       await fs.writeFile(finalOutputHtmlPath, pageHtml);

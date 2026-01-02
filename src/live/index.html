@@ -12,7 +12,7 @@
     <!-- Top Bar (Desktop) -->
     <div class="top-bar">
         <div class="logo">
-            <a href="/" class="back-link" title="Back to Home" aria-label="Back to Home">
+            <a href="/" class="back-link" id="back-btn" title="Back to Home" aria-label="Back to Home">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m12 19-7-7 7-7"/>
                     <path d="M19 12H5"/>
@@ -78,6 +78,7 @@ Try resizing the window or switching to mobile view!
         // --- Core Logic ---
         const input = document.getElementById('input');
         const preview = document.getElementById('preview');
+        const backBtn = document.getElementById('back-btn');
 
         function render() {
             try {
@@ -184,6 +185,16 @@ Try resizing the window or switching to mobile view!
             
             document.getElementById('mob-edit').classList.toggle('active', tab === 'editor');
             document.getElementById('mob-prev').classList.toggle('active', tab === 'preview');
+        }
+
+        // --- Back Button Logic ---
+        if (window.history.length <= 1) {
+            backBtn.style.display = 'none';
+        } else {
+            backBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.history.back();
+            });
         }
     </script>
 </body>
