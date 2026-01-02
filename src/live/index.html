@@ -74,22 +74,26 @@ Try resizing the window or switching to mobile view!
         function render() {
             try {
                 let html = docmd.compile(input.value, {
-                    siteTitle: '', 
+                    siteTitle: 'My Project', // User can change this in real config, but here we set a default
                     search: false, 
                     theme: { name: 'sky', defaultMode: 'light' },
                     sidebar: { collapsible: false } 
                 });
 
-                // --- INJECT CUSTOM CSS HERE ---
+                // --- INJECTIONS ---
+                
+                // 1. Force links to open in new tab (Fixes infinite iframe recursion)
+                html = html.replace('<head>', '<head><base target="_blank">');
+
+                // 2. Hide Sidebar Header via CSS
                 const customStyle = `
                     <style>
                         .sidebar-header { display: none !important; }
-                        /* Add a bit of padding to top of nav since header is gone */
                         .sidebar-nav { margin-top: 1rem; }
                     </style>
                 `;
                 html = html.replace('</body>', `${customStyle}</body>`);
-                // ------------------------------
+                // ------------------
 
                 const doc = preview.contentWindow.document;
                 doc.open();

@@ -369,7 +369,9 @@ async function buildSite(configPath, options = { isDev: false, preserve: false, 
 
   // Generate search index if enabled
   if (config.search !== false) {
-    console.log('🔍 Generating search index...');
+    if (!options.isDev) {
+      console.log('🔍 Generating search index...');
+    }
 
     // Create MiniSearch instance
     const miniSearch = new MiniSearch({
