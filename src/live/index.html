@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Docmd Live</title>
+    <link rel="stylesheet" href="live.css">
+    <script src="docmd-live.js"></script>
+</head>
+<body class="mode-split mobile-tab-editor">
+
+    <!-- Top Bar (Desktop) -->
+    <div class="top-bar">
+        <div class="logo">docmd <span>Live</span></div>
+        
+        <div class="view-controls desktop-only">
+            <button class="view-btn active" onclick="setViewMode('split')" id="btn-split">Split View</button>
+            <button class="view-btn" onclick="setViewMode('single')" id="btn-single">Single View</button>
+        </div>
+
+        <!-- Single View Tabs (Visible only when in Single Mode on Desktop) -->
+        <div class="view-controls" id="single-view-tabs" style="display:none;">
+            <button class="view-btn active" onclick="switchSingleTab('editor')" id="btn-tab-edit">Editor</button>
+            <button class="view-btn" onclick="switchSingleTab('preview')" id="btn-tab-prev">Preview</button>
+        </div>
+    </div>
+
+    <!-- Workspace -->
+    <div class="workspace" id="workspace">
+        <!-- Editor -->
+        <div class="pane editor-pane" id="editorPane">
+            <div class="pane-header">Markdown</div>
+            <textarea id="input" spellcheck="false">---
+title: My Page
+description: Start editing to see changes instantly.
+---
+
+# Hello World
+
+This is a **live** preview.
+
+::: callout tip
+Try resizing the window or switching to mobile view!
+:::
+
+## Features
+1. Responsive Design
+2. Split or Tabbed view
+3. Instant Rendering
+</textarea>
+        </div>
+
+        <!-- Resizer Handle -->
+        <div class="resizer" id="resizer"></div>
+
+        <!-- Preview -->
+        <div class="pane preview-pane" id="previewPane">
+            <div class="pane-header">Preview</div>
+            <iframe id="preview"></iframe>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Tabs -->
+    <div class="mobile-tabs">
+        <button class="mobile-tab-btn active" onclick="setMobileTab('editor')" id="mob-edit">Editor</button>
+        <button class="mobile-tab-btn" onclick="setMobileTab('preview')" id="mob-prev">Preview</button>
+    </div>
+
+    <script>
+        // --- Core Logic ---
+        const input = document.getElementById('input');
+        const preview = document.getElementById('preview');
+
+        function render() {
+            try {
+                let html = docmd.compile(input.value, {
+                    siteTitle: '', 
+                    search: false, 
+                    theme: { name: 'sky', defaultMode: 'light' },
+                    sidebar: { collapsible: false } 
+                });
+
+                // --- INJECT CUSTOM CSS HERE ---
+                const customStyle = `
+                    <style>
+                        .sidebar-header { display: none !important; }
+                        /* Add a bit of padding to top of nav since header is gone */
+                        .sidebar-nav { margin-top: 1rem; }
+                    </style>
+                `;
+                html = html.replace('</body>', `${customStyle}</body>`);
+                // ------------------------------
+
+                const doc = preview.contentWindow.document;
+                doc.open();
+                doc.write(html);
+                doc.close();
+            } catch (e) { console.error(e); }
+        }
+
+        // Debounce Render
+        let timer;
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(render, 300);
+        });
+        
+        // Initial Render
+        render();
+
+
+        // --- Resizer Logic ---
+        const resizer = document.getElementById('resizer');
+        const editorPane = document.getElementById('editorPane');
+        const workspace = document.getElementById('workspace');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizer.classList.add('resizing');
+            preview.style.pointerEvents = 'none';
+            document.body.style.cursor = 'col-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerWidth = workspace.offsetWidth;
+            const newEditorWidth = (e.clientX / containerWidth) * 100;
+            if (newEditorWidth > 15 && newEditorWidth < 85) {
+                editorPane.style.width = newEditorWidth + '%';
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizer.classList.remove('resizing');
+                preview.style.pointerEvents = 'auto';
+                document.body.style.cursor = 'default';
+            }
+        });
+
+
+        // --- View Mode Logic (Desktop) ---
+        function setViewMode(mode) {
+            document.body.classList.remove('mode-split', 'mode-single');
+            document.body.classList.add('mode-' + mode);
+            
+            document.getElementById('btn-split').classList.toggle('active', mode === 'split');
+            document.getElementById('btn-single').classList.toggle('active', mode === 'single');
+            
+            document.getElementById('single-view-tabs').style.display = mode === 'single' ? 'flex' : 'none';
+            
+            if (mode === 'single') {
+                switchSingleTab('editor');
+            }
+        }
+
+        function switchSingleTab(tab) {
+            document.body.classList.remove('show-editor', 'show-preview');
+            document.body.classList.add('show-' + tab);
+            
+            document.getElementById('btn-tab-edit').classList.toggle('active', tab === 'editor');
+            document.getElementById('btn-tab-prev').classList.toggle('active', tab === 'preview');
+        }
+
+
+        // --- Mobile Logic ---
+        function setMobileTab(tab) {
+            document.body.classList.remove('mobile-tab-editor', 'mobile-tab-preview');
+            document.body.classList.add('mobile-tab-' + tab);
+            
+            document.getElementById('mob-edit').classList.toggle('active', tab === 'editor');
+            document.getElementById('mob-prev').classList.toggle('active', tab === 'preview');
+        }
+    </script>
+</body>
+</html>

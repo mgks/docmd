@@ -37,6 +37,7 @@ async function processMarkdownFile(filePath, md, config) {
     return processMarkdownContent(rawContent, md, config, filePath);
 }
 
+// Pure logic, no file reading (Used by Live Editor)
 function processMarkdownContent(rawContent, md, config, filePath = 'memory') {
     let frontmatter, markdownContent;
   
