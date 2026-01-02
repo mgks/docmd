@@ -9,124 +9,82 @@ function initializeCollapsibleNav() {
   const nav = document.querySelector('.sidebar-nav');
   if (!nav) return;
 
-  let navStates = {};
-  try {
-    // Use sessionStorage to remember state only for the current session
-    navStates = JSON.parse(sessionStorage.getItem('docmd-nav-states')) || {};
-  } catch (e) { /* silent fail */ }
+  // We NO LONGER set initial state here. 
+  // The HTML arrives with style="display: block" and aria-expanded="true" 
+  // pre-rendered by the build process. This eliminates the FOUC/Jitter.
 
   nav.querySelectorAll('li.collapsible').forEach(item => {
-    const navId = item.dataset.navId;
     const anchor = item.querySelector('a');
     const submenu = item.querySelector('.submenu');
 
-    if (!navId || !anchor || !submenu) return;
+    if (!anchor || !submenu) return;
 
-    const isParentActive = item.classList.contains('active-parent');
-    // Default to expanded if it's a parent of the active page, otherwise check stored state.
-    let isExpanded = isParentActive || (navStates[navId] === true);
-
-    const toggleSubmenu = (expand) => {
-      item.setAttribute('aria-expanded', expand);
-      submenu.style.display = expand ? 'block' : 'none';
-      navStates[navId] = expand;
-      sessionStorage.setItem('docmd-nav-states', JSON.stringify(navStates));
-    };
-
-    // Set initial state on page load
-    toggleSubmenu(isExpanded);
-
+    // Only handle CLICK events to toggle state
     anchor.addEventListener('click', (e) => {
-      const currentExpanded = item.getAttribute('aria-expanded') === 'true';
       const href = anchor.getAttribute('href');
-      const isPlaceholder = !href || href === '#' || href === '';
+      // If it's a placeholder link (#) OR the user clicked the arrow icon
+      const isToggleAction = !href || href === '#' || e.target.closest('.collapse-icon');
 
-      if (!currentExpanded) {
-        toggleSubmenu(true);
-      } else if (isPlaceholder || e.target.closest('.collapse-icon')) {
-        toggleSubmenu(false);
-      }
-
-      if (isPlaceholder || e.target.closest('.collapse-icon')) {
+      if (isToggleAction) {
         e.preventDefault();
+        
+        // Toggle Logic
+        const isExpanded = item.getAttribute('aria-expanded') === 'true';
+        const newState = !isExpanded;
+        
+        item.setAttribute('aria-expanded', newState);
+        submenu.style.display = newState ? 'block' : 'none';
       }
     });
-
-    /*    anchor.addEventListener('click', (e) => {
-          // If the click target is the icon, ALWAYS prevent navigation and toggle.
-          if (e.target.closest('.collapse-icon')) {
-            e.preventDefault();
-            toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
-          } 
-          // If the link is just a placeholder, also prevent navigation and toggle.
-          else if (anchor.getAttribute('href') === '#') {
-            e.preventDefault();
-            toggleSubmenu(item.getAttribute('aria-expanded') !== 'true');
-          }
-          // Otherwise, let the click proceed to navigate to the link.
-        });*/
   });
 }
 
 // --- Mobile Menu Logic ---
 function initializeMobileMenus() {
-  // 1. Sidebar Toggle
   const sidebarBtn = document.querySelector('.sidebar-menu-button');
   const sidebar = document.querySelector('.sidebar');
   
   if (sidebarBtn && sidebar) {
     sidebarBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent bubbling
+      e.stopPropagation();
       sidebar.classList.toggle('mobile-expanded');
     });
   }
 
-  // 2. TOC Toggle
   const tocBtn = document.querySelector('.toc-menu-button');
   const tocContainer = document.querySelector('.toc-container');
-  // Also allow clicking the title text to toggle
   const tocTitle = document.querySelector('.toc-title');
 
   const toggleToc = (e) => {
-    // Only engage on mobile view (check if button is visible)
     if (window.getComputedStyle(tocBtn).display === 'none') return;
-    
     e.stopPropagation();
     tocContainer.classList.toggle('mobile-expanded');
   };
 
   if (tocBtn && tocContainer) {
     tocBtn.addEventListener('click', toggleToc);
-    if (tocTitle) {
-      tocTitle.addEventListener('click', toggleToc);
-    }
+    if (tocTitle) tocTitle.addEventListener('click', toggleToc);
   }
 }
 
-// --- Sidebar Scroll Preservation ---
+// --- Sidebar Scroll Preservation (Instant Center) ---
 function initializeSidebarScroll() {
   const sidebar = document.querySelector('.sidebar');
   if (!sidebar) return;
 
-  setTimeout(() => {
-    const activeElement = sidebar.querySelector('a.active') || sidebar.querySelector('.active-parent > a');
+  // Wait for the layout to be stable
+  requestAnimationFrame(() => {
+    // Find the active link
+    const activeElement = sidebar.querySelector('a.active');
 
     if (activeElement) {
-      const sidebarRect = sidebar.getBoundingClientRect();
-      const elementRect = activeElement.getBoundingClientRect();
-
-      // Check if the element's top or bottom is outside the sidebar's visible area
-      const isNotInView = elementRect.top < sidebarRect.top || elementRect.bottom > sidebarRect.bottom;
-
-      if (isNotInView) {
-        activeElement.scrollIntoView({
-          behavior: 'auto',
-          block: 'center',
-          inline: 'nearest'
-        });
-      }
+      activeElement.scrollIntoView({
+        behavior: 'auto', // INSTANT jump (prevents scrolling animation jitter)
+        block: 'center',  // Center it vertically in the sidebar
+        inline: 'nearest'
+      });
     }
-  }, 10);
+  });
 }
 
 // --- Theme Toggle Logic ---
@@ -138,7 +96,6 @@ function setupThemeToggleListener() {
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('docmd-theme', theme);
 
-    // Switch highlight.js theme
     const highlightThemeLink = document.getElementById('highlight-theme');
     if (highlightThemeLink) {
       const newHref = highlightThemeLink.getAttribute('data-base-href') + `docmd-highlight-${theme}.css`;
@@ -146,7 +103,6 @@ function setupThemeToggleListener() {
     }
   }
 
-  // Add click listener to the toggle button
   if (themeToggleButton) {
     themeToggleButton.addEventListener('click', () => {
       const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -161,22 +117,15 @@ function initializeSidebarToggle() {
   const toggleButton = document.getElementById('sidebar-toggle-button');
   const body = document.body;
 
-  if (!body.classList.contains('sidebar-collapsible') || !toggleButton) {
-    return;
-  }
+  if (!body.classList.contains('sidebar-collapsible') || !toggleButton) return;
 
   const defaultConfigCollapsed = body.dataset.defaultCollapsed === 'true';
   let isCollapsed = localStorage.getItem('docmd-sidebar-collapsed');
 
-  if (isCollapsed === null) {
-    isCollapsed = defaultConfigCollapsed;
-  } else {
-    isCollapsed = isCollapsed === 'true';
-  }
+  if (isCollapsed === null) isCollapsed = defaultConfigCollapsed;
+  else isCollapsed = isCollapsed === 'true';
 
-  if (isCollapsed) {
-    body.classList.add('sidebar-collapsed');
-  }
+  if (isCollapsed) body.classList.add('sidebar-collapsed');
 
   toggleButton.addEventListener('click', () => {
     body.classList.toggle('sidebar-collapsed');
@@ -197,9 +146,7 @@ function initializeTabs() {
         tabPanes.forEach(pane => pane.classList.remove('active'));
 
         navItem.classList.add('active');
-        if (tabPanes[index]) {
-          tabPanes[index].classList.add('active');
-        }
+        if (tabPanes[index]) tabPanes[index].classList.add('active');
       });
     });
   });
@@ -207,9 +154,7 @@ function initializeTabs() {
 
 // --- Copy Code Button Logic ---
 function initializeCopyCodeButtons() {
-  if (document.body.dataset.copyCodeEnabled !== 'true') {
-    return;
-  }
+  if (document.body.dataset.copyCodeEnabled !== 'true') return;
 
   const copyIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
   const checkIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
@@ -218,18 +163,12 @@ function initializeCopyCodeButtons() {
     const codeElement = preElement.querySelector('code');
     if (!codeElement) return;
 
-    // Create a wrapper div around the pre element
     const wrapper = document.createElement('div');
     wrapper.style.position = 'relative';
     wrapper.style.display = 'block';
 
-    // Insert the wrapper before the pre element
     preElement.parentNode.insertBefore(wrapper, preElement);
-
-    // Move the pre element into the wrapper
     wrapper.appendChild(preElement);
-
-    // Remove the relative positioning from pre since wrapper handles it
     preElement.style.position = 'static';
 
     const copyButton = document.createElement('button');
@@ -260,21 +199,11 @@ function syncBodyTheme() {
   if (currentTheme && document.body) {
     document.body.setAttribute('data-theme', currentTheme);
   }
-
-  // Also ensure highlight CSS matches the current theme
-  const highlightThemeLink = document.getElementById('highlight-theme');
-  if (highlightThemeLink && currentTheme) {
-    const baseHref = highlightThemeLink.getAttribute('data-base-href');
-    if (baseHref) {
-      const newHref = baseHref + `docmd-highlight-${currentTheme}.css`;
-      highlightThemeLink.setAttribute('href', newHref);
-    }
-  }
 }
 
 // --- Main Execution ---
 document.addEventListener('DOMContentLoaded', () => {
-  syncBodyTheme(); // Sync body theme with html theme
+  syncBodyTheme();
   setupThemeToggleListener();
   initializeSidebarToggle();
   initializeTabs();

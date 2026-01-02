@@ -44,17 +44,17 @@
     data-copy-code-enabled="<%= config.copyCode === true %>">
     <aside class="sidebar">
         <div class="sidebar-header">
-            <% if (logo && logo.light && logo.dark) { %>
-                <a href="<%= logo.href || (relativePathToRoot + 'index.html') %>" class="logo-link">
-                    <img src="<%= relativePathToRoot %><%- logo.light.startsWith('/') ? logo.light.substring(1) : logo.light %>" alt="<%= logo.alt || siteTitle %>" class="logo-light" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
-                    <img src="<%= relativePathToRoot %><%- logo.dark.startsWith('/') ? logo.dark.substring(1) : logo.dark %>" alt="<%= logo.alt || siteTitle %>" class="logo-dark" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
-                </a>
-            <% } else { %>
-                <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
-            <% } %>
-                <span class="mobile-view sidebar-menu-button float-right">
-                    <%- renderIcon("ellipsis-vertical") %>
-                </span>
+        <% if (logo && logo.light && logo.dark) { %>
+            <a href="<%= logo.href || relativePathToRoot %>" class="logo-link">
+                <img src="<%= relativePathToRoot %><%- logo.light.startsWith('/') ? logo.light.substring(1) : logo.light %>" alt="<%= logo.alt || siteTitle %>" class="logo-light" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+                <img src="<%= relativePathToRoot %><%- logo.dark.startsWith('/') ? logo.dark.substring(1) : logo.dark %>" alt="<%= logo.alt || siteTitle %>" class="logo-dark" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+            </a>
+        <% } else { %>
+            <h1><a href="<%= relativePathToRoot %>index.html"><%= siteTitle %></a></h1>
+        <% } %>
+            <span class="mobile-view sidebar-menu-button float-right">
+                <%- renderIcon("ellipsis-vertical") %>
+            </span>
         </div>
         <%- navigationHtml %>
         <% if (theme && theme.enableModeToggle && theme.positionMode !== 'top') { %>

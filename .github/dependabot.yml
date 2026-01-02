@@ -1,0 +1,44 @@
+version: 2
+updates:
+  # -------------------------------------------------------
+  # 1. GitHub Actions (Universal for all your projects)
+  # Keeps your workflow files (checkout, setup-node) updated
+  # -------------------------------------------------------
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
+
+  # -------------------------------------------------------
+  # 2. NPM (Specific to tree-fs / Node projects)
+  # -------------------------------------------------------
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Ignore major updates automatically to prevent breaking changes
+    # Remove this 'ignore' block if you want to see v1 -> v2 updates
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # Group all minor/patch updates into one PR
+      npm-dependencies:
+        patterns:
+          - "*"
+
+  # -------------------------------------------------------
+  # 3. (Optional) Uncomment for Python projects
+  # -------------------------------------------------------
+  # - package-ecosystem: "pip"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   groups:
+  #      python-deps:
+  #        patterns:
+  #          - "*"

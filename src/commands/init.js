@@ -14,10 +14,10 @@ module.exports = {
 
   // Logo Configuration
   logo: {
-    light: '/assets/images/docmd-logo-light.png', // Path relative to outputDir root
-    dark: '/assets/images/docmd-logo-dark.png',   // Path relative to outputDir root
+    light: 'assets/images/docmd-logo-light.png', // Path relative to outputDir root
+    dark: 'assets/images/docmd-logo-dark.png',   // Path relative to outputDir root
     alt: 'docmd logo',                      // Alt text for the logo
-    href: '/',                              // Link for the logo, defaults to site root
+    href: './',                              // Link for the logo, defaults to site root
   },
 
   // Directory Configuration
@@ -44,14 +44,14 @@ module.exports = {
     positionMode: 'top', // 'top' or 'bottom' for the theme toggle
     codeHighlight: true,    // Enable/disable codeblock highlighting and import of highlight.js
     customCss: [            // Array of paths to custom CSS files
-      // '/assets/css/custom.css', // Custom TOC styles
+      // 'assets/css/custom.css', // Custom TOC styles
     ]
   },
 
   // Custom JavaScript Files
   customJs: [  // Array of paths to custom JS files, loaded at end of body
-    // '/assets/js/custom-script.js', // Paths relative to outputDir root
-    '/assets/js/docmd-image-lightbox.js', // Image lightbox functionality
+    // 'assets/js/custom-script.js', // Paths relative to outputDir root
+    'assets/js/docmd-image-lightbox.js', // Image lightbox functionality
   ],
 
   // Content Processing
@@ -71,7 +71,7 @@ module.exports = {
         // siteName: 'docmd Documentation', // Optional, defaults to config.siteTitle
         // Default image for og:image if not specified in page frontmatter
         // Path relative to outputDir root
-        defaultImage: '/assets/images/docmd-preview.png',
+        defaultImage: 'assets/images/docmd-preview.png',
       },
       twitter: { // For Twitter Cards
         cardType: 'summary_large_image',     // 'summary', 'summary_large_image'
@@ -139,7 +139,7 @@ module.exports = {
 
   // Favicon Configuration
   // Path relative to outputDir root
-  favicon: '/assets/favicon.ico',
+  favicon: 'assets/favicon.ico',
 };
 `;
 
