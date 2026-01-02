@@ -27,8 +27,39 @@ body {
     flex-shrink: 0;
 }
 
-.logo { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-.logo span { background: var(--primary-color); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; }
+.logo { 
+    font-weight: 700; 
+    font-size: 1.1rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+}
+
+.logo span { 
+    background: var(--primary-color); 
+    color: white; 
+    padding: 2px 6px; 
+    border-radius: 4px; 
+    font-size: 0.75rem; 
+    text-transform: uppercase; 
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s, transform 0.2s;
+    text-decoration: none;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.back-link:hover {
+    color: var(--primary-color);
+    background: #f0f0f0;
+    transform: translateX(-2px);
+}
 
 .view-controls { display: flex; gap: 8px; background: #f0f0f0; padding: 3px; border-radius: 6px; }
 .view-btn { border: none; background: transparent; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: #666; font-weight: 500; }
