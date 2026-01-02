@@ -15,6 +15,7 @@
   "scripts": {
     "start": "node ./bin/docmd.js dev",
     "build": "node ./bin/docmd.js build",
+    "live": "node scripts/build-live.js && npx serve dist",
     "postinstall": "node ./bin/postinstall.js",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -26,7 +27,6 @@
     "clean-css": "^5.3.3",
     "commander": "^14.0.0",
     "ejs": "^3.1.9",
-    "esbuild": "^0.27.0",
     "express": "^5.1.0",
     "fs-extra": "^11.2.0",
     "gray-matter": "^4.0.3",
@@ -44,6 +44,8 @@
     "ws": "^8.17.0"
   },
   "devDependencies": {
+    "buffer": "^6.0.3",
+    "esbuild": "^0.27.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-node": "^11.1.0",

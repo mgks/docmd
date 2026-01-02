@@ -1,0 +1,136 @@
+:root {
+    --header-height: 50px;
+    --border-color: #e0e0e0;
+    --bg-color: #f9fafb;
+    --primary-color: #007bff;
+    --resizer-width: 8px;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+}
+
+/* --- Top Bar --- */
+.top-bar {
+    height: var(--header-height);
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+    flex-shrink: 0;
+}
+
+.logo { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+.logo span { background: var(--primary-color); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; text-transform: uppercase; }
+
+.view-controls { display: flex; gap: 8px; background: #f0f0f0; padding: 3px; border-radius: 6px; }
+.view-btn { border: none; background: transparent; padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 0.85rem; color: #666; font-weight: 500; }
+.view-btn.active { background: white; color: black; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+/* --- Main Layout --- */
+.workspace {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+}
+
+.pane {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 300px; /* Minimum width constraint */
+    background: white;
+}
+
+.pane-header {
+    padding: 8px 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #888;
+    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+}
+
+/* Editor Pane */
+.editor-pane { width: 50%; }
+textarea#input {
+    flex: 1;
+    border: none;
+    resize: none;
+    padding: 20px;
+    font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    outline: none;
+    background: var(--bg-color);
+}
+
+/* Preview Pane */
+.preview-pane { flex: 1; background: white; }
+iframe#preview { width: 100%; height: 100%; border: none; display: block; }
+
+/* --- Resizer Handle --- */
+.resizer {
+    width: var(--resizer-width);
+    background: var(--bg-color);
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    cursor: col-resize;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 10;
+}
+.resizer:hover, .resizer.resizing { background: #e0e0e0; }
+.resizer::after { content: "||"; color: #aaa; font-size: 10px; letter-spacing: 1px; }
+
+/* --- View Modes (Single vs Split) --- */
+
+/* Single Mode (Mobile style on Desktop) */
+body.mode-single .resizer { display: none; }
+body.mode-single .pane { width: 100% !important; min-width: 0; }
+body.mode-single .editor-pane { display: none; }
+body.mode-single .preview-pane { display: none; }
+body.mode-single.show-editor .editor-pane { display: flex; }
+body.mode-single.show-preview .preview-pane { display: flex; }
+
+/* --- Mobile Responsive Overrides --- */
+@media (max-width: 768px) {
+    /* Force single mode on mobile, hide desktop view controls */
+    .desktop-only { display: none !important; }
+    .resizer { display: none !important; }
+    
+    .pane { width: 100% !important; }
+    .editor-pane { display: none; }
+    .preview-pane { display: none; }
+    
+    body.mobile-tab-editor .editor-pane { display: flex; }
+    body.mobile-tab-preview .preview-pane { display: flex; }
+    
+    .mobile-tabs {
+        display: flex !important;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        height: 50px;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        z-index: 100;
+    }
+    .mobile-tab-btn { flex: 1; border: none; background: transparent; font-weight: 600; color: #888; cursor: pointer; }
+    .mobile-tab-btn.active { color: var(--primary-color); border-top: 2px solid var(--primary-color); }
+    
+    .workspace { padding-bottom: 50px; } /* Space for tabs */
+}
+
+.mobile-tabs { display: none; } /* Hidden on desktop */
