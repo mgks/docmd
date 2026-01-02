@@ -42,6 +42,10 @@ program
   .option('--preserve', 'Preserve existing assets', false)
   .action((options) => {
     buildSite(options.config, { isDev: false, preserve: options.preserve });
+  })
+  .option('--offline', 'Generate a build optimized for file:// viewing (appends index.html)', false)
+  .action((options) => {
+    buildSite(options.config, { isDev: false, preserve: options.preserve, offline: options.offline });
   });
 
 program
