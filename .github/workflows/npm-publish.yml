@@ -29,8 +29,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests (optional)
-        run: npm test --if-present
+      - name: Run Failsafe Test 🛡️
+        run: npm test
 
       - name: Publish to npm
         run: npm publish --access public

@@ -32,6 +32,9 @@ jobs:
       - name: Install Dependencies 📦
         run: npm ci
       
+      - name: Run Failsafe Test 🛡️
+        run: npm test
+
       - name: Build docmd's Own Docs 🛠️
         run: node ./bin/docmd.js build
 
