@@ -13,13 +13,14 @@
     "docmd": "bin/docmd.js"
   },
   "scripts": {
-    "start": "node ./bin/docmd.js dev",
-    "build": "node ./bin/docmd.js build",
-    "live": "node scripts/build-live.js && npx serve dist",
-    "postinstall": "node ./bin/postinstall.js",
+    "test": "node scripts/failsafe.js",
+    "prepublishOnly": "npm test",
+    "start": "node bin/docmd.js dev",
+    "build": "node bin/docmd.js build",
+    "live": "node bin/docmd.js live",
+    "postinstall": "node bin/postinstall.js",
     "lint": "eslint .",
-    "format": "prettier --write .",
-    "test": "echo \"No tests specified currently\" && exit 0"
+    "format": "prettier --write ."
   },
   "dependencies": {
     "chalk": "^4.1.2",
