@@ -92,14 +92,22 @@ function setupThemeToggleListener() {
   const themeToggleButton = document.getElementById('theme-toggle-button');
 
   function applyTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.body.setAttribute('data-theme', theme);
-    localStorage.setItem('docmd-theme', theme);
+    const validThemes = ['light', 'dark'];
+    const selectedTheme = validThemes.includes(theme) ? theme : 'light';
+
+    document.documentElement.setAttribute('data-theme', selectedTheme);
+    document.body.setAttribute('data-theme', selectedTheme);
+    localStorage.setItem('docmd-theme', selectedTheme);
 
     const highlightThemeLink = document.getElementById('highlight-theme');
     if (highlightThemeLink) {
-      const newHref = highlightThemeLink.getAttribute('data-base-href') + `docmd-highlight-${theme}.css`;
-      highlightThemeLink.setAttribute('href', newHref);
+      const baseHref = highlightThemeLink.getAttribute('data-base-href');
+
+      if (baseHref) {
+        const themeFile = `docmd-highlight-${selectedTheme}.css`;
+        const cleanHref = baseHref + themeFile;
+        highlightThemeLink.setAttribute('href', encodeURI(cleanHref));
+      }
     }
   }
 
