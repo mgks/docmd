@@ -1,32 +1,43 @@
 <div align="center">
-  <a href="https://docmd.mgks.dev">
+
+  <!-- PROJECT TITLE -->
+  <h1>
     <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/docmd-logo-light.png?raw=true" alt="docmd logo" width="150" />
-  </a>
+    <!-- docmd -->
+  </h1>
+  
+  <!-- ONE LINE SUMMARY -->
   <p>
-    <strong>The minimalist, zero-config documentation generator.</strong>
+    <b>The minimalist, zero-config documentation generator.</b>
   </p>
+  
+  <!-- BADGES -->
+  <p>
+    <img src="https://img.shields.io/npm/v/@mgks/docmd.svg?style=flat-square&color=d25353" alt="npm version">
+    <img src="https://img.shields.io/github/commit-activity/m/mgks/docmd?style=flat-square&color=38bd24" alt="commits">
+    <img src="https://img.shields.io/npm/dt/@mgks/docmd.svg?style=flat-square&color=38bd24" alt="downloads">
+    <img src="https://img.shields.io/github/stars/mgks/docmd?style=flat-square&logo=github" alt="stars">
+    <img src="https://img.shields.io/github/license/mgks/docmd.svg?style=flat-square&color=blue" alt="license">
+  </p>
+
+  <!-- MENU -->
+  <p>
+    <h4>
+      <a href="https://docmd.mgks.dev">View Demo</a> • 
+      <a href="https://docmd.mgks.dev/getting-started/installation/">Documentation</a> • 
+      <a href="https://docmd.mgks.dev/live/">Live Editor</a> •
+      <a href="https://github.com/mgks/docmd/issues">Report Bug</a>
+    </h4>
+  </p>
+
+  <!-- PREVIEW -->
+  <p>
+    <img width="800" alt="docmd preview" src="https://github.com/user-attachments/assets/1a74d6f7-10f9-41fa-be8a-faeee278dbb9" />
+    <br/>
+    <sup><i>docmd noStyle page preview in light mode</i></sup>
+  </p>
+
 </div>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/v/@mgks/docmd.svg?style=flat-square&color=fc3b53" alt="npm version"></a>
-<a href="https://github.com/mgks/docmd/commits"><img src="https://img.shields.io/github/commit-activity/m/mgks/docmd?style=flat-square&color=38bd24" alt="commits"></a>
-  <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/dt/@mgks/docmd.svg?style=flat-square&color=38bd24" alt="downloads"></a>
-  <a href="https://github.com/mgks/docmd/stargazers"><img src="https://img.shields.io/github/stars/mgks/docmd?style=flat-square&logo=github" alt="stars"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/mgks/docmd.svg?style=flat-square&color=blue" alt="license"></a>
-</p>
-
-<p align="center">
-  <a href="https://docmd.mgks.dev"><b>View Live Demo</b></a> • 
-  <a href="https://docmd.mgks.dev/getting-started/installation/"><b>Read Documentation</b></a> • 
-  <a href="https://docmd.mgks.dev/live/"><b>Live Editor</b></a> •
-  <a href="https://github.com/mgks/docmd/issues"><b>Report Bug</b></a>
-</p>
-
-<p align="center">
-  <img width="800" alt="docmd preview" src="https://docmd.mgks.dev/assets/images/preview-dark-welcome.png" style="border-radius: 10px" />
-  <br/>
-  <sup><i>docmd noStyle page preview in dark mode</i></sup>
-</p>
 
 ## Features
 
