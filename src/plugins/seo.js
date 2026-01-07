@@ -28,7 +28,7 @@ function generateSeoMetaTags(config, pageData, relativePathToRoot) {
   metaTagsHtml += `  <link rel="canonical" href="${canonicalUrl}">\n`;
 
   // Open Graph
-  metaTagsHtml += `  <meta property="og:title" content="${pageTitle} | ${siteTitle}">\n`;
+  metaTagsHtml += `  <meta property="og:title" content="${pageTitle} : ${siteTitle}">\n`;
   metaTagsHtml += `  <meta property="og:description" content="${description}">\n`;
   metaTagsHtml += `  <meta property="og:url" content="${pageUrl}">\n`;
   metaTagsHtml += `  <meta property="og:site_name" content="${config.plugins?.seo?.openGraph?.siteName || siteTitle}">\n`;
@@ -50,7 +50,7 @@ function generateSeoMetaTags(config, pageData, relativePathToRoot) {
   if (twitterCreator) {
     metaTagsHtml += `  <meta name="twitter:creator" content="${twitterCreator}">\n`;
   }
-  metaTagsHtml += `  <meta name="twitter:title" content="${pageTitle} | ${siteTitle}">\n`;
+  metaTagsHtml += `  <meta name="twitter:title" content="${pageTitle} : ${siteTitle}">\n`;
   metaTagsHtml += `  <meta name="twitter:description" content="${description}">\n`;
   if (ogImage) {
     const twitterImageUrl = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage.startsWith('/') ? ogImage : '/' + ogImage}`;

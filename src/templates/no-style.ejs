@@ -6,7 +6,7 @@
 
     <% if (frontmatter.components?.meta !== false) { %>
         <%- metaTagsHtml || '' %>
-        <title><%= pageTitle %><% if (frontmatter.components?.siteTitle !== false) { %> | <%= siteTitle %><% } %></title>
+        <title><%= pageTitle %><% if (frontmatter.components?.siteTitle !== false) { %> : <%= siteTitle %><% } %></title>
         <% if (description && !(metaTagsHtml && metaTagsHtml.includes('name="description"'))) { %>
             <meta name="description" content="<%= description %>">
         <% } %>

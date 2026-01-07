@@ -3,6 +3,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const readline = require('readline');
+const { version } = require('../../package.json');
 
 const defaultConfigContent = `// docmd.config.js: basic config for docmd
 module.exports = {
@@ -83,7 +84,7 @@ module.exports = {
     analytics: {
       // Google Analytics 4 (GA4)
       googleV4: {
-        measurementId: 'G-8QVBDQ4KM1' // Replace with your actual GA4 Measurement ID
+        measurementId: 'G-X9WTDL262N' // Replace with your actual GA4 Measurement ID
       }
     },
     // Enable Sitemap plugin
@@ -153,10 +154,25 @@ description: "Your documentation starts here."
 Start writing your Markdown content here.
 `;
 
+const defaultPackageJson = {
+  name: "my-docs",
+  version: "0.0.1",
+  private: true,
+  scripts: {
+    "dev": "docmd dev",
+    "build": "docmd build",
+    "preview": "npx serve site"
+  },
+  dependencies: {
+    "@mgks/docmd": `^${version}`
+  }
+};
+
 async function initProject() {
   const baseDir = process.cwd();
-  const docsDir = path.join(baseDir, 'docs');
+  const packageJsonFile = path.join(baseDir, 'package.json');
   const configFile = path.join(baseDir, 'docmd.config.js');
+  const docsDir = path.join(baseDir, 'docs');
   const indexMdFile = path.join(docsDir, 'index.md');
   const assetsDir = path.join(baseDir, 'assets');
   const assetsCssDir = path.join(assetsDir, 'css');
@@ -169,19 +185,28 @@ async function initProject() {
     assets: false
   };
   
+  // Check if package.json exists
+  if (!await fs.pathExists(packageJsonFile)) {
+    await fs.writeJson(packageJsonFile, defaultPackageJson, { spaces: 2 });
+    console.log('📦 Created `package.json` (Deployment Ready)');
+  } else {
+    console.log('⏭️  Skipped existing `package.json`');
+  }
+
   // Check each file individually
   if (await fs.pathExists(configFile)) {
     existingFiles.push('docmd.config.js');
   }
+
   // Check for the config.js as well to warn the user
   const oldConfigFile = path.join(baseDir, 'config.js');
   if (await fs.pathExists(oldConfigFile)) {
     existingFiles.push('config.js');
   }
   
+  // Check if docs directory exists
   if (await fs.pathExists(docsDir)) {
     dirExists.docs = true;
-    
     if (await fs.pathExists(indexMdFile)) {
       existingFiles.push('docs/index.md');
     }
@@ -271,6 +296,7 @@ async function initProject() {
   }
   
   console.log('✅ Project initialization complete!');
+  console.log('👉 Run `npm install` to setup dependencies.');
 }
 
 module.exports = { initProject };

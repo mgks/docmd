@@ -7,7 +7,8 @@ const chokidar = require('chokidar');
 const path = require('path');
 const fs = require('fs-extra');
 const chalk = require('chalk');
-const os = require('os'); 
+const os = require('os');
+const readline = require('readline');
 const { buildSite } = require('./build');
 const { loadConfig } = require('../core/config-loader');
 
@@ -58,9 +59,13 @@ async function startDevServer(configPathOption, options = { preserve: false, por
   
   const app = express();
   const server = http.createServer(app);
-  const wss = new WebSocket.Server({ server });
+  
+  // FIX 1: Declare wss here but do not initialize it yet (prevents EADDRINUSE crash)
+  let wss;
 
   function broadcastReload() {
+    if (!wss) return; // Guard against early calls
+    
     wss.clients.forEach((client) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send('reload');
@@ -129,7 +134,6 @@ async function startDevServer(configPathOption, options = { preserve: false, por
     );
   }
   
-  // LOGS: Explicitly print what we are watching
   console.log(chalk.dim('\n👀 Watching for changes in:'));
   console.log(chalk.dim(`   - Source: ${chalk.cyan(formatPathForDisplay(paths.srcDirToWatch, CWD))}`));
   console.log(chalk.dim(`   - Config: ${chalk.cyan(formatPathForDisplay(paths.configFileToWatch, CWD))}`));
@@ -171,17 +175,54 @@ async function startDevServer(configPathOption, options = { preserve: false, por
     }
   });
 
-  const PORT = options.port || process.env.PORT || 3000;
+  // --- 3. Server Startup Logic ---
+  const PORT = parseInt(options.port || process.env.PORT || 3000, 10);
   const MAX_PORT_ATTEMPTS = 10;
+
+  // Helper to check if a port is in use without fully starting the main server
+  function checkPortInUse(port) {
+    return new Promise((resolve) => {
+      const tester = http.createServer()
+        .once('error', (err) => {
+          if (err.code === 'EADDRINUSE') resolve(true);
+          else resolve(false);
+        })
+        .once('listening', () => {
+          tester.close(() => resolve(false));
+        })
+        .listen(port, '0.0.0.0');
+    });
+  }
+
+  // Helper to ask user for confirmation
+  function askUserConfirmation() {
+    return new Promise((resolve) => {
+      const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+      });
+
+      console.log(chalk.yellow(`\n⚠️  Port ${PORT} is already in use.`));
+      console.log(chalk.yellow(`   Another instance of docmd (or another app) might be running.`));
+      
+      rl.question('   Do you want to start another instance on a different port? (Y/n) ', (answer) => {
+        rl.close();
+        const isYes = answer.trim().toLowerCase() === 'y' || answer.trim() === '';
+        resolve(isYes);
+      });
+    });
+  }
   
   function tryStartServer(port, attempt = 1) {
     // 0.0.0.0 allows network access
     server.listen(port, '0.0.0.0')
       .on('listening', async () => {
+        // FIX 1: Initialize WebSocket Server only AFTER successful listen
+        wss = new WebSocket.Server({ server });
+
         const indexHtmlPath = path.join(paths.outputDir, 'index.html');
         const networkIp = getNetworkIp();
         
-        // Use 127.0.0.1 explicitly
         const localUrl = `http://127.0.0.1:${port}`;
         const networkUrl = networkIp ? `http://${networkIp}:${port}` : null;
 
@@ -204,6 +245,8 @@ async function startDevServer(configPathOption, options = { preserve: false, por
       })
       .on('error', (err) => {
         if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_ATTEMPTS) {
+          // FIX 1: Close the failed server instance before retrying to ensure clean state
+          server.close();
           tryStartServer(port + 1, attempt + 1);
         } else {
           console.error(chalk.red(`Failed to start server: ${err.message}`));
@@ -211,8 +254,32 @@ async function startDevServer(configPathOption, options = { preserve: false, por
         }
       });
   }
-  
-  tryStartServer(parseInt(PORT, 10));
+
+  // FIX 2: Check port status before launching logic
+  (async () => {
+    // If the user manually specified a port flag (e.g. --port 8080), 
+    // we assume they want THAT specific port and skip the check/prompt logic,
+    // falling back to standard auto-increment behavior if busy.
+    if (options.port) {
+      tryStartServer(PORT);
+      return;
+    }
+
+    const isBusy = await checkPortInUse(PORT);
+    
+    if (isBusy) {
+      const shouldProceed = await askUserConfirmation();
+      if (!shouldProceed) {
+        console.log(chalk.dim('Cancelled.'));
+        process.exit(0);
+      }
+      // If they said yes, start trying from the NEXT port
+      tryStartServer(PORT + 1);
+    } else {
+      // Port is free, start normally
+      tryStartServer(PORT);
+    }
+  })();
 
   process.on('SIGINT', () => {
     console.log(chalk.yellow('\n🛑 Shutting down...'));
@@ -221,5 +288,4 @@ async function startDevServer(configPathOption, options = { preserve: false, por
   });
 }
 
-// Ensure this export is here!
 module.exports = { startDevServer };
