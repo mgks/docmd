@@ -1,5 +1,5 @@
 ---
-title: "Documentation. Zero Clutter. Just Content."
+title: "Beautiful Documentation. Zero Clutter. Just Content."
 description: "A lightweight static documentation site generator that transforms Markdown into beautiful, responsive documentation websites."
 noStyle: true
 components:
