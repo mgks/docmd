@@ -55,7 +55,7 @@ module.exports = {
     },
     analytics: {
       googleV4: {
-        measurementId: 'G-8QVBDQ4KM1'
+        measurementId: 'G-W8BCN0W4RF'
       }
     },
     sitemap: {
