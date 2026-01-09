@@ -2,7 +2,7 @@
 
   <!-- PROJECT TITLE -->
   <h1>
-    <img src="https://github.com/docmd-io/docmd/blob/main/src/assets/images/docmd-logo-dark.png?raw=true" alt="docmd logo" width="150" />
+    <img src="https://github.com/docmd-io/docmd/blob/main/src/assets/images/docmd-logo-dark.png?raw=true" alt="docmd logo" width="200" />
     <!-- docmd -->
   </h1>
   
