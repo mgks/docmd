@@ -1,56 +1,28 @@
-<%# src/templates/toc.ejs %>
-<% 
-// Helper function to decode HTML entities
-function decodeHtmlEntities(html) {
-  return html
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
-}
+<%# Source file from the docmd project — https://github.com/docmd-io/docmd %>
 
-// Use the isActivePage flag if provided, otherwise fall back to checking navigationHtml
+<% 
+function decodeHtmlEntities(html) {
+  return html.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ');
+}
 const shouldShowToc = typeof isActivePage !== 'undefined' ? isActivePage : 
                       (typeof navigationHtml !== 'undefined' && navigationHtml && navigationHtml.includes('class="active"'));
 
 if (shouldShowToc && !frontmatter?.toc || frontmatter?.toc !== 'false') {
-  // If direct headings aren't available, we'll try to extract them from the content
   let tocHeadings = [];
   if (headings && headings.length > 0) {
-    // Use provided headings if available
     tocHeadings = headings.filter(h => h.level >= 2 && h.level <= 4);
   } else if (content) {
-    // Basic regex to extract headings from HTML content
     const headingRegex = /<h([2-4])[^>]*?(?:id="([^"]*)")?[^>]*?>([\s\S]*?)<\/h\1>/g;
     let match;
     let contentStr = content.toString();
-    
     while ((match = headingRegex.exec(contentStr)) !== null) {
       const level = parseInt(match[1], 10);
-      // Use ID if available, or generate one from the text
       let id = match[2];
-      // Remove any HTML tags inside the heading text
-      const textWithTags = match[3].replace(/<\/?[^>]+(>|$)/g, '');
-      // Decode HTML entities
-      const text = decodeHtmlEntities(textWithTags);
-      
-      if (!id) {
-        // Generate an ID from the heading text if none exists
-        id = text
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^\w-]/g, '')
-          .replace(/--+/g, '-')
-          .replace(/^-+|-+$/g, '');
-      }
-      
+      const text = decodeHtmlEntities(match[3].replace(/<\/?\w+[^>]*>/g, '')); // Stripped tags
+      if (!id) id = text.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '').replace(/--+/g, '-').replace(/^-+|-+$/g, '');
       tocHeadings.push({ id, level, text });
     }
   }
-
-  // Only show TOC if there are enough headings
   if (tocHeadings.length > 1) { 
 %>
   <div class="toc-container">
@@ -63,5 +35,4 @@ if (shouldShowToc && !frontmatter?.toc || frontmatter?.toc !== 'false') {
       <% }); %>
     </ul>
   </div>
-<% } 
-} %> 
+<% } } %>

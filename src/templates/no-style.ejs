@@ -1,180 +1,166 @@
+<%# Source file from the docmd project — https://github.com/docmd-io/docmd %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <% if (frontmatter.components?.meta !== false) { %>
-        <%- metaTagsHtml || '' %>
-        <title><%= pageTitle %><% if (frontmatter.components?.siteTitle !== false) { %> : <%= siteTitle %><% } %></title>
-        <% if (description && !(metaTagsHtml && metaTagsHtml.includes('name="description"'))) { %>
-            <meta name="description" content="<%= description %>">
-        <% } %>
+    <%- metaTagsHtml || '' %>
+    <title><%= pageTitle %><% if (frontmatter.components?.siteTitle !== false) { %> : <%= siteTitle %><% } %></title>
+    <% if (description && !(metaTagsHtml && metaTagsHtml.includes('name="description"'))) { %>
+    <meta name="description" content="<%= description %>">
     <% } %>
-
+    <% } %>
     <% if (frontmatter.components?.favicon !== false) { %>
-        <%- faviconLinkHtml || '' %>
+    <%- faviconLinkHtml || '' %>
     <% } %>
-
     <% if (frontmatter.components?.themeMode !== false) { %>
-        <script>window.DOCMD_DEFAULT_MODE = "<%= defaultMode %>";</script>
+    <script>window.DOCMD_DEFAULT_MODE = "<%= defaultMode %>";</script>
     <% } %>
-
     <% if (frontmatter.components?.css !== false) { %>
-        <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
-        <% if (frontmatter.components?.highlight !== false) { %>
-            <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
-        <% } %>
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-main.css">
+    <% if (frontmatter.components?.highlight !== false) { %>
+    <link rel="stylesheet" href="<%= relativePathToRoot %>assets/css/docmd-highlight-<%= defaultMode === 'dark' ? 'dark' : 'light' %>.css" id="highlight-theme">
     <% } %>
-
+    <% } %>
     <% if (frontmatter.components?.themeMode !== false) { %>
-        <%- themeInitScript %>
+    <%- themeInitScript %>
     <% } %>
-
     <% if (frontmatter.components?.theme !== false) { %>
-        <%- themeCssLinkHtml || '' %>
+    <%- themeCssLinkHtml || '' %>
     <% } %>
-
     <% if (frontmatter.components?.customCss !== false && customCssFiles && customCssFiles.length > 0) { %>
-        <% customCssFiles.forEach(cssFile => { %>
-            <link rel="stylesheet" href="<%= relativePathToRoot %><%- cssFile.startsWith('/') ? cssFile.substring(1) : cssFile %>">
-        <% }); %>
+    <% customCssFiles.forEach(cssFile => { %>
+    <link rel="stylesheet" href="<%= relativePathToRoot %><%- cssFile.startsWith('/') ? cssFile.substring(1) : cssFile %>">
+    <% }); %>
     <% } %>
-
     <% if (frontmatter.components?.pluginStyles !== false) { %>
-        <%- pluginStylesHtml || '' %>
+    <%- pluginStylesHtml || '' %>
     <% } %>
-
     <% if (frontmatter.components?.pluginHeadScripts !== false) { %>
-        <%- pluginHeadScriptsHtml || '' %>
+    <%- pluginHeadScriptsHtml || '' %>
     <% } %>
-    
     <% if (frontmatter.customHead) { %>
-        <%- frontmatter.customHead %>
+    <%- frontmatter.customHead %>
     <% } %>
 </head>
-<body
-    <%
-    if (frontmatter.components?.theme !== false) {
-        %> data-theme="<%= defaultMode %>"<%
-    }
-    %><%
-    if (frontmatter.bodyClass) {
-        %> class="<%= frontmatter.bodyClass %>"<%
-    }
-    %> data-copy-code-enabled="<%= config.copyCode === true %>">
+<body<% if (frontmatter.components?.theme !== false) { %> data-theme="<%= defaultMode %>"<% } %><% if (frontmatter.bodyClass) { %> class="<%= frontmatter.bodyClass %>"<% } %> data-copy-code-enabled="<%= config.copyCode === true %>">
     <% if (frontmatter.components?.layout === true || frontmatter.components?.layout === 'full') { %>
-        <div class="main-content-wrapper">
-            <% if (frontmatter.components?.header !== false) { %>
-                <header class="page-header">
-                    <% if (frontmatter.components?.pageTitle !== false) { %>
-                        <h1><%= pageTitle %></h1>
-                    <% } %>
-                </header>
+    <div class="main-content-wrapper">
+        <% if (frontmatter.components?.header !== false) { %>
+        <header class="page-header">
+            <% if (frontmatter.components?.pageTitle !== false) { %>
+            <h1><%= pageTitle %></h1>
             <% } %>
-            <main class="content-area">
-                <div class="content-layout">
-                    <div class="main-content">
-                        <%- content %>
-                    </div>
+        </header>
+        <% } %>
+        <main class="content-area">
+            <div class="content-layout">
+                <div class="main-content"><%- content %></div>
+                <% if (frontmatter.components?.toc !== false && headings && headings.length > 0) { %>
+                <div class="toc-sidebar">
+                    <%- include('toc', { content, headings, navigationHtml, isActivePage }) %>
                 </div>
-            </main>
-            <% if (frontmatter.components?.footer !== false) { %>
-                <footer class="page-footer">
-                    <div class="footer-content">
-                        <div class="user-footer">
-                            <%- footerHtml || '' %>
-                        </div>
-                        <% if (frontmatter.components?.branding !== false) { %>
-                            <div class="branding-footer">
-                                Build with <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.mgks.dev" target="_blank" rel="noopener">docmd.</a>
-                            </div>
-                        <% } %>
-                    </div>
-                </footer>
-            <% } %>
-        </div>
+                <% } %>
+            </div>
+        </main>
+        <% if (frontmatter.components?.footer !== false) { %>
+        <footer class="page-footer">
+            <div class="footer-content">
+                <div class="user-footer"><%- footerHtml || '' %></div>
+                <% if (frontmatter.components?.branding !== false) { %>
+                <div class="branding-footer">
+                    Build with <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
+                </div>
+                <% } %>
+            </div>
+        </footer>
+        <% } %>
+    </div>
     <% } else if (frontmatter.components?.sidebar === true) { %>
-        <aside class="sidebar">
-            <% if (frontmatter.components?.logo !== false && logo && logo.light && logo.dark) { %>
-                <div class="sidebar-header">
-                    <a href="<%= logo.href || (relativePathToRoot + 'index.html') %>" class="logo-link">
-                        <img src="<%= relativePathToRoot %><%- logo.light.startsWith('/') ? logo.light.substring(1) : logo.light %>" alt="<%= logo.alt || siteTitle %>" class="logo-light" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
-                        <img src="<%= relativePathToRoot %><%- logo.dark.startsWith('/') ? logo.dark.substring(1) : logo.dark %>" alt="<%= logo.alt || siteTitle %>" class="logo-dark" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
-                    </a>
-                </div>
-            <% } %>
-            <% if (frontmatter.components?.navigation !== false) { %>
-                <%- navigationHtml %>
-            <% } %>
-            <% if (frontmatter.components?.themeToggle !== false && theme && theme.enableModeToggle) { %>
-                <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button">
-                    <%- renderIcon('sun', { class: 'icon-sun' }) %>
-                    <%- renderIcon('moon', { class: 'icon-moon' }) %>
-                </button>
-            <% } %>
-        </aside>
-        <div class="main-content-wrapper">
-            <% if (frontmatter.components?.header !== false) { %>
-                <header class="page-header">
-                    <% if (frontmatter.components?.pageTitle !== false) { %>
-                        <h1><%= pageTitle %></h1>
-                    <% } %>
-                </header>
-            <% } %>
-            <main class="content-area">
-                <div class="content-layout">
-                    <div class="main-content">
-                        <%- content %>
-                    </div>
-                    <% if (frontmatter.components?.toc !== false && headings && headings.length > 0) { %>
-                        <div class="toc-sidebar">
-                            <%- include('toc', { content, headings, navigationHtml, isActivePage }) %>
-                        </div>
-                    <% } %>
-                </div>
-            </main>
-            <% if (frontmatter.components?.footer !== false) { %>
-                <footer class="page-footer">
-                    <div class="footer-content">
-                        <div class="user-footer">
-                            <%- footerHtml || '' %>
-                        </div>
-                        <% if (frontmatter.components?.branding !== false) { %>
-                            <div class="branding-footer">
-                                Build with <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.mgks.dev" target="_blank" rel="noopener">docmd.</a>
-                            </div>
-                        <% } %>
-                    </div>
-                </footer>
-            <% } %>
+    <aside class="sidebar">
+        <% if (frontmatter.components?.logo !== false && logo && logo.light && logo.dark) { %>
+        <div class="sidebar-header">
+            <a href="<%= logo.href || (relativePathToRoot + 'index.html') %>" class="logo-link">
+                <img src="<%= relativePathToRoot %><%- logo.light.startsWith('/') ? logo.light.substring(1) : logo.light %>" alt="<%= logo.alt || siteTitle %>" class="logo-light" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+                <img src="<%= relativePathToRoot %><%- logo.dark.startsWith('/') ? logo.dark.substring(1) : logo.dark %>" alt="<%= logo.alt || siteTitle %>" class="logo-dark" <% if (logo.height) { %>style="height: <%= logo.height %>;"<% } %>>
+            </a>
         </div>
+        <% } %>
+        <% if (frontmatter.components?.navigation !== false) { %>
+        <%- navigationHtml %>
+        <% } %>
+        <% if (frontmatter.components?.themeToggle !== false && theme && theme.enableModeToggle) { %>
+        <button id="theme-toggle-button" aria-label="Toggle theme" class="theme-toggle-button">
+            <%- renderIcon('sun', { class: 'icon-sun' }) %> <%- renderIcon('moon', { class: 'icon-moon' }) %>
+        </button>
+        <% } %>
+    </aside>
+    <div class="main-content-wrapper">
+        <% if (frontmatter.components?.header !== false) { %>
+        <header class="page-header">
+            <% if (frontmatter.components?.pageTitle !== false) { %>
+            <h1><%= pageTitle %></h1>
+            <% } %>
+        </header>
+        <% } %>
+        <main class="content-area">
+            <div class="content-layout">
+                <div class="main-content"><%- content %></div>
+                <% if (frontmatter.components?.toc !== false && headings && headings.length > 0) { %>
+                <div class="toc-sidebar">
+                    <%- include('toc', { content, headings, navigationHtml, isActivePage }) %>
+                </div>
+                <% } %>
+            </div>
+        </main>
+        <% if (frontmatter.components?.footer !== false) { %>
+        <footer class="page-footer">
+            <div class="footer-content">
+                <div class="user-footer"><%- footerHtml || '' %></div>
+                <% if (frontmatter.components?.branding !== false) { %>
+                <div class="branding-footer">
+                    Build with <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"></path><path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66"></path><path d="m18 15-2-2"></path><path d="m15 18-2-2"></path></svg> <a href="https://docmd.io" target="_blank" rel="noopener">docmd.</a>
+                </div>
+                <% } %>
+            </div>
+        </footer>
+        <% } %>
+    </div>
     <% } else { %>
-        <%- content %>
+    <%- content %>
     <% } %>
 
     <% if (frontmatter.components?.scripts === true) { %>
         <% if (frontmatter.components?.mainScripts === true) { %>
-            <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
+        <script>window.DOCMD_ROOT = "<%= relativePathToRoot %>";</script>
+        <script src="<%= relativePathToRoot %>assets/js/docmd-main.js"></script>
         <% } %>
         
         <% if (frontmatter.components?.lightbox === true && frontmatter.components?.mainScripts === true) { %>
-            <script src="<%= relativePathToRoot %>assets/js/docmd-image-lightbox.js"></script>
+        <script src="<%= relativePathToRoot %>assets/js/docmd-image-lightbox.js"></script>
         <% } %>
         
+        <!-- Mermaid & MiniSearch from CDN -->
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@11.12.2/dist/mermaid.min.js"></script>
+        <script src="<%= relativePathToRoot %>assets/js/docmd-mermaid.js"></script>
+        
+        <script src="https://cdn.jsdelivr.net/npm/minisearch@7.2.0/dist/umd/index.min.js"></script>
+        <script src="<%= relativePathToRoot %>assets/js/docmd-search.js"></script>
+
         <% if (frontmatter.components?.customJs === true && customJsFiles && customJsFiles.length > 0) { %>
-            <% customJsFiles.forEach(jsFile => { %>
-                <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
-            <% }); %>
+        <% customJsFiles.forEach(jsFile => { %>
+        <script src="<%= relativePathToRoot %><%- jsFile.startsWith('/') ? jsFile.substring(1) : jsFile %>"></script>
+        <% }); %>
         <% } %>
         
         <% if (frontmatter.components?.pluginBodyScripts === true) { %>
-            <%- pluginBodyScriptsHtml || '' %>
+        <%- pluginBodyScriptsHtml || '' %>
         <% } %>
     <% } %>
-    
     <% if (frontmatter.customScripts) { %>
-        <%- frontmatter.customScripts %>
+    <%- frontmatter.customScripts %>
     <% } %>
 </body>
-</html> 
+</html>
