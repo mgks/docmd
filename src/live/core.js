@@ -1,6 +1,10 @@
+// Source file from the docmd project — https://github.com/docmd-io/docmd
+
 const { processMarkdownContent, createMarkdownItInstance } = require('../core/file-processor');
 const { renderHtmlPage } = require('../core/html-generator');
-const templates = require('./templates'); 
+
+// Virtual import of templates for the live editor bundler
+const templates = require('virtual:docmd-templates');
 
 function compile(markdown, config = {}, options = {}) {
     // Default config values for the browser
