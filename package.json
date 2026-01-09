@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Generate beautiful, lightweight static documentation sites directly from your Markdown files. Zero clutter, just content.",
   "main": "src/index.js",
   "exports": {
@@ -9,6 +9,12 @@
       "require": "./src/index.js"
     }
   },
+  "files": [
+    "bin",
+    "src",
+    "LICENSE",
+    "README.md"
+  ],
   "bin": {
     "docmd": "bin/docmd.js"
   },
@@ -23,14 +29,12 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "chalk": "^4.1.2",
     "chokidar": "^5.0.0",
-    "clean-css": "^5.3.3",
     "commander": "^14.0.2",
     "ejs": "^3.1.10",
     "esbuild": "^0.27.2",
-    "express": "^5.2.1",
-    "fs-extra": "^11.3.3",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
     "lucide-static": "^0.562.0",
@@ -41,9 +45,7 @@
     "markdown-it-deflist": "^3.0.0",
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-task-lists": "^2.1.1",
-    "mermaid": "^11.12.2",
     "minisearch": "^7.2.0",
-    "striptags": "^3.2.0",
     "ws": "^8.18.3"
   },
   "devDependencies": {
@@ -71,12 +73,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mgks/docmd.git"
+    "url": "git+https://github.com/docmd-io/docmd.git"
   },
   "bugs": {
-    "url": "https://github.com/mgks/docmd/issues"
+    "url": "https://github.com/docmd-io/docmd/issues"
   },
-  "homepage": "https://github.com/mgks/docmd#readme",
+  "homepage": "https://docmd.io",
   "funding": "https://github.com/sponsors/mgks",
   "license": "MIT"
 }
