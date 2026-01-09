@@ -1,19 +1,15 @@
-.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list > li.step-item::before, .docmd-container.steps-reset ol.steps-list > li.step-item::before, .docmd-container.steps-reset ol.steps-list[start] > li.step-item::before {
-    content: counter(list-counter) ".";
-    font-weight: 700;
-    margin-right: 0.5em;
-    color: var(--accent-color, #007acc);
-}
+/* Source file from the docmd project — https://github.com/docmd-io/docmd */
 
-.docmd-tab-pane.active, .logo-link img, .logo-link img.logo-light, .tab-panel.active, .theme-toggle-button .icon-sun, body.sidebar-collapsible .sidebar-toggle-button, html[data-theme="dark"] .logo-link img.logo-dark, html[data-theme="dark"] .theme-toggle-button .icon-moon, img {
-    display: block;
-}
+/*
+ * docmd-main.css
+ * Main CSS styles for the docmd generated site.
+ */
 
 :root {
     --font-family-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    --bg-color: #ffffff;
-    --text-color: #333333;
+    --font-family-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    --bg-color: #fff;
+    --text-color: #333;
     --sidebar-bg: #f4f7f9;
     --sidebar-text: #2c3e50;
     --sidebar-link-active-bg: #e0e7ec;
@@ -22,19 +18,19 @@
     --border-color: #e0e0e0;
     --code-bg: #f8f8f8;
     --code-text: #333;
-    --header-bg: #ffffff;
+    --header-bg: #fff;
     --header-border: #e0e0e0;
     --image-border-color: #e0e0e0;
-    --image-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --image-shadow: 0 2px 8px #0000001a;
     --image-caption-bg: #f8f8f8;
     --image-caption-text: #666;
-    --lightbox-bg: rgba(0, 0, 0, 0.9);
+    --lightbox-bg: #000000e6;
     --lightbox-text: #fff;
     --accent-color: #858585;
-    --white: #ffffff;
+    --white: #fff
 }
 
-:root[data-theme="dark"] {
+:root[data-theme=dark] {
     --bg-color: #1a1a1a;
     --text-color: #e0e0e0;
     --sidebar-bg: #2c2c2c;
@@ -42,36 +38,37 @@
     --sidebar-link-active-bg: #3a3a3a;
     --sidebar-link-active-parent-bg: #343434;
     --link-color: #58a6ff;
-    --border-color: #444444;
+    --border-color: #444;
     --code-bg: #282c34;
     --code-text: #abb2bf;
     --header-bg: #1a1a1a;
-    --header-border: #444444;
-    --image-border-color: #444444;
-    --image-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --header-border: #444;
+    --image-border-color: #444;
+    --image-shadow: 0 2px 8px #0000004d;
     --image-caption-bg: #2c2c2c;
     --image-caption-text: #bdc3c7;
-    --lightbox-bg: rgba(0, 0, 0, 0.95);
-    --lightbox-text: #fff;
+    --lightbox-bg: #000000f2;
+    --lightbox-text: #fff
 }
 
 body {
     font-family: var(--font-family-sans);
     background-color: var(--bg-color);
     color: var(--text-color);
-    margin: 0px;
+    margin: 0;
     display: flex;
     min-height: 100vh;
-    line-height: 1.6;
+    line-height: 1.6
 }
 
-code, pre {
+code,
+pre {
     font-family: var(--font-family-mono);
-    background-color: var(--code-bg);
+    background-color: var(--code-bg)
 }
 
 a:any-link {
-    color: var(--link-color);
+    color: var(--link-color)
 }
 
 .sidebar {
@@ -82,25 +79,25 @@ a:any-link {
     border-right: 1px solid var(--border-color);
     height: 100vh;
     position: fixed;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     overflow-y: auto;
     box-sizing: border-box;
-    flex-shrink: 0;
+    flex-shrink: 0
 }
 
 .sidebar h1 {
     font-size: 1.5em;
-    margin-top: 0px;
+    margin-top: 0;
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color)
 }
 
 .sidebar nav ul {
     list-style: none;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0
 }
 
 .sidebar nav li a {
@@ -109,76 +106,105 @@ a:any-link {
     text-decoration: none;
     color: var(--sidebar-text);
     border-radius: 4px;
-    transition: background-color 0.2s;
+    transition: background-color .2s
 }
 
-.copy-code-button:hover, .docmd-tabs-nav-item:hover, .sidebar nav li a.active, .sidebar nav li a:hover, .theme-toggle-button:hover {
-    background-color: var(--sidebar-link-active-bg);
+.copy-code-button:hover,
+.docmd-tabs-nav-item:hover,
+.sidebar nav li a.active,
+.sidebar nav li a:hover,
+.theme-toggle-button:hover {
+    background-color: var(--sidebar-link-active-bg)
 }
 
 .sidebar nav li a.active {
     font-weight: 600;
-    color: var(--link-color);
+    color: var(--link-color)
 }
 
-.sidebar nav li.active-parent > a {
+.sidebar nav li.active-parent>a {
     background-color: var(--sidebar-link-active-parent-bg);
     font-weight: 500;
-    position: relative;
+    position: relative
 }
 
-.sidebar nav li.active-parent > a::before {
+.sidebar nav li.active-parent>a::before {
     content: "";
     position: absolute;
-    left: 0px;
-    top: 0px;
-    bottom: 0px;
+    left: 0;
+    top: 0;
+    bottom: 0;
     width: 3px;
     background-color: var(--link-color);
-    opacity: 0.5;
+    opacity: .5
 }
 
-.copy-code-button:hover, .sidebar nav li.active-parent > a.active::before, div:hover > .copy-code-button {
-    opacity: 1;
+.copy-code-button:hover,
+.sidebar nav li.active-parent>a.active::before,
+div:hover>.copy-code-button {
+    opacity: 1
 }
 
 .sidebar nav ul ul {
     padding-left: 20px;
-    margin-top: 5px;
+    margin-top: 5px
 }
 
 .sidebar-toggle-button {
-    background: 0px 0px;
+    background: 0 0;
     border: 1px solid transparent;
     color: var(--text-color);
     cursor: pointer;
-    padding: 0px;
-    margin: 0.5em 0px 0px;
+    padding: 0;
+    margin: .5em 0 0;
     display: none;
-    border-radius: 4px;
+    border-radius: 4px
 }
 
 .sidebar-toggle-button:hover {
     background-color: var(--sidebar-bg);
-    border-color: var(--border-color);
+    border-color: var(--border-color)
 }
 
 .sidebar-toggle-button .lucide-icon {
     width: 2em;
-    height: 2em;
+    height: 2em
+}
+
+.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list>li.step-item::before,
+.docmd-container.steps-reset ol.steps-list>li.step-item::before,
+.docmd-container.steps-reset ol.steps-list[start]>li.step-item::before {
+    content: counter(list-counter) ".";
+    font-weight: 700;
+    margin-right: .5em;
+    color: var(--accent-color, #007acc)
+}
+
+.docmd-tab-pane.active,
+.logo-link img,
+.logo-link img.logo-light,
+.tab-panel.active,
+.theme-toggle-button .icon-sun,
+body.sidebar-collapsible .sidebar-toggle-button,
+html[data-theme=dark] .logo-link img.logo-dark,
+html[data-theme=dark] .theme-toggle-button .icon-moon,
+img {
+    display: block
 }
 
 body.sidebar-collapsed .sidebar {
     transform: translateX(-100%);
-    visibility: hidden;
+    visibility: hidden
 }
 
-.toc-level-2, body.sidebar-collapsed .main-content-wrapper {
-    margin-left: 0px;
+.toc-level-2,
+body.sidebar-collapsed .main-content-wrapper {
+    margin-left: 0
 }
 
-.main-content-wrapper, .sidebar {
-    transition: transform 0.3s, margin-left 0.3s, visibility 0.3s;
+.main-content-wrapper,
+.sidebar {
+    transition: transform .3s, margin-left .3s, visibility .3s
 }
 
 .main-content-wrapper {
@@ -186,12 +212,13 @@ body.sidebar-collapsed .sidebar {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow: hidden
 }
 
-.header-left, .page-header {
+.header-left,
+.page-header {
     align-items: center;
-    display: flex;
+    display: flex
 }
 
 .page-header {
@@ -199,47 +226,50 @@ body.sidebar-collapsed .sidebar {
     border-bottom: 1px solid var(--header-border);
     background-color: var(--header-bg);
     justify-content: space-between;
-    min-height: 2.5em;
+    min-height: 2.5em
 }
 
 .header-left {
-    gap: 15px;
+    gap: 15px
 }
 
 .header-right {
     display: flex;
-    align-items: center;
+    align-items: center
 }
 
 .page-header h1 {
-    margin: 0px;
-    font-size: 1.8em;
+    margin: 0;
+    font-size: 1.8em
 }
 
-.docmd-search-trigger, .theme-toggle-header {
+.docmd-search-trigger,
+.theme-toggle-header {
     padding: 8px;
     background: var(--content-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: .2s
 }
 
-.docmd-search-trigger:hover, .theme-toggle-header:hover {
+.docmd-search-trigger:hover,
+.theme-toggle-header:hover {
     background: var(--sidebar-bg);
-    border-color: var(--accent-color);
+    border-color: var(--accent-color)
 }
 
-.card .card-title, .sidebar-header {
-    border-bottom: 1px solid var(--border-color);
+.card .card-title,
+.sidebar-header {
+    border-bottom: 1px solid var(--border-color)
 }
 
 .content-area {
     padding: 2.5rem 2rem;
     max-width: 1200px;
-    margin: 0px auto;
+    margin: 0 auto;
     width: 100%;
-    box-sizing: border-box;
+    box-sizing: border-box
 }
 
 pre {
@@ -248,107 +278,111 @@ pre {
     border-radius: 4px;
     overflow-x: auto;
     position: relative;
-}
-
-pre {
-    margin: 1.5em 0px;
+    margin: 1.5em 0;
     border-radius: 8px;
     box-shadow: var(--shadow-sm);
     background-color: var(--code-bg);
     padding: 1.25em;
     color: var(--code-text);
     overflow-x: auto;
-    position: relative;
+    position: relative
 }
 
 code {
-    padding: 0.2em 0.4em;
+    padding: .2em .4em;
     border-radius: 3px;
-    font-size: 0.9em;
+    font-size: .9em
 }
 
 pre code {
     background-color: transparent;
-    padding: 0px;
-    font-size: inherit;
+    padding: 0;
+    font-size: inherit
 }
 
 .table-wrapper {
     display: block;
     width: 100%;
     overflow-x: auto;
-    margin: 1.5em 0px;
+    margin: 1.5em 0;
     border-radius: 8px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--shadow-sm)
 }
 
 table {
     width: 100%;
     border-collapse: separate;
-    border-spacing: 0px;
-    margin: 0px;
+    border-spacing: 0;
+    margin: 0
 }
 
 th {
     text-align: left;
     font-weight: 600;
-    padding: 0.75rem 1rem;
+    padding: .75rem 1rem;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--sidebar-bg);
-    white-space: nowrap;
+    white-space: nowrap
 }
 
 td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--border-color);
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--border-color)
 }
 
 tr:last-child td {
     border-bottom-width: medium;
     border-bottom-style: none;
-    border-bottom-color: currentcolor;
+    border-bottom-color: currentcolor
 }
 
 .sidebar-header {
     padding-bottom: 10px;
     margin-bottom: 10px;
     text-align: center;
-    height: 2.5em;
+    height: 2.5em
 }
 
 .sidebar-header h1 {
     font-size: 1.5em;
-    margin-top: 0px;
-    margin-bottom: 0px;
+    margin-top: 0;
+    margin-bottom: 0
 }
 
 .logo-link img {
     max-height: 40px;
     width: auto;
-    margin: 0px auto;
+    margin: 0 auto
 }
 
-.docmd-tab-pane, .logo-link img.logo-dark, .tab-panel, .theme-toggle-button .icon-moon, html[data-theme="dark"] .logo-link img.logo-light, html[data-theme="dark"] .theme-toggle-button .icon-sun, .sidebar nav li.collapsible:not([aria-expanded="true"]) > .submenu {
-    display: none;
+.docmd-tab-pane,
+.logo-link img.logo-dark,
+.sidebar nav li.collapsible:not([aria-expanded=true])>.submenu,
+.tab-panel,
+.theme-toggle-button .icon-moon,
+html[data-theme=dark] .logo-link img.logo-light,
+html[data-theme=dark] .theme-toggle-button .icon-sun {
+    display: none
 }
 
 .sidebar-nav .lucide-icon {
     width: 1em;
     height: 1em;
-    margin-right: 0.5em;
-    vertical-align: -0.15em;
-    stroke-width: 2;
+    margin-right: .5em;
+    vertical-align: -.15em;
+    stroke-width: 2
 }
 
 .sidebar-nav .nav-external-icon {
     width: 1em;
     height: 1.5em;
     float: right;
-    margin-left: 0.3em;
-    opacity: 0.7;
+    margin-left: .3em;
+    opacity: .7
 }
 
-.docmd-search-trigger, .theme-toggle-button {
+.docmd-search-trigger,
+.theme-toggle-button {
     background-color: var(--sidebar-bg);
     border: 1px solid var(--border-color);
     color: var(--sidebar-text);
@@ -359,21 +393,27 @@ tr:last-child td {
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin: 0 0.25em;
+    margin: 0 .25em
 }
 
-.next-page, .prev-page, .step::before {
+.next-page,
+.prev-page,
+.step::before {
     color: var(--link-color);
-    display: flex;
+    display: flex
 }
 
-.callout .callout-content > :first-child, .card .card-content > :first-child, .docmd-container > :first-child, .step-content > :first-child, .step-title {
-    margin-top: 0px;
+.callout .callout-content> :first-child,
+.card .card-content> :first-child,
+.docmd-container> :first-child,
+.step-content> :first-child,
+.step-title {
+    margin-top: 0
 }
 
 .theme-toggle-button .lucide-icon {
     width: 1.2em;
-    height: 1.2em;
+    height: 1.2em
 }
 
 .docmd-container {
@@ -381,56 +421,60 @@ tr:last-child td {
     margin-bottom: 1.5rem;
     border-radius: 6px;
     border: 1px solid var(--border-color);
-    background-color: var(--code-bg);
+    background-color: var(--code-bg)
 }
 
-.callout .callout-content > :last-child, .card .card-content > :last-child, .docmd-container > :last-child, .step-content > :last-child {
-    margin-bottom: 0px;
+.callout .callout-content> :last-child,
+.card .card-content> :last-child,
+.docmd-container> :last-child,
+.step-content> :last-child {
+    margin-bottom: 0
 }
 
 .callout {
     border-left-width: 5px;
-    background-color: transparent;
+    background-color: transparent
 }
 
 .callout-title {
     font-weight: 700;
-    margin-bottom: 0.5em;
+    margin-bottom: .5em
 }
 
 .callout-info {
-    border-left-color: rgb(52, 152, 219);
-    background-color: rgba(52, 152, 219, 0.07);
+    border-left-color: #3498db;
+    background-color: #3498db12
 }
 
 .callout-warning {
-    border-left-color: rgb(243, 156, 18);
-    background-color: rgba(243, 156, 18, 0.07);
+    border-left-color: #f39c12;
+    background-color: #f39c1212
 }
 
-.callout-success, .callout-tip {
-    border-left-color: rgb(46, 204, 113);
-    background-color: rgba(46, 204, 113, 0.07);
+.callout-success,
+.callout-tip {
+    border-left-color: #2ecc71;
+    background-color: #2ecc7112
 }
 
 .callout-danger {
-    border-left-color: rgb(231, 76, 60);
-    background-color: rgba(231, 76, 60, 0.07);
+    border-left-color: #e74c3c;
+    background-color: #e74c3c12
 }
 
 .card .card-title {
     font-weight: 700;
     font-size: 1.1em;
     margin: -1rem -1.5rem 1rem;
-    padding: 0.75rem 1.5rem;
+    padding: .75rem 1.5rem
 }
 
 .docmd-container.steps {
     position: relative;
     padding-left: 3rem;
     border: medium;
-    background: 0px 0px;
-    box-shadow: none;
+    background: 0 0;
+    box-shadow: none
 }
 
 .docmd-container.steps::before {
@@ -440,23 +484,23 @@ tr:last-child td {
     bottom: 1rem;
     left: 2.5rem;
     width: 2px;
-    background-color: var(--border-color);
+    background-color: var(--border-color)
 }
 
 .step {
     position: relative;
-    padding-bottom: 1.5rem;
+    padding-bottom: 1.5rem
 }
 
 .step:last-child {
-    padding-bottom: 0px;
+    padding-bottom: 0
 }
 
 .step::before {
     content: attr(data-step);
     position: absolute;
     left: -3rem;
-    top: 0.1rem;
+    top: .1rem;
     width: 2.5rem;
     height: 2.5rem;
     background-color: var(--bg-color);
@@ -466,139 +510,144 @@ tr:last-child td {
     justify-content: center;
     font-size: 1rem;
     font-weight: 600;
-    z-index: 1;
+    z-index: 1
 }
 
 .step-title {
     font-size: 1.25rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin-bottom: .5rem
 }
 
 .docmd-container.steps-reset {
-    counter-reset: step-counter 0;
+    counter-reset: step-counter 0
 }
 
 .docmd-container.steps-reset ol.steps-list {
     counter-reset: list-counter 0;
-    list-style: none;
+    list-style: none
 }
 
-.docmd-container.steps-reset ol.steps-list > li.step-item {
+.docmd-container.steps-reset ol.steps-list>li.step-item {
     counter-increment: list-counter 1;
     position: relative;
-    padding-left: 0px;
-    margin-bottom: 2.5rem;
+    padding-left: 0;
+    margin-bottom: 2.5rem
 }
 
-.docmd-container.steps-reset ol.steps-list > li.step-item::before {
-    font-size: 2rem;
+.docmd-container.steps-reset ol.steps-list>li.step-item::before {
+    font-size: 2rem
 }
 
-.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list, .docmd-container.steps-reset ol.steps-list[start] {
-    counter-reset: list-counter 0;
+.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list,
+.docmd-container.steps-reset ol.steps-list[start] {
+    counter-reset: list-counter 0
 }
 
-.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list > li.step-item, .docmd-container.steps-reset ol.steps-list[start] > li.step-item {
-    counter-increment: list-counter 1;
+.docmd-container.steps-reset .docmd-container.steps-reset ol.steps-list>li.step-item,
+.docmd-container.steps-reset ol.steps-list[start]>li.step-item {
+    counter-increment: list-counter 1
 }
 
-.docmd-container.steps-reset ol:not(.steps-list)::before, .docmd-container.steps-reset ol:not(.steps-list) > li::before, .docmd-container.steps-reset ul::before, .docmd-container.steps-reset ul > li::before {
-    width: 0.75rem;
-    height: 0.75rem;
+.docmd-container.steps-reset ol:not(.steps-list)::before,
+.docmd-container.steps-reset ol:not(.steps-list)>li::before,
+.docmd-container.steps-reset ul::before,
+.docmd-container.steps-reset ul>li::before {
+    width: .75rem;
+    height: .75rem;
     left: -1.5rem;
-    top: 0.5rem;
-    content: "" !important;
+    top: .5rem;
+    content: "" !important
 }
 
 .mermaid-container {
-    margin: 1.5rem 0px;
+    margin: 1.5rem 0;
     overflow-x: auto;
-    text-align: center;
+    text-align: center
 }
 
 .mermaid-container svg {
     max-width: 100%;
     height: auto;
-    display: inline-block;
+    display: inline-block
 }
 
 .mermaid-error {
-    color: rgb(231, 76, 60);
+    color: #e74c3c;
     padding: 1rem;
-    margin: 0px;
-    background-color: rgba(231, 76, 60, 0.07);
+    margin: 0;
+    background-color: #e74c3c12;
     border-left-width: 4px;
     border-left-style: solid;
-    border-left-color: rgb(231, 76, 60);
+    border-left-color: #e74c3c;
     border-radius: 4px;
-    font-size: 0.9rem;
+    font-size: .9rem
 }
 
 pre.mermaid {
     background-color: transparent;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
     border: medium;
-    display: none;
+    display: none
 }
 
 .docmd-container.collapsible {
-    padding: 0px;
+    padding: 0;
     background-color: var(--card-bg, var(--bg-color));
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
     margin-bottom: 1.5rem;
-    transition: border-color 0.2s;
+    transition: border-color .2s
 }
 
 .docmd-container.collapsible[open] {
-    border-color: var(--link-color);
+    border-color: var(--link-color)
 }
 
 .collapsible-summary {
     list-style: none;
-    padding: 0.75rem 1.25rem;
+    padding: .75rem 1.25rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: space-between;
     font-weight: 600;
     background-color: var(--sidebar-bg);
-    transition: background-color 0.2s;
+    transition: background-color .2s
 }
 
 .collapsible-summary:hover {
-    background-color: var(--sidebar-link-active-bg);
+    background-color: var(--sidebar-link-active-bg)
 }
 
 .collapsible-summary::-webkit-details-marker {
-    display: none;
+    display: none
 }
 
 .collapsible-arrow svg {
     width: 1.2em;
     height: 1.2em;
-    transition: transform 0.2s;
-    opacity: 0.7;
+    transition: transform .2s;
+    opacity: .7
 }
 
-details[open] > .collapsible-summary .collapsible-arrow svg {
-    transform: rotate(180deg);
+details[open]>.collapsible-summary .collapsible-arrow svg {
+    transform: rotate(180deg)
 }
 
 .collapsible-content {
     padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color)
 }
 
 .docmd-container.changelog-timeline {
     border: medium;
-    background: none;
-    padding: 0px;
+    background: 0 0;
+    padding: 0;
     margin-top: 2rem;
-    box-shadow: none;
+    box-shadow: none
 }
 
 .changelog-entry {
@@ -606,12 +655,12 @@ details[open] > .collapsible-summary .collapsible-arrow svg {
     grid-template-columns: 180px 1fr;
     gap: 2rem;
     margin-bottom: 3rem;
-    position: relative;
+    position: relative
 }
 
 .changelog-meta {
     text-align: right;
-    padding-top: 0.5rem;
+    padding-top: .5rem
 }
 
 .changelog-date {
@@ -621,313 +670,323 @@ details[open] > .collapsible-summary .collapsible-arrow svg {
     border: 1px solid var(--border-color);
     padding: 4px 12px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: .85rem;
     font-weight: 600;
-    font-family: var(--font-family-mono);
+    font-family: var(--font-family-mono)
 }
 
 .changelog-body {
     border-left: 2px solid var(--border-color);
     padding-left: 2rem;
-    padding-bottom: 1rem;
+    padding-bottom: 1rem
 }
 
-.changelog-body > :first-child {
-    margin-top: 0px;
+.changelog-body> :first-child {
+    margin-top: 0
 }
 
 :focus-visible {
     outline: 2px solid var(--link-color);
-    outline-offset: 2px;
+    outline-offset: 2px
 }
 
 :focus:not(:focus-visible) {
-    outline: currentcolor;
+    outline: currentcolor
 }
 
 .sidebar nav li a:focus-visible {
     background-color: var(--sidebar-link-active-bg);
     outline: 2px solid var(--link-color);
-    outline-offset: -2px;
+    outline-offset: -2px
 }
 
 .theme-toggle-button:focus-visible {
     border-color: var(--link-color);
-    box-shadow: 0 0 0 2px var(--link-color);
+    box-shadow: 0 0 0 2px var(--link-color)
 }
 
-.page-footer, .page-navigation {
-    border-top: 1px solid var(--border-color);
+.page-footer,
+.page-navigation {
+    border-top: 1px solid var(--border-color)
 }
 
 .page-navigation {
     display: flex;
     justify-content: space-between;
     margin-top: 3rem;
-    padding-top: 1.5rem;
+    padding-top: 1.5rem
 }
 
-.next-page, .prev-page {
+.next-page,
+.prev-page {
     align-items: center;
     text-decoration: none;
-    padding: 0.75rem;
+    padding: .75rem;
     border-radius: 6px;
-    transition: background-color 0.2s;
+    transition: background-color .2s;
     width: 48%;
-    max-width: 48%;
+    max-width: 48%
 }
 
-.next-page:hover, .prev-page:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    text-decoration: none;
+.next-page:hover,
+.prev-page:hover {
+    background-color: #0000000d;
+    text-decoration: none
 }
 
-:root[data-theme="dark"] .next-page:hover, :root[data-theme="dark"] .prev-page:hover {
-    background-color: rgba(255, 255, 255, 0.05);
+:root[data-theme=dark] .next-page:hover,
+:root[data-theme=dark] .prev-page:hover {
+    background-color: #ffffff0d
 }
 
 .prev-page {
-    justify-content: flex-start;
+    justify-content: flex-start
 }
 
 .next-page {
     justify-content: flex-end;
-    text-align: right;
+    text-align: right
 }
 
-.next-page-placeholder, .prev-page-placeholder {
-    width: 48%;
+.next-page-placeholder,
+.prev-page-placeholder {
+    width: 48%
 }
 
-.next-page span, .prev-page span {
+.next-page span,
+.prev-page span {
     display: flex;
-    flex-direction: column;
+    flex-direction: column
 }
 
-.next-page small, .prev-page small {
-    font-size: 0.8rem;
-    opacity: 0.8;
-    margin-bottom: 0.25rem;
+.next-page small,
+.prev-page small {
+    font-size: .8rem;
+    opacity: .8;
+    margin-bottom: .25rem
 }
 
-.next-page strong, .prev-page strong {
-    font-weight: 500;
+.next-page strong,
+.prev-page strong {
+    font-weight: 500
 }
 
 .page-nav-icon {
     width: 1.2rem;
-    height: 1.2rem;
+    height: 1.2rem
 }
 
 .prev-page .page-nav-icon {
-    margin-right: 0.75rem;
+    margin-right: .75rem
 }
 
 .next-page .page-nav-icon {
-    margin-left: 0.75rem;
+    margin-left: .75rem
 }
 
 .page-footer {
     text-align: center;
     padding: 20px 30px;
     margin-top: auto;
-    font-size: 0.9em;
+    font-size: .9em;
     color: var(--text-color);
-    background-color: var(--sidebar-bg);
+    background-color: var(--sidebar-bg)
 }
 
 .footer-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin: 0px auto;
-    width: 100%;
+    margin: 0 auto;
+    width: 100%
 }
 
 .user-footer {
-    text-align: left;
+    text-align: left
 }
 
 .branding-footer {
     text-align: right;
-    opacity: 0.9;
-    font-weight: 500;
+    opacity: .9;
+    font-weight: 500
 }
 
 .branding-footer svg {
-    color: rgb(251, 58, 58);
+    color: #fb3a3a
 }
 
 .page-footer a {
     color: var(--link-color);
-    text-decoration: none;
+    text-decoration: none
 }
 
-.page-footer a:hover, .toc-link:hover {
-    text-decoration: underline;
+.page-footer a:hover,
+.toc-link:hover {
+    text-decoration: underline
 }
 
 .content-layout {
     display: flex;
     gap: 2rem;
-    width: 100%;
+    width: 100%
 }
 
 .main-content {
-    flex: 1 1 0%;
-    min-inline-size: 0px;
+    flex: 1 1 0;
+    min-inline-size: 0
 }
 
 .toc-container {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     border: medium;
-    background-color: transparent;
+    background-color: transparent
 }
 
-.docmd-container figure img, .toc-title {
-    margin-bottom: 0.5rem;
+.docmd-container figure img,
+.toc-title {
+    margin-bottom: .5rem
 }
 
 .toc-title {
-    margin-top: 0px;
+    margin-top: 0;
     font-size: 1rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text-muted)
 }
 
 .toc-list {
     list-style: none;
-    padding-left: 0px;
-    margin: 0px;
+    padding-left: 0;
+    margin: 0
 }
 
 .toc-item {
-    margin-bottom: 0.25rem;
-    line-height: 1.4;
+    margin-bottom: .25rem;
+    line-height: 1.4
 }
 
 .toc-link {
     text-decoration: none;
     color: var(--link-color);
     display: inline-block;
-    padding: 0.1rem 0px;
-    font-size: 0.9rem;
-    font-weight: 500;
+    padding: .1rem 0;
+    font-size: .9rem;
+    font-weight: 500
 }
 
 .toc-level-3 {
-    margin-left: 0.75rem;
-    font-size: 0.85rem;
+    margin-left: .75rem;
+    font-size: .85rem
 }
 
 .toc-level-4 {
     margin-left: 1.5rem;
-    font-size: 0.8rem;
+    font-size: .8rem
 }
 
 .toc-sidebar {
     width: 180px;
     position: sticky;
     top: 2rem;
-    max-height: calc(-4rem + 100vh);
     overflow-y: auto;
-    align-self: flex-start;
+    align-self: flex-start
 }
 
-.docmd-tabs, img {
-    margin: 1.5rem 0px;
+.docmd-tabs,
+img {
+    margin: 1.5rem 0
 }
 
 img {
     max-width: 100%;
-    height: auto;
+    height: auto
 }
 
 img.align-left {
     float: left;
     margin-right: 1.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1rem
 }
 
 img.align-center {
     margin-left: auto;
-    margin-right: auto;
+    margin-right: auto
 }
 
 img.align-right {
     float: right;
     margin-left: 1.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1rem
 }
 
 img.size-small {
-    max-width: 300px;
+    max-width: 300px
 }
 
 img.size-medium {
-    max-width: 500px;
+    max-width: 500px
 }
 
 img.size-large {
-    max-width: 800px;
+    max-width: 800px
 }
 
 img.with-border {
     border: 1px solid var(--image-border-color);
-    padding: 4px;
+    padding: 4px
 }
 
 img.with-shadow {
-    box-shadow: var(--image-shadow);
+    box-shadow: var(--image-shadow)
 }
 
 .docmd-container figure {
-    margin: 2rem 0px;
+    margin: 2rem 0
 }
 
 .docmd-container figcaption {
-    font-size: 0.9rem;
+    font-size: .9rem;
     color: var(--image-caption-text);
     text-align: center;
-    padding: 0.5rem;
+    padding: .5rem;
     background-color: var(--image-caption-bg);
-    border-radius: 0px 0px 4px 4px;
+    border-radius: 0 0 4px 4px
 }
 
 .docmd-container .image-gallery {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
-    margin: 2rem 0px;
+    margin: 2rem 0
 }
 
 .docmd-container .image-gallery figure {
-    margin: 0px;
+    margin: 0
 }
 
 .docmd-container .clear-float::after {
     content: "";
     display: table;
-    clear: both;
+    clear: both
 }
 
 .docmd-tabs {
     border: 1px solid var(--border-color);
     border-radius: 6px;
     overflow: hidden;
-    box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 3px;
+    box-shadow: #0000000d 0 1px 3px
 }
 
 .docmd-tabs-nav {
     display: flex;
     background-color: var(--sidebar-bg);
     border-bottom: 1px solid var(--border-color);
-    overflow: auto hidden;
+    overflow: auto hidden
 }
 
 .docmd-tabs-nav-item {
-    padding: 0.75rem 1.25rem;
+    padding: .75rem 1.25rem;
     cursor: pointer;
     border-bottom-width: 3px;
     border-bottom-style: solid;
@@ -935,97 +994,98 @@ img.with-shadow {
     margin-bottom: -1px;
     font-weight: 500;
     color: var(--sidebar-text);
-    white-space: nowrap;
+    white-space: nowrap
 }
 
 .docmd-tabs-nav-item.active {
     color: var(--link-color);
     border-bottom-color: var(--link-color);
-    background-color: var(--bg-color);
+    background-color: var(--bg-color)
 }
 
 .docmd-tabs-content {
-    padding: 1.5rem;
+    padding: 1.5rem
 }
 
 .tabs-container {
-    margin: 1rem 0px;
-    border: 1px solid rgb(225, 229, 233);
-    border-radius: 0.375rem;
+    margin: 1rem 0;
+    border: 1px solid #e1e5e9;
+    border-radius: .375rem
 }
 
 .tab-navigation {
     display: flex;
-    background-color: rgb(248, 249, 250);
+    background-color: #f8f9fa;
     border-bottom-width: 1px;
     border-bottom-style: solid;
-    border-bottom-color: rgb(225, 229, 233);
-    border-radius: 0.375rem 0.375rem 0px 0px;
+    border-bottom-color: #e1e5e9;
+    border-radius: .375rem .375rem 0 0
 }
 
 .tab-button {
-    padding: 0.75rem 1rem;
+    padding: .75rem 1rem;
     border-width: medium medium 2px;
     border-style: none none solid;
     border-color: currentcolor currentcolor transparent;
     border-image: none;
-    background: 0px 0px;
+    background: 0 0;
     cursor: pointer;
-    transition: 0.2s;
+    transition: .2s
 }
 
 .tab-button:hover {
-    background-color: rgb(233, 236, 239);
+    background-color: #e9ecef
 }
 
 .tab-button.active {
-    border-bottom-color: rgb(0, 123, 255);
-    background-color: rgb(255, 255, 255);
+    border-bottom-color: #007bff;
+    background-color: #fff
 }
 
 .tab-content {
-    padding: 1rem;
+    padding: 1rem
 }
 
 .docmd-lightbox {
     display: none;
     position: fixed;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     background-color: var(--lightbox-bg);
     z-index: 9999;
     justify-content: center;
     align-items: center;
-    flex-direction: column;
+    flex-direction: column
 }
 
-.copy-code-button svg, .sponsor-icon {
+.copy-code-button svg,
+.sponsor-icon {
     width: 1rem;
-    height: 1rem;
+    height: 1rem
 }
 
 .docmd-lightbox-content {
     position: relative;
     max-width: 90%;
     max-height: 90%;
-    text-align: center;
+    text-align: center
 }
 
 .docmd-lightbox-content img {
     max-width: 100%;
     max-height: 80vh;
     object-fit: contain;
-    margin: 0px auto;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 0px 20px;
+    margin: 0 auto;
+    box-shadow: #0000004d 0 0 20px
 }
 
 .docmd-lightbox-caption {
     color: var(--lightbox-text);
     padding: 1rem;
     font-size: 1rem;
-    max-width: 100%;
+    max-width: 100%
 }
 
 .docmd-lightbox-close {
@@ -1035,138 +1095,141 @@ img.with-shadow {
     color: var(--lightbox-text);
     font-size: 2.5rem;
     cursor: pointer;
-    z-index: 10000;
+    z-index: 10000
 }
 
 .docmd-lightbox-close:hover {
-    color: rgb(221, 221, 221);
+    color: #ddd
 }
 
-a.docmd-button, a.sponsor-link, a.sponsor-link:hover {
-    color: rgb(255, 255, 255);
-    text-decoration: none;
+a.docmd-button,
+a.sponsor-link,
+a.sponsor-link:hover {
+    color: #fff;
+    text-decoration: none
 }
 
-.docmd-container .image-gallery img, img.lightbox {
-    cursor: zoom-in;
+.docmd-container .image-gallery img,
+img.lightbox {
+    cursor: zoom-in
 }
 
 .docmd-button {
     display: inline-block;
-    padding: 0.6rem 1.2rem;
-    margin: 0.5rem;
+    padding: .6rem 1.2rem;
+    margin: .5rem;
     border-radius: 6px;
     background-color: var(--link-color);
     font-weight: 500;
-    transition: background-color 0.2s, transform 0.2s;
+    transition: background-color .2s, transform .2s;
     border: medium;
-    cursor: pointer;
+    cursor: pointer
 }
 
 .docmd-button:hover {
     text-decoration: none;
     filter: brightness(90%);
-    transform: translateY(-1px);
+    transform: translateY(-1px)
 }
 
 .sponsor-ribbon {
     position: fixed;
     bottom: 4.5em;
-    right: 0px;
+    right: 0;
     z-index: 1000;
-    transform: rotate(0deg);
+    transform: rotate(0);
     transform-origin: center center;
-    opacity: 0.85;
-    transition: 0.5s;
+    opacity: .85;
+    transition: .5s
 }
 
 .sponsor-ribbon:hover {
-    opacity: 1;
+    opacity: 1
 }
 
 .sponsor-link {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background: linear-gradient(to right bottom, rgb(255, 107, 107), rgb(238, 90, 36));
-    padding: 0.5rem 0.5em 0.5em 0.75rem;
-    border-radius: 20px 0px 0px 20px;
+    gap: .5rem;
+    background: linear-gradient(to right bottom, #ff6b6b, #ee5a24);
+    padding: .5rem .5em .5em .75rem;
+    border-radius: 20px 0 0 20px;
     font-weight: 700;
-    font-size: 0.85em;
-    transition: 0.3s;
+    font-size: .85em;
+    transition: .3s;
     white-space: nowrap;
-    color: var(--white) !important;
+    color: var(--white) !important
 }
 
 .sponsor-link:hover {
     transform: scale(1.02);
-    box-shadow: rgba(255, 107, 107, 0.4) 0px 0px 25px;
+    box-shadow: #ff6b6b66 0 0 25px
 }
 
 .sponsor-icon {
-    animation: 2s ease-in-out infinite heartbeat;
+    animation: 2s ease-in-out infinite heartbeat
 }
 
 .sponsor-text {
-    font-family: inherit;
+    font-family: inherit
 }
 
-html[data-theme="dark"] .sponsor-link {
-    background: linear-gradient(135deg, rgb(255, 107, 107), rgb(196, 69, 105));
-    box-shadow: rgba(255, 107, 107, 0.2) 0px 4px 12px;
+html[data-theme=dark] .sponsor-link {
+    background: linear-gradient(135deg, #ff6b6b, #c44569);
+    box-shadow: #ff6b6b33 0 4px 12px
 }
 
-html[data-theme="dark"] .sponsor-link:hover {
-    box-shadow: rgba(255, 107, 107, 0.3) 0px 6px 20px;
+html[data-theme=dark] .sponsor-link:hover {
+    box-shadow: #ff6b6b4d 0 6px 20px
 }
 
 .copy-code-button {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    padding: 0.5rem;
+    top: .75rem;
+    right: .75rem;
+    padding: .5rem;
     background-color: var(--code-bg);
     border: 1px solid var(--border-color);
     border-radius: 6px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s ease-in-out, background-color 0.2s;
+    transition: opacity .2s ease-in-out, background-color .2s;
     color: var(--sidebar-text);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 10;
-    pointer-events: auto;
+    pointer-events: auto
 }
 
 .copy-code-button.copied {
-    color: rgb(16, 185, 129);
-    opacity: 1;
+    color: #10b981;
+    opacity: 1
 }
 
-.sidebar nav li.collapsible > a {
+.sidebar nav li.collapsible>a {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: center
 }
 
-.sidebar nav li.collapsible > a .nav-item-title {
-    flex-grow: 1;
+.sidebar nav li.collapsible>a .nav-item-title {
+    flex-grow: 1
 }
 
 .sidebar nav .collapse-icon {
-    transition: transform 0.2s ease-in-out;
+    transition: transform .2s ease-in-out;
     flex-shrink: 0;
-    margin-left: 0.5em;
+    margin-left: .5em
 }
 
-.sidebar nav li.collapsible[aria-expanded="true"] > a > .collapse-icon {
-    transform: rotate(90deg);
+.sidebar nav li.collapsible[aria-expanded=true]>a>.collapse-icon {
+    transform: rotate(90deg)
 }
 
 hr {
-    color: rgba(245, 245, 245, 0.27);
-    border-top-width: 1px;
+    color: #f5f5f545;
+    border-top-width: 1px
 }
 
 .page-footer-actions {
@@ -1176,40 +1239,40 @@ hr {
     display: flex;
     justify-content: flex-end;
     gap: 1rem;
-    font-size: 0.875rem;
+    font-size: .875rem
 }
 
 .edit-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: .5rem;
     color: var(--text-light);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color .2s
 }
 
 .edit-link:hover {
-    color: var(--link-color);
+    color: var(--link-color)
 }
 
 .edit-link svg {
     width: 1em;
-    height: 1em;
+    height: 1em
 }
 
 .docmd-search-trigger {
-    gap: 0.5rem;
-    padding: 0.4rem 0.6rem;
-    font-size: 0.9rem;
+    gap: .5rem;
+    padding: .4rem .6rem;
+    font-size: .9rem
 }
 
 .search-label {
-    margin-right: 1rem;
+    margin-right: 1rem
 }
 
 .search-keys {
     display: flex;
-    gap: 2px;
+    gap: 2px
 }
 
 .docmd-kbd {
@@ -1217,34 +1280,36 @@ hr {
     border: 1px solid var(--border-color);
     border-radius: 3px;
     font-family: var(--font-family-mono);
-    font-size: 0.7rem;
-    padding: 0px 4px;
+    font-size: .7rem;
+    padding: 0 4px;
     box-shadow: 0 1px 0 var(--border-color);
     color: var(--text-muted, var(--accent-color));
     min-width: 1.2em;
-    text-align: center;
+    text-align: center
 }
 
 @media (max-width: 768px) {
-    .search-label, .search-keys {
-        display: none;
+
+    .search-keys,
+    .search-label {
+        display: none
     }
 
     .docmd-search-trigger {
-        padding: 0.5rem;
-        margin-right: 0.5rem;
+        padding: .5rem;
+        margin-right: .5rem
     }
 }
 
 .docmd-search-modal {
     position: fixed;
-    inset: 0px;
-    background-color: rgba(0, 0, 0, 0.5);
+    inset: 0;
+    background-color: #00000080;
     z-index: 1000;
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding-top: 10vh;
+    padding-top: 10vh
 }
 
 .docmd-search-box {
@@ -1253,22 +1318,22 @@ hr {
     background-color: var(--bg-color);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    box-shadow: rgba(0, 0, 0, 0.3) 0px 20px 50px -12px;
+    box-shadow: #0000004d 0 20px 50px -12px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    animation: 0.2s ease-out searchSlideIn;
+    animation: .2s ease-out searchSlideIn
 }
 
 @keyframes searchSlideIn {
     0% {
         opacity: 0;
-        transform: scale(0.98) translateY(10px);
+        transform: scale(.98) translateY(10px)
     }
 
     100% {
         opacity: 1;
-        transform: scale(1) translateY(0px);
+        transform: scale(1) translateY(0)
     }
 }
 
@@ -1277,149 +1342,156 @@ hr {
     align-items: center;
     padding: 1rem 1.5rem;
     border-bottom: 1px solid var(--border-color);
-    gap: 1rem;
+    gap: 1rem
 }
 
 .docmd-search-header svg {
-    color: var(--link-color);
+    color: var(--link-color)
 }
 
 #docmd-search-input {
-    flex: 1 1 0%;
+    flex: 1 1 0;
     border: medium;
-    background: none;
+    background: 0 0;
     font-size: 1.1rem;
     color: var(--text-color);
-    outline: currentcolor;
+    outline: currentcolor
 }
 
 .docmd-search-close {
-    background: none;
+    background: 0 0;
     border: medium;
     cursor: pointer;
     color: var(--text-muted, #888);
-    padding: 0px;
-    display: flex;
+    padding: 0;
+    display: flex
 }
 
 .docmd-search-results {
     max-height: 60vh;
     overflow-y: auto;
-    padding: 0.5rem;
+    padding: .5rem
 }
 
 .search-result-item {
     display: block;
-    padding: 0.75rem 1rem;
+    padding: .75rem 1rem;
     border-radius: 6px;
     text-decoration: none;
     color: var(--text-color);
     margin-bottom: 2px;
     border-left-width: 3px;
     border-left-style: solid;
-    border-left-color: transparent;
+    border-left-color: transparent
 }
 
-.search-result-item:hover, .search-result-item:focus, .search-result-item.selected {
+.search-result-item.selected,
+.search-result-item:focus,
+.search-result-item:hover {
     background-color: var(--sidebar-bg);
     border-left-color: var(--link-color);
     text-decoration: none;
-    cursor: pointer;
+    cursor: pointer
 }
 
 .search-result-title {
     font-weight: 600;
-    font-size: 0.95rem;
-    margin-bottom: 0.2rem;
-    color: var(--link-color);
+    font-size: .95rem;
+    margin-bottom: .2rem;
+    color: var(--link-color)
 }
 
 .search-result-preview {
-    font-size: 0.8rem;
+    font-size: .8rem;
     color: var(--text-muted, #666);
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
+    text-overflow: ellipsis
 }
 
-.search-no-results, .search-error {
+.search-error,
+.search-no-results {
     padding: 2rem;
     text-align: center;
-    color: var(--text-muted, #666);
+    color: var(--text-muted, #666)
 }
 
-.search-initial, .search-no-results, .search-error {
+.search-error,
+.search-initial,
+.search-no-results {
     padding: 3rem 2rem;
     text-align: center;
     color: var(--text-muted, #666);
-    font-size: 0.95rem;
+    font-size: .95rem
 }
 
 .search-result-preview mark {
-    background-color: rgba(255, 235, 59, 0.4);
+    background-color: #ffeb3b66;
     color: inherit;
-    padding: 0px 2px;
-    border-radius: 2px;
+    padding: 0 2px;
+    border-radius: 2px
 }
 
-:root[data-theme="dark"] .search-result-preview mark {
-    background-color: rgba(255, 235, 59, 0.25);
-    color: rgb(255, 255, 255);
+:root[data-theme=dark] .search-result-preview mark {
+    background-color: #ffeb3b40;
+    color: #fff
 }
 
 .docmd-search-footer {
-    padding: 0.75rem 1.5rem;
+    padding: .75rem 1.5rem;
     background-color: var(--sidebar-bg);
     border-top: 1px solid var(--border-color);
-    font-size: 0.75rem;
+    font-size: .75rem;
     color: var(--text-muted, #888);
     display: flex;
     gap: 1rem;
-    justify-content: flex-end;
+    justify-content: flex-end
 }
 
 .sidebar-menu-button {
-    font-size: 1.5em;
+    font-size: 1.5em
 }
 
 .mobile-view {
-    display: none;
+    display: none
 }
 
 .float-left {
-    float: left;
+    float: left
 }
 
 .float-right {
-    float: right;
+    float: right
 }
 
 @keyframes heartbeat {
-    0%, 100% {
-        transform: scale(1);
+
+    0%,
+    100% {
+        transform: scale(1)
     }
 
     50% {
-        transform: scale(1.1);
+        transform: scale(1.1)
     }
 }
 
 @media (max-width: 1024px) {
     .content-layout {
         display: flex;
-        flex-direction: column-reverse;
+        flex-direction: column-reverse
     }
 
     .toc-sidebar {
         width: 100%;
         position: static;
-        margin-bottom: 1rem;
+        margin-bottom: 1rem
     }
 }
 
 @media (max-width: 768px) {
     body {
-        flex-direction: column;
+        flex-direction: column
     }
 
     .sidebar {
@@ -1431,16 +1503,16 @@ hr {
         border-right-color: currentcolor;
         border-bottom: 1px solid var(--border-color);
         padding: 10px 20px;
-        z-index: 100;
+        z-index: 100
     }
 
     .sidebar-header {
-        border-bottom-width: 0px;
+        border-bottom-width: 0;
         border-bottom-style: none;
         border-bottom-color: currentcolor;
-        padding-bottom: 0px;
-        margin-bottom: 0px;
-        text-align: left;
+        padding-bottom: 0;
+        margin-bottom: 0;
+        text-align: left
     }
 
     .mobile-view {
@@ -1450,178 +1522,186 @@ hr {
         cursor: pointer;
         padding: 4px;
         border-radius: 4px;
-        transition: background-color 0.2s;
+        transition: background-color .2s
     }
 
     .mobile-view:hover {
-        background-color: var(--sidebar-bg);
+        background-color: var(--sidebar-bg)
     }
 
     .sidebar-menu-button {
         font-size: 1.5em;
-        margin-top: 5px;
+        margin-top: 5px
     }
 
-    .sidebar-nav, .sidebar #theme-toggle-button {
-        max-height: 0px;
+    .sidebar #theme-toggle-button,
+    .sidebar-nav {
+        max-height: 0;
         display: none;
         opacity: 0;
-        transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s;
-        margin-top: 0px;
+        transition: max-height .3s ease-out, opacity .3s ease-out, margin .3s;
+        margin-top: 0
     }
 
-    .sidebar.mobile-expanded .sidebar-nav, .sidebar.mobile-expanded #theme-toggle-button {
+    .sidebar.mobile-expanded #theme-toggle-button,
+    .sidebar.mobile-expanded .sidebar-nav {
         max-height: initial;
         opacity: 1;
         margin-top: 1rem;
-        display: block;
+        display: block
     }
 
     .sidebar-toggle-button {
-        display: none !important;
+        display: none !important
     }
 
     .logo-link img {
-        float: left;
+        float: left
     }
 
     .toc-container {
         background-color: var(--sidebar-bg);
         border: 1px solid var(--border-color);
         border-radius: 6px;
-        padding: 0.75rem 1rem;
-        margin-bottom: 2rem;
+        padding: .75rem 1rem;
+        margin-bottom: 2rem
     }
 
     .toc-title {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 0px;
+        margin-bottom: 0;
         cursor: pointer;
-        border-bottom-width: 0px;
+        border-bottom-width: 0;
         border-bottom-style: none;
         border-bottom-color: currentcolor;
-        padding-bottom: 0px;
+        padding-bottom: 0
     }
 
     .toc-list {
-        max-height: 0px;
+        height: 0;
         overflow: hidden;
         opacity: 0;
-        transition: max-height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s;
-        margin-top: 0px;
+        transition: max-height .3s ease-out, opacity .3s ease-out, margin .3s;
+        margin-top: 0
     }
 
     .toc-container.mobile-expanded .toc-list {
-        max-height: 50vh;
+        height: auto;
         opacity: 1;
-        margin-top: 1rem;
+        margin-top: 1rem
     }
 
     .toc-container.mobile-expanded .toc-title {
-        margin-bottom: 0.5rem;
+        margin-bottom: .5rem
     }
 
     .toc-menu-button svg {
-        transition: transform 0.3s;
+        transition: transform .3s
     }
 
     .toc-container.mobile-expanded .toc-menu-button svg {
-        transform: rotate(180deg);
+        transform: rotate(180deg)
     }
 
     .main-content-wrapper {
-        margin-left: 0px;
+        margin-left: 0
     }
 
     .content-area {
-        padding: 15px;
+        padding: 15px
     }
 
-    .footer-content, .page-navigation {
+    .footer-content,
+    .page-navigation {
         flex-direction: column;
-        gap: 1rem;
+        gap: 1rem
     }
 
-    .branding-footer, .user-footer {
-        text-align: center;
+    .branding-footer,
+    .user-footer {
+        text-align: center
     }
 
-    .next-page, .next-page-placeholder, .prev-page, .prev-page-placeholder {
+    .next-page,
+    .next-page-placeholder,
+    .prev-page,
+    .prev-page-placeholder {
         width: 100%;
-        max-width: 100%;
+        max-width: 100%
     }
 
-    img.align-left, img.align-right {
+    img.align-left,
+    img.align-right {
         float: none;
         margin-left: auto;
-        margin-right: auto;
+        margin-right: auto
     }
 
     .docmd-container .image-gallery {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr
     }
 
     .docmd-search-modal {
-        padding-top: 0px;
+        padding-top: 0;
         background-color: var(--bg-color);
-        align-items: flex-start;
+        align-items: flex-start
     }
 
     .docmd-search-box {
         max-width: 100%;
         height: 100%;
-        border-radius: 0px;
+        border-radius: 0;
         border: medium;
-        box-shadow: none;
+        box-shadow: none
     }
 
     .docmd-search-header {
-        padding: 1rem;
+        padding: 1rem
     }
 
     #docmd-search-input {
-        font-size: 1rem;
+        font-size: 1rem
     }
 
     .docmd-search-footer {
-        display: none;
+        display: none
     }
 
     .docmd-search-results {
         max-height: none;
-        flex: 1 1 0%;
+        flex: 1 1 0
     }
 
     .sponsor-ribbon {
         bottom: 10px;
-        right: 10px;
+        right: 10px
     }
 
     .sponsor-link {
-        padding: 0.5rem 1rem;
-        font-size: 0.75rem;
+        padding: .5rem 1rem;
+        font-size: .75rem
     }
 
     .sponsor-icon {
-        width: 0.875rem;
-        height: 0.875rem;
+        width: .875rem;
+        height: .875rem
     }
 
     .changelog-entry {
         grid-template-columns: 1fr;
-        gap: 1rem;
+        gap: 1rem
     }
 
     .changelog-meta {
         text-align: left;
-        padding-top: 0px;
+        padding-top: 0
     }
 
     .changelog-body {
         border-left: 2px solid var(--border-color);
         padding-left: 1.5rem;
-        margin-left: 0.5rem;
+        margin-left: .5rem
     }
 }

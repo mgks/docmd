@@ -1,10 +1,107 @@
-/* Source file from the docmd project — https://github.com/mgks/docmd */
+/* Source file from the docmd project — https://github.com/docmd-io/docmd */
 
 /* 
- * docmd Sky Theme
+ * Sky Theme
  * Inspired by the clear blue sky
  * Features: Blue tones, clean lines, subtle gradients
  */
+
+:root {
+    --sky-primary: #0097ff
+}
+
+:root[data-theme=light] {
+    --font-family-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --font-family-mono: 'JetBrains Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    --accent-color: #0097ff;
+    --sky-primary: #0097ff;
+    --sky-primary-light: #e5f4ff;
+    --sky-primary-dark: #0078cc;
+    --sky-text: #1a1f36;
+    --sky-text-light: #4a5568;
+    --sky-text-lightest: #718096;
+    --sky-background: #fff;
+    --sky-background-alt: #f9fafb;
+    --sky-border: #e2e8f0;
+    --sky-border-light: #edf2f7;
+    --bg-color: var(--sky-background);
+    --text-color: var(--sky-text);
+    --sidebar-bg: #f7fafc;
+    --sidebar-text: var(--sky-text-light);
+    --sidebar-link-active-bg: #e5f4ff;
+    --sidebar-link-active-text: var(--sky-primary);
+    --link-color: var(--sky-primary);
+    --border-color: var(--sky-border);
+    --code-bg: var(--sky-primary-light);
+    --code-text: var(--sky-primary-dark);
+    --header-bg: var(--sky-background);
+    --header-border: var(--sky-border);
+    --shadow-sm: 0 1px 2px 0 #0000000d;
+    --shadow-md: 0 4px 6px -1px #0000001a 0 2px 4px -1px #0000000f;
+    --shadow-lg: 0 10px 15px -3px #0000001a 0 4px 6px -2px #0000000d;
+    --image-border-color: var(--sky-border);
+    --image-shadow: var(--shadow-md);
+    --image-caption-bg: var(--sky-background-alt);
+    --image-caption-text: var(--sky-text-light);
+    --image-hover-transform: translateY(-2px);
+    --image-hover-shadow: var(--shadow-lg);
+    --image-border-radius: 8px;
+    --image-transition: all .3s ease
+}
+
+:root[data-theme=dark] {
+    --sky-primary: #3b82f6;
+    --sky-primary-light: #1e293b;
+    --sky-primary-dark: #60a5fa;
+    --sky-text: #f1f5f9;
+    --sky-text-light: #cbd5e1;
+    --sky-text-lightest: #94a3b8;
+    --sky-background: #0f172a;
+    --sky-background-alt: #1e293b;
+    --sky-border: #334155;
+    --sky-border-light: #1e293b;
+    --bg-color: var(--sky-background);
+    --text-color: var(--sky-text);
+    --sidebar-bg: #0f172a;
+    --sidebar-text: var(--sky-text-light);
+    --sidebar-link-active-bg: #1e293b;
+    --sidebar-link-active-text: var(--sky-primary);
+    --link-color: var(--sky-primary);
+    --border-color: var(--sky-border);
+    --code-bg: var(--sky-primary-light);
+    --code-text: var(--sky-text);
+    --header-bg: var(--sky-background);
+    --header-border: var(--sky-border);
+    --shadow-sm: 0 1px 2px 0 #0000004d;
+    --shadow-md: 0 4px 6px -1px #0000004d 0 2px 4px -1px #0003;
+    --shadow-lg: 0 10px 15px -3px #0000004d 0 4px 6px -2px #0003;
+    --image-border-color: var(--sky-border);
+    --image-shadow: 0 4px 8px #00000080;
+    --image-caption-bg: var(--sky-background-alt);
+    --image-caption-text: var(--sky-text-light);
+    --image-hover-transform: translateY(-2px);
+    --image-hover-shadow: 0 6px 12px #000000b3;
+    --image-border-radius: 8px;
+    --image-transition: all .3s ease
+}
+
+body {
+    font-feature-settings: salt, ss01, ss02;
+    letter-spacing: -.01em
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin-top: 2em;
+    margin-bottom: .5em;
+    color: var(--sky-text)
+}
 
 .sidebar nav li a.active,
 .sidebar nav li a:hover {
@@ -51,104 +148,6 @@ table {
 .card .card-content>:last-child,
 figure img {
     margin-bottom: 0
-}
-
-:root {
-    --sky-primary: #0097ff
-}
-
-:root[data-theme=light] {
-    --font-family-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    --font-family-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-    --accent-color: #0097ff;
-    --sky-primary: #0097ff;
-    --sky-primary-light: #e5f4ff;
-    --sky-primary-dark: #0078cc;
-    --sky-text: #1a1f36;
-    --sky-text-light: #4a5568;
-    --sky-text-lightest: #718096;
-    --sky-background: #ffffff;
-    --sky-background-alt: #f9fafb;
-    --sky-border: #e2e8f0;
-    --sky-border-light: #edf2f7;
-    --bg-color: var(--sky-background);
-    --text-color: var(--sky-text);
-    --sidebar-bg: #f7fafc;
-    --sidebar-text: var(--sky-text-light);
-    --sidebar-link-active-bg: #e5f4ff;
-    --sidebar-link-active-text: var(--sky-primary);
-    --link-color: var(--sky-primary);
-    --border-color: var(--sky-border);
-    --code-bg: var(--sky-primary-light);
-    --code-text: var(--sky-primary-dark);
-    --header-bg: var(--sky-background);
-    --header-border: var(--sky-border);
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    --image-border-color: var(--sky-border);
-    --image-shadow: var(--shadow-md);
-    --image-caption-bg: var(--sky-background-alt);
-    --image-caption-text: var(--sky-text-light);
-    --image-hover-transform: translateY(-2px);
-    --image-hover-shadow: var(--shadow-lg);
-    --image-border-radius: 8px;
-    --image-transition: all 0.3s ease;
-
-}
-
-:root[data-theme=dark] {
-    --sky-primary: #3b82f6;
-    --sky-primary-light: #1e293b;
-    --sky-primary-dark: #60a5fa;
-    --sky-text: #f1f5f9;
-    --sky-text-light: #cbd5e1;
-    --sky-text-lightest: #94a3b8;
-    --sky-background: #0f172a;
-    --sky-background-alt: #1e293b;
-    --sky-border: #334155;
-    --sky-border-light: #1e293b;
-    --bg-color: var(--sky-background);
-    --text-color: var(--sky-text);
-    --sidebar-bg: #0f172a;
-    --sidebar-text: var(--sky-text-light);
-    --sidebar-link-active-bg: #1e293b;
-    --sidebar-link-active-text: var(--sky-primary);
-    --link-color: var(--sky-primary);
-    --border-color: var(--sky-border);
-    --code-bg: var(--sky-primary-light);
-    --code-text: var(--sky-text);
-    --header-bg: var(--sky-background);
-    --header-border: var(--sky-border);
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
-    --image-border-color: var(--sky-border);
-    --image-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-    --image-caption-bg: var(--sky-background-alt);
-    --image-caption-text: var(--sky-text-light);
-    --image-hover-transform: translateY(-2px);
-    --image-hover-shadow: 0 6px 12px rgba(0, 0, 0, 0.7);
-    --image-border-radius: 8px;
-    --image-transition: all 0.3s ease
-}
-
-body {
-    font-feature-settings: "salt", "ss01", "ss02";
-    letter-spacing: -.01em
-}
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-    font-weight: 600;
-    line-height: 1.3;
-    margin-top: 2em;
-    margin-bottom: .5em;
-    color: var(--sky-text)
 }
 
 .card .card-content>:first-child,

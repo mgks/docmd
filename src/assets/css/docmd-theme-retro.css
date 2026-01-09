@@ -1,10 +1,88 @@
-/* Source file from the docmd project — https://github.com/mgks/docmd */
+/* Source file from the docmd project — https://github.com/docmd-io/docmd */
 
 /* 
- * docmd Retro Theme
+ * Retro Theme
  * Inspired by 1980s-90s computing aesthetics
  * Features: Neon colors, scanlines, terminal styling, glow effects
  */
+
+:root {
+    --retro-primary: #0a0a0a;
+    --retro-secondary: #1a1a1a;
+    --retro-bg-light: #0f0f0f;
+    --retro-text: #00ff41;
+    --retro-text-secondary: #ffb000;
+    --retro-text-muted: #888;
+    --retro-accent: #0ff;
+    --retro-danger: #ff1493;
+    --retro-warning: #ffb000;
+    --retro-success: #00ff41;
+    --retro-info: #06f;
+    --retro-border: #333;
+    --retro-border-bright: #0ff;
+    --retro-glow: 0 0 10px currentColor;
+    --retro-glow-soft: 0 0 5px currentColor;
+    --retro-shadow: 0 0 20px #00ffff4d;
+    --retro-font-family: 'Fira Code', 'Courier New', Consolas, monospace;
+    --retro-font-family-alt: 'Share Tech Mono', 'Courier New', monospace;
+    --retro-spacing: 1rem;
+    --retro-spacing-small: .5rem;
+    --retro-spacing-large: 2rem
+}
+
+html[data-theme=light] {
+    --retro-primary: #f0f0f0;
+    --retro-secondary: #e0e0e0;
+    --retro-bg-light: #f5f5f5;
+    --retro-text: #2d5d2d;
+    --retro-text-secondary: #8b4500;
+    --retro-text-muted: #666;
+    --retro-accent: #066;
+    --retro-danger: #b71c42;
+    --retro-warning: #b8860b;
+    --retro-success: #228b22;
+    --retro-info: #4169e1;
+    --retro-border: #ccc;
+    --retro-border-bright: #066;
+    --retro-glow: 0 0 5px currentColor;
+    --retro-glow-soft: 0 0 3px currentColor;
+    --retro-shadow: 0 0 15px #0663
+}
+
+* {
+    box-sizing: border-box
+}
+
+body {
+    color: var(--retro-text);
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-x: hidden
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(transparent 50%, #00ff4108 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 1000;
+    animation: .1s linear infinite scanlines
+}
+
+html[data-theme=light]::before {
+    background: linear-gradient(transparent 50%, #2d5d2d05 50%)
+}
+
+html[data-theme=light] .page-header {
+    box-shadow: 0 2px 10px #0663
+}
 
 a,
 h1,
@@ -68,84 +146,6 @@ h4,
 h5,
 h6 {
     font-family: var(--retro-font-family)
-}
-
-:root {
-    --retro-primary: #0a0a0a;
-    --retro-secondary: #1a1a1a;
-    --retro-bg-light: #0f0f0f;
-    --retro-text: #00ff41;
-    --retro-text-secondary: #ffb000;
-    --retro-text-muted: #888888;
-    --retro-accent: #00ffff;
-    --retro-danger: #ff1493;
-    --retro-warning: #ffb000;
-    --retro-success: #00ff41;
-    --retro-info: #0066ff;
-    --retro-border: #333333;
-    --retro-border-bright: #00ffff;
-    --retro-glow: 0 0 10px currentColor;
-    --retro-glow-soft: 0 0 5px currentColor;
-    --retro-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-    --retro-font-family: 'Fira Code', 'Courier New', 'Consolas', monospace;
-    --retro-font-family-alt: 'Share Tech Mono', 'Courier New', monospace;
-    --retro-spacing: 1rem;
-    --retro-spacing-small: 0.5rem;
-    --retro-spacing-large: 2rem
-}
-
-html[data-theme=light] {
-    --retro-primary: #f0f0f0;
-    --retro-secondary: #e0e0e0;
-    --retro-bg-light: #f5f5f5;
-    --retro-text: #2d5d2d;
-    --retro-text-secondary: #8b4500;
-    --retro-text-muted: #666666;
-    --retro-accent: #006666;
-    --retro-danger: #b71c42;
-    --retro-warning: #b8860b;
-    --retro-success: #228b22;
-    --retro-info: #4169e1;
-    --retro-border: #cccccc;
-    --retro-border-bright: #006666;
-    --retro-glow: 0 0 5px currentColor;
-    --retro-glow-soft: 0 0 3px currentColor;
-    --retro-shadow: 0 0 15px rgba(0, 102, 102, 0.2)
-}
-
-* {
-    box-sizing: border-box
-}
-
-body {
-    color: var(--retro-text);
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    overflow-x: hidden
-}
-
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(transparent 50%, rgba(0, 255, 65, .03) 50%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    z-index: 1000;
-    animation: .1s linear infinite scanlines
-}
-
-html[data-theme=light]::before {
-    background: linear-gradient(transparent 50%, rgba(45, 93, 45, .02) 50%)
-}
-
-html[data-theme=light] .page-header {
-    box-shadow: 0 2px 10px rgba(0, 102, 102, .2)
 }
 
 .page-container {
@@ -230,7 +230,7 @@ code {
     padding: .2rem .4rem;
     border-radius: 3px;
     border: 1px solid var(--retro-border);
-    box-shadow: inset 0 0 5px rgba(0, 255, 65, .2)
+    box-shadow: inset 0 0 5px #00ff4133
 }
 
 .page-header,
@@ -255,7 +255,7 @@ pre::before {
 
 html[data-theme=light] code {
     color: var(--retro-text-secondary) !important;
-    box-shadow: inset 0 0 5px rgba(45, 93, 45, .2)
+    box-shadow: inset 0 0 5px #2d5d2d33
 }
 
 pre::before {
@@ -271,7 +271,7 @@ pre::before {
 .page-header {
     background: linear-gradient(45deg, var(--retro-secondary), var(--retro-bg-light));
     border-bottom: 2px solid var(--retro-border-bright);
-    box-shadow: 0 2px 10px rgba(0, 255, 255, .3)
+    box-shadow: 0 2px 10px #00ffff4d
 }
 
 .page-header::after {
@@ -287,7 +287,7 @@ pre::before {
 .sidebar {
     background: var(--retro-secondary);
     border-right: 2px solid var(--retro-border-bright);
-    box-shadow: 2px 0 10px rgba(0, 255, 255, .2)
+    box-shadow: 2px 0 10px #0ff3
 }
 
 .sidebar-nav a {
@@ -301,14 +301,14 @@ pre::before {
 .sidebar-nav a:hover {
     background: var(--retro-bg-light);
     border-left: 4px solid var(--retro-accent);
-    box-shadow: inset 0 0 10px rgba(0, 255, 255, .2)
+    box-shadow: inset 0 0 10px #0ff3
 }
 
 html[data-theme=light] .sidebar-nav a.active,
 html[data-theme=light] .sidebar-nav a:hover {
     background: var(--retro-bg-light);
     border-left: 4px solid var(--retro-accent);
-    box-shadow: inset 0 0 10px rgba(0, 102, 102, .2)
+    box-shadow: inset 0 0 10px #0663
 }
 
 .btn,
@@ -324,7 +324,7 @@ button {
     position: relative;
     text-decoration: none;
     display: inline-block;
-    box-shadow: 0 4px 15px rgba(0, 255, 255, .3)
+    box-shadow: 0 4px 15px #00ffff4d
 }
 
 .btn:hover,
@@ -357,7 +357,7 @@ th {
 .docmd-button:hover,
 button:hover {
     color: var(--retro-danger);
-    box-shadow: 0 6px 20px rgba(255, 20, 147, .4);
+    box-shadow: 0 6px 20px #ff149366;
     transform: translateY(-2px)
 }
 
@@ -365,7 +365,7 @@ button:hover {
 .docmd-button:active,
 button:active {
     transform: translateY(0);
-    box-shadow: 0 2px 10px rgba(0, 255, 255, .5)
+    box-shadow: 0 2px 10px #00ffff80
 }
 
 .docmd-container {
@@ -389,23 +389,23 @@ button:active {
 
 .docmd-container.callout.info {
     border-color: var(--retro-info);
-    box-shadow: 0 0 15px rgba(0, 102, 255, .3)
+    box-shadow: 0 0 15px #0066ff4d
 }
 
 .docmd-container.callout.warning {
     border-color: var(--retro-warning);
-    box-shadow: 0 0 15px rgba(255, 176, 0, .3)
+    box-shadow: 0 0 15px #ffb0004d
 }
 
 .docmd-container.callout.danger {
     border-color: var(--retro-danger);
-    box-shadow: 0 0 15px rgba(255, 20, 147, .3)
+    box-shadow: 0 0 15px #ff14934d
 }
 
 .docmd-container.callout.success,
 .docmd-container.callout.tip {
     border-color: var(--retro-success);
-    box-shadow: 0 0 15px rgba(0, 255, 65, .3)
+    box-shadow: 0 0 15px #00ff414d
 }
 
 .docmd-tabs-nav,
@@ -461,7 +461,7 @@ th {
 .docmd-container.card {
     background: linear-gradient(145deg, var(--retro-secondary), var(--retro-bg-light));
     border: 1px solid var(--retro-border-bright);
-    box-shadow: 0 4px 15px rgba(0, 255, 255, .2), inset 0 0 10px rgba(0, 255, 65, .1)
+    box-shadow: 0 4px 15px #0ff3 inset 0 0 10px #00ff411a
 }
 
 .docmd-tabs {
@@ -472,7 +472,7 @@ th {
 
 .theme-toggle-button,
 img {
-    box-shadow: 0 0 10px rgba(0, 255, 255, .3)
+    box-shadow: 0 0 10px #00ffff4d
 }
 
 .docmd-tabs::before {
@@ -514,14 +514,14 @@ th {
 
 .docmd-tabs-nav-item:hover {
     background: var(--retro-bg-light);
-    box-shadow: inset 0 0 10px rgba(0, 255, 255, .2)
+    box-shadow: inset 0 0 10px #0ff3
 }
 
 .docmd-tabs-nav-item.active {
     background: var(--retro-primary);
     color: var(--retro-accent);
     border-bottom: 2px solid var(--retro-accent);
-    box-shadow: 0 0 15px rgba(0, 255, 255, .5)
+    box-shadow: 0 0 15px #00ffff80
 }
 
 .docmd-container.steps,
@@ -596,7 +596,7 @@ table {
     font-weight: 700;
     font-size: 1.2rem;
     text-shadow: none;
-    box-shadow: 0 0 10px rgba(0, 255, 255, .5), inset 0 0 5px rgba(0, 0, 0, .3);
+    box-shadow: 0 0 10px #00ffff80 inset 0 0 5px #0000004d;
     animation: 2s ease-in-out infinite pulse-glow
 }
 
@@ -657,11 +657,11 @@ td {
 
 tr:hover {
     background: var(--retro-bg-light);
-    box-shadow: inset 0 0 10px rgba(0, 255, 65, .1)
+    box-shadow: inset 0 0 10px #00ff411a
 }
 
 html[data-theme=light] tr:hover {
-    box-shadow: inset 0 0 10px rgba(45, 93, 45, .1)
+    box-shadow: inset 0 0 10px #2d5d2d1a
 }
 
 .theme-toggle-button {
@@ -676,15 +676,15 @@ html[data-theme=light] tr:hover {
 .theme-toggle-button:hover {
     background: var(--retro-accent);
     color: var(--retro-primary);
-    box-shadow: 0 0 15px rgba(0, 255, 255, .6)
+    box-shadow: 0 0 15px #0ff9
 }
 
 html[data-theme=light] .theme-toggle-button {
-    box-shadow: 0 0 10px rgba(0, 102, 102, .3)
+    box-shadow: 0 0 10px #0066664d
 }
 
 html[data-theme=light] .theme-toggle-button:hover {
-    box-shadow: 0 0 15px rgba(0, 102, 102, .6)
+    box-shadow: 0 0 15px #0669
 }
 
 .terminal-cursor::after {
@@ -774,7 +774,6 @@ html[data-theme=light] .theme-toggle-button:hover {
     }
 }
 
-
 @keyframes scanlines {
     0% {
         transform: translateY(0)
@@ -859,10 +858,10 @@ html[data-theme=light] .theme-toggle-button:hover {
 
     0%,
     100% {
-        box-shadow: 0 0 10px rgba(0, 255, 255, .5), inset 0 0 5px rgba(0, 0, 0, .3)
+        box-shadow: 0 0 10px #00ffff80 inset 0 0 5px #0000004d
     }
 
     50% {
-        box-shadow: 0 0 20px rgba(0, 255, 255, .8), inset 0 0 10px rgba(0, 0, 0, .5)
+        box-shadow: 0 0 20px #0ffc inset 0 0 10px #00000080
     }
 }
