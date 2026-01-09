@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 const { program } = require('commander');
-// This import corresponds to module.exports = { startDevServer } in src/commands/dev.js
 const { startDevServer } = require('../src/commands/dev'); 
 const { buildSite } = require('../src/commands/build');
 const { initProject } = require('../src/commands/init');
+const { build: buildLive } = require('../src/commands/live');
 const { version } = require('../package.json');
 const { printBanner } = require('../src/core/logger');
 const path = require('path');
@@ -51,25 +51,22 @@ program
 program
   .command('live')
   .description('Build and serve the browser-based live editor')
-  .action(() => {
-    const scriptPath = path.resolve(__dirname, '../scripts/build-live.js');
-    const distPath = path.resolve(__dirname, '../dist');
-    
-    console.log('🚀 Starting Live Editor build...');
-    
-    // Using spawn ensures the build runs in a fresh process context
-    const build = spawn(process.execPath, [scriptPath], { stdio: 'inherit' });
-    
-    build.on('close', (code) => {
-      if (code === 0) {
+  .action(async () => {
+    try {
+        await buildLive();
+
         console.log('\n🌍 Launching server...');
         console.log('   Press Ctrl+C to stop.\n');
-        
-        // Fix for Node DeprecationWarning regarding shell: true
+
+        const distPath = path.resolve(__dirname, '../dist');
         const serveCmd = `npx serve "${distPath}"`;
+
         spawn(serveCmd, { stdio: 'inherit', shell: true });
-      }
-    });
+        
+    } catch (e) {
+        console.error('Live build failed:', e);
+        process.exit(1);
+    }
   });
 
 program.parse();
