@@ -2,7 +2,7 @@
 
   <!-- PROJECT TITLE -->
   <h1>
-    <img src="https://github.com/mgks/docmd/blob/main/src/assets/images/docmd-logo-light.png?raw=true" alt="docmd logo" width="150" />
+    <img src="https://github.com/docmd-io/docmd/blob/main/src/assets/images/docmd-logo-dark.png?raw=true" alt="docmd logo" width="150" />
     <!-- docmd -->
   </h1>
   
@@ -13,20 +13,20 @@
   
   <!-- BADGES -->
   <p>
-    <img src="https://img.shields.io/npm/v/@mgks/docmd.svg?style=flat-square&color=d25353" alt="npm version">
-    <img src="https://img.shields.io/github/commit-activity/m/mgks/docmd?style=flat-square&color=38bd24" alt="commits">
-    <img src="https://img.shields.io/npm/dt/@mgks/docmd.svg?style=flat-square&color=38bd24" alt="downloads">
-    <img src="https://img.shields.io/github/stars/mgks/docmd?style=flat-square&logo=github" alt="stars">
-    <img src="https://img.shields.io/github/license/mgks/docmd.svg?style=flat-square&color=blue" alt="license">
+    <a href="https://www.npmjs.com/package/@mgks/docmd"><img src="https://img.shields.io/npm/v/@mgks/docmd.svg?style=flat-square&color=d25353" alt="npm version"></a>
+    <a href="https://github.com/docmd-io/docmd/commits/main/"><img src="https://img.shields.io/github/commit-activity/m/docmd-io/docmd?style=flat-square&color=38bd24" alt="commits"></a>
+    <a href="https://www.npmjs.com/package/@mgks/docmd?activeTab=versions"><img src="https://img.shields.io/npm/dt/@mgks/docmd.svg?style=flat-square&color=38bd24" alt="downloads"></a>
+    <a href="https://github.com/docmd-io/docmd/stargazers"><img src="https://img.shields.io/github/stars/docmd-io/docmd?style=flat-square&logo=github" alt="stars"></a>
+    <a href="https://github.com/docmd-io/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/docmd-io/docmd.svg?style=flat-square&color=blue" alt="license"></a>
   </p>
 
   <!-- MENU -->
   <p>
     <h4>
-      <a href="https://docmd.mgks.dev">View Demo</a> • 
-      <a href="https://docmd.mgks.dev/getting-started/installation/">Documentation</a> • 
-      <a href="https://docmd.mgks.dev/live/">Live Editor</a> •
-      <a href="https://github.com/mgks/docmd/issues">Report Bug</a>
+      <a href="https://docmd.io">View Demo</a> • 
+      <a href="https://docs.docmd.io/getting-started/installation/">Documentation</a> • 
+      <a href="https://live.docmd.io">Live Editor</a> •
+      <a href="https://github.com/docmd-io/docmd/issues">Report Bug</a>
     </h4>
   </p>
 
@@ -44,60 +44,53 @@
 - **Zero Config**: Works out of the box with sensible defaults. Just `init` and go.
 - **Blazing Fast**: Generates **pure, static HTML**. No React hydration lag, no heavy bundles.
 - **Smart Search**: Built-in, **offline-capable** full-text search with fuzzy matching. No API keys required.
-- **Isomorphic Core**: Runs anywhere—Node.js CLI, CI/CD pipelines, or **directly in the browser** via WASM.
+- **Isomorphic Core**: Runs anywhere, Node.js CLI, CI/CD pipelines, or **directly in the browser**.
 - **Rich Content**: Built-in support for Callouts, Cards, Tabs, Steps, Changelogs, and Mermaid diagrams.
 - **Theming**: Beautiful light/dark modes and multiple pre-built themes (`sky`, `ruby`, `retro`).
 
-## Quick Start
-
-**Installation:**
+## Installation
 
 ```bash
 npm install -g @mgks/docmd
 ```
 
-**Run:**
+## Usage
+
+### CLI
+
+The Command Line Interface is the primary way to interact with `docmd`.
 
 ```bash
-docmd init my-docs     # Initialize a new project
-cd my-docs             # Enter directory
-docmd dev              # Start live-reloading server
-docmd build            # Generate static site for deployment
-docmd live             # Launch live editor to preview and design pages
+docmd init      # Initialize a new project with config and assets
+docmd dev       # Start a local development server with hot-reload
+docmd build     # Generate a production-ready static site in ./site
+docmd live      # Launch the browser-based Live Editor locally
 ```
 
-**Dev Server:**
+### API
 
-```js
-                       
-     _                 _ 
-   _| |___ ___ _____ _| |
-  | . | . |  _|     | . |
-  |___|___|___|_|_|_|___|
-  
-   v0.x.x
+`docmd` exports its core engine, allowing you to build documentation programmatically within your own Node.js scripts or build tools.
 
+```javascript
+const { build, buildLive } = require('@mgks/docmd');
 
-🚀 Performing initial build...
+// Trigger a standard documentation build
+await build('./docmd.config.js', { 
+  isDev: false, 
+  preserve: true 
+});
 
-👀 Watching for changes in:
-   - Source: ./docs
-   - Config: ./config.js
-   - Assets: ./assets
-
-────────────────────────────────────────
-  SERVER RUNNING  (v0.3.5)
-
-  Local:    http://127.0.0.1:3000
-  Network:  http://192.1.1.1:3000
-
-  Serving:  ./site
-────────────────────────────────────────
+// Trigger a Live Editor bundle build
+await buildLive(); 
 ```
 
-## Usage in Detail
+### Live Editor
 
-### Project Structure
+`docmd` features a modular architecture that allows the core engine to run client-side. 
+
+Running `docmd live` builds a standalone web application where you can write Markdown and see the preview instantly without any server-side processing. You can embed the generated `docmd-live.js` bundle to add Markdown capabilities to your own applications.
+
+## Project Structure
 
 `docmd` keeps it simple. Your content lives in `docs/`, your config in `docmd.config.js`.
 
@@ -107,42 +100,47 @@ my-docs/
 │   ├── index.md           # Homepage
 │   └── guide.md           # Content page
 ├── assets/                # Images and custom CSS
-└── docmd.config.js        # Configuration
+├── docmd.config.js        # Configuration
+└── package.json
 ```
 
-### Configuration
+## Configuration
 
 Customize your site in seconds via `docmd.config.js`:
 
 ```javascript
 module.exports = {
   siteTitle: 'My Project',
+  siteUrl: 'https://mysite.com',
   srcDir: 'docs',
   outputDir: 'site',
+  
+  // Theme Settings
   theme: {
     name: 'sky',           // 'default', 'sky', 'ruby', 'retro'
-    defaultMode: 'dark',   // 'light' or 'dark'
+    defaultMode: 'system', // 'light', 'dark', or 'system'
     enableModeToggle: true
   },
+  
+  // Sidebar Navigation
   navigation: [
     { title: 'Home', path: '/', icon: 'home' },
-    { title: 'Guide', path: '/guide', icon: 'book' }
-  ]
+    { 
+      title: 'Guide', 
+      icon: 'book',
+      children: [
+        { title: 'Installation', path: '/guide/install' }
+      ]
+    }
+  ],
+
+  // Plugins
+  plugins: {
+    seo: { /* ... */ },
+    sitemap: { /* ... */ }
+  }
 }
 ```
-
-## Live Editor
-
-`docmd` comes with a modular architecture that allows the core engine to run client-side.
-
-**Launch locally:**
-```bash
-docmd live
-```
-This builds and serves a local editor where you can write Markdown and see the preview instantly without any server-side processing.
-
-**Embed in your app:**
-You can also use the `dist/docmd-live.js` bundle to add Markdown compilation capabilities to your own web applications.
 
 ## Comparison
 
