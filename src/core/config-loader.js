@@ -1,7 +1,7 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 const path = require('path');
-const fs = require('fs-extra');
+const fs = require('./fs-utils');
 const { validateConfig } = require('./config-validator');
 
 async function loadConfig(configPath) {
