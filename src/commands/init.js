@@ -1,157 +1,144 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
-const fs = require('fs-extra');
+const fs = require('../core/fs-utils');
 const path = require('path');
 const readline = require('readline');
 const { version } = require('../../package.json');
 
-const defaultConfigContent = `// docmd.config.js: basic config for docmd
+const defaultConfigContent = `// docmd.config.js
 module.exports = {
-  // Core Site Metadata
-  siteTitle: 'docmd',
-  // Define a base URL for your site, crucial for SEO and absolute paths
-  // No trailing slash
-  siteUrl: '', // Replace with your actual deployed URL
+  // --- Core Metadata ---
+  siteTitle: 'My Documentation',
+  siteUrl: '', // e.g. https://mysite.com (Critical for SEO/Sitemap)
 
-  // Logo Configuration
+  // --- Branding ---
   logo: {
-    light: 'assets/images/docmd-logo-light.png', // Path relative to outputDir root
-    dark: 'assets/images/docmd-logo-dark.png',   // Path relative to outputDir root
-    alt: 'docmd logo',                      // Alt text for the logo
-    href: './',                              // Link for the logo, defaults to site root
+    light: 'assets/images/docmd-logo-dark.png',
+    dark: 'assets/images/docmd-logo-light.png',
+    alt: 'Logo',
+    href: './',
   },
+  favicon: 'assets/favicon.ico',
 
-  // Directory Configuration
-  srcDir: 'docs',       // Source directory for Markdown files
-  outputDir: 'site',    // Directory for generated static site
+  // --- Source & Output ---
+  srcDir: 'docs',
+  outputDir: 'site',
 
-  // Search Configuration
-  search: true,        // Enable/disable search functionality
-
-  // Build Options
-  minify: true,        // Enable/disable HTML/CSS/JS minification
-
-  // Sidebar Configuration
-  sidebar: {
-    collapsible: true,        // or false to disable
-    defaultCollapsed: false,  // or true to start collapsed
-  },
-
-  // Theme Configuration
+  // --- Theme & Layout ---
   theme: {
-    name: 'sky',            // Themes: 'default', 'sky'
-    defaultMode: 'light',   // Initial color mode: 'light' or 'dark'
-    enableModeToggle: true, // Show UI button to toggle light/dark modes
-    positionMode: 'top', // 'top' or 'bottom' for the theme toggle
-    codeHighlight: true,    // Enable/disable codeblock highlighting and import of highlight.js
-    customCss: [            // Array of paths to custom CSS files
-      // 'assets/css/custom.css', // Custom TOC styles
-    ]
+    name: 'sky',            // Options: 'default', 'sky', 'ruby', 'retro'
+    defaultMode: 'system',  // 'light', 'dark', or 'system'
+    enableModeToggle: true, // Show mode toggle button
+    positionMode: 'top',    // 'top' or 'bottom'
+    codeHighlight: true,    // Enable Highlight.js
+    customCss: [],          // e.g. ['assets/css/custom.css']
   },
 
-  // Custom JavaScript Files
-  customJs: [  // Array of paths to custom JS files, loaded at end of body
-    // 'assets/js/custom-script.js', // Paths relative to outputDir root
-    'assets/js/docmd-image-lightbox.js', // Image lightbox functionality
+  // --- Features ---
+  search: true,           // Built-in offline search
+  minify: true,           // Minify HTML/CSS/JS in build
+  autoTitleFromH1: true,  // Auto-generate page title from first H1
+  copyCode: true,         // Show "copy" button on code blocks
+  pageNavigation: true,   // Prev/Next buttons at bottom
+
+  // --- Navigation (Sidebar) ---
+  navigation: [
+    { title: 'Introduction', path: '/', icon: 'home' },
+    {
+      title: 'Guide',
+      icon: 'book-open',
+      collapsible: true,
+      children: [
+        { title: 'Getting Started', path: 'https://docs.docmd.io/getting-started/installation', icon: 'rocket', external: true },
+        { title: 'Configuration', path: 'https://docs.docmd.io/configuration', icon: 'settings', external: true },
+      ],
+    },
+    { title: 'Live Editor', path: 'https://live.docmd.io', icon: 'pencil-ruler', external: true },
+    { title: 'GitHub', path: 'https://github.com/docmd-io/docmd', icon: 'github', external: true },
   ],
 
-  // Content Processing
-  autoTitleFromH1: true, // Set to true to automatically use the first H1 as page title
-  copyCode: true, // Enable/disable the copy code button on code blocks
-
-  // Plugins Configuration
-  // Plugins are configured here. docmd will look for these keys.
+  // --- Plugins ---
   plugins: {
-    // SEO Plugin Configuration
-    // Most SEO data is pulled from page frontmatter (title, description, image, etc.)
-    // These are fallbacks or site-wide settings.
     seo: {
-      // Default meta description if a page doesn't have one in its frontmatter
-      defaultDescription: 'docmd is a Node.js command-line tool for generating beautiful, lightweight static documentation sites from Markdown files.',
-      openGraph: { // For Facebook, LinkedIn, etc.
-        // siteName: 'docmd Documentation', // Optional, defaults to config.siteTitle
-        // Default image for og:image if not specified in page frontmatter
-        // Path relative to outputDir root
-        defaultImage: 'assets/images/docmd-preview.png',
+      defaultDescription: 'Documentation built with docmd.',
+      openGraph: {
+        defaultImage: '',   // e.g. 'assets/images/og-image.png'
       },
-      twitter: { // For Twitter Cards
-        cardType: 'summary_large_image',     // 'summary', 'summary_large_image'
-        // siteUsername: '@docmd_handle',    // Your site's Twitter handle (optional)
-        // creatorUsername: '@your_handle',  // Default author handle (optional, can be overridden in frontmatter)
+      twitter: {
+        cardType: 'summary_large_image',
       }
     },
-    // Analytics Plugin Configuration
     analytics: {
-      // Google Analytics 4 (GA4)
       googleV4: {
-        measurementId: 'G-X9WTDL262N' // Replace with your actual GA4 Measurement ID
+        measurementId: 'G-X9WTDL262N' // Replace with your Google Analytics Measurement ID
       }
     },
-    // Enable Sitemap plugin
     sitemap: {
-      defaultChangefreq: 'weekly',
-      defaultPriority: 0.8
+      defaultChangefreq: 'weekly',  // e.g. 'daily', 'weekly', 'monthly'
+      defaultPriority: 0.8          // Priority between 0.0 and 1.0
     }
-    // Add other future plugin configurations here by their key
   },
 
-  // "Edit this page" Link Configuration
+  // --- Footer ---
+  footer: '© ' + new Date().getFullYear() + ' My Project. Built with [docmd](https://docmd.io).',
+  
+  // --- Edit Link ---
   editLink: {
     enabled: false,
-    // The URL to the folder containing your docs in the git repo
-    // Note: It usually ends with /edit/main/docs or /blob/main/docs
-    baseUrl: 'https://github.com/mgks/docmd/edit/main/docs',
-    text: 'Edit this page on GitHub'
-  },
-
-  // Navigation Structure (Sidebar)
-  // Icons are kebab-case names from Lucide Icons (https://lucide.dev/)
-  navigation: [
-      { title: 'Welcome', path: '/', icon: 'home' }, // Corresponds to docs/index.md
-      {
-        title: 'Getting Started',
-        icon: 'rocket',
-        path: '#',
-        collapsible: true, // This makes the menu section collapsible
-        children: [
-          { title: 'Documentation', path: 'https://docmd.mgks.dev', icon: 'scroll', external: true },
-          { title: 'Installation', path: 'https://docmd.mgks.dev/getting-started/installation', icon: 'download', external: true },
-          { title: 'Basic Usage', path: 'https://docmd.mgks.dev/getting-started/basic-usage', icon: 'play', external: true },
-          { title: 'Content', path: 'https://docmd.mgks.dev/content', icon: 'layout-template', external: true },
-        ],
-      },
-      // External links:
-      { title: 'GitHub', path: 'https://github.com/mgks/docmd', icon: 'github', external: true },
-      { title: 'Support the Project', path: 'https://github.com/sponsors/mgks', icon: 'heart', external: true },
-    ],
-    
-  pageNavigation: true, // Enable previous / next page navigation at the bottom of each page
-
-  // Sponsor Ribbon Configuration
-  Sponsor: {
-    enabled: false,
-    title: 'Support docmd',
-    link: 'https://github.com/sponsors/mgks',
-  },
-
-  // Footer Configuration
-  // Markdown is supported here.
-  footer: '© ' + new Date().getFullYear() + ' Project.',
-
-  // Favicon Configuration
-  // Path relative to outputDir root
-  favicon: 'assets/favicon.ico',
+    baseUrl: 'https://github.com/USERNAME/REPO/edit/main/docs',
+    text: 'Edit this page'
+  }
 };
 `;
 
 const defaultIndexMdContent = `---
 title: "Welcome"
-description: "Your documentation starts here."
+description: "Welcome to your new documentation site."
 ---
 
-# Hello, docmd!
+# Welcome to Your Docs
 
-Start writing your Markdown content here.
+Congratulations! You have successfully initialized a new **docmd** project.
+
+## 🚀 Quick Start
+
+You are currently viewing the content of \`docs/index.md\`.
+
+\`\`\`bash
+npm start   # Start the dev server
+docmd build # Build for production
+\`\`\`
+
+## ✨ Features Demo
+
+docmd comes with built-in components to make your documentation beautiful.
+
+::: callout tip
+**Try this:** Edit this file and save it. The browser will live reload instantly!
+:::
+
+### Container Examples
+
+::: card Flexible Structure
+**Organize your way.**
+Create Markdown files in the \`docs/\` folder and map them in \`docmd.config.js\`.
+:::
+
+::: tabs
+== tab "Simple"
+This is a simple tab content.
+
+== tab "Nested"
+::: callout info
+You can even nest other components inside tabs!
+:::
+:::
+
+## 📚 Next Steps
+
+*   [Check the Official Documentation](https://docs.docmd.io)
+*   [Customize your Theme](https://docs.docmd.io/theming)
+*   [Deploy to GitHub Pages](https://docs.docmd.io/deployment)
 `;
 
 const defaultPackageJson = {
@@ -198,7 +185,7 @@ async function initProject() {
     existingFiles.push('docmd.config.js');
   }
 
-  // Check for the config.js as well to warn the user
+  // Check for the legacy config.js
   const oldConfigFile = path.join(baseDir, 'config.js');
   if (await fs.pathExists(oldConfigFile)) {
     existingFiles.push('config.js');
@@ -259,21 +246,9 @@ async function initProject() {
   } else {
     console.log('📁 Using existing `assets/` directory');
     
-    // Create subdirectories if they don't exist
-    if (!await fs.pathExists(assetsCssDir)) {
-      await fs.ensureDir(assetsCssDir);
-      console.log('📁 Created `assets/css/` directory');
-    }
-    
-    if (!await fs.pathExists(assetsJsDir)) {
-      await fs.ensureDir(assetsJsDir);
-      console.log('📁 Created `assets/js/` directory');
-    }
-    
-    if (!await fs.pathExists(assetsImagesDir)) {
-      await fs.ensureDir(assetsImagesDir);
-      console.log('📁 Created `assets/images/` directory');
-    }
+    if (!await fs.pathExists(assetsCssDir)) await fs.ensureDir(assetsCssDir);
+    if (!await fs.pathExists(assetsJsDir)) await fs.ensureDir(assetsJsDir);
+    if (!await fs.pathExists(assetsImagesDir)) await fs.ensureDir(assetsImagesDir);
   }
   
   // Write config file if it doesn't exist or user confirmed override
@@ -285,7 +260,7 @@ async function initProject() {
   }
   
   // Write index.md file if it doesn't exist or user confirmed override
-  if (!await fs.pathExists(indexMdFile)) {
+  if (!await fs.pathExists(indexMdFile) || shouldOverride) {
     await fs.writeFile(indexMdFile, defaultIndexMdContent, 'utf8');
     console.log('📄 Created `docs/index.md`');
   } else if (shouldOverride) {

@@ -1,16 +1,125 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
-const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 const chokidar = require('chokidar');
 const path = require('path');
-const fs = require('fs-extra');
+const fs = require('../core/fs-utils');
 const chalk = require('chalk');
 const os = require('os');
 const readline = require('readline');
 const { buildSite } = require('./build');
 const { loadConfig } = require('../core/config-loader');
+
+// --- 1. Native Static File Server ---
+const MIME_TYPES = {
+  '.html': 'text/html',
+  '.js': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpg',
+  '.jpeg': 'image/jpg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'application/font-woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'application/font-ttf',
+  '.txt': 'text/plain',
+};
+
+async function serveStatic(req, res, rootDir) {
+  // Normalize path and remove query strings
+  let safePath = path.normalize(req.url).replace(/^(\.\.[\/\\])+/, '').split('?')[0].split('#')[0];
+  if (safePath === '/' || safePath === '\\') safePath = 'index.html';
+  
+  let filePath = path.join(rootDir, safePath);
+
+  try {
+    let stats;
+    try {
+      stats = await fs.stat(filePath);
+    } catch (e) {
+      // If direct path fails, try appending .html (clean URLs support)
+      if (path.extname(filePath) === '') {
+        filePath += '.html';
+        stats = await fs.stat(filePath);
+      } else {
+        throw e;
+      }
+    }
+    
+    if (stats.isDirectory()) {
+      filePath = path.join(filePath, 'index.html');
+      await fs.stat(filePath);
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+    const content = await fs.readFile(filePath);
+
+    res.writeHead(200, { 'Content-Type': contentType });
+    
+    // Inject Live Reload Script into HTML files only
+    if (contentType === 'text/html') {
+      const htmlStr = content.toString('utf-8');
+      const liveReloadScript = `
+        <script>
+          (function() {
+            let socket;
+            let retryCount = 0;
+            const maxRetries = 50;
+            
+            function connect() {
+              // Avoid connecting if already connected
+              if (socket && (socket.readyState === 0 || socket.readyState === 1)) return;
+
+              socket = new WebSocket('ws://' + window.location.host);
+              
+              socket.onopen = () => {
+                console.log('⚡ docmd connected');
+                retryCount = 0;
+              };
+              
+              socket.onmessage = (e) => { 
+                if(e.data === 'reload') window.location.reload(); 
+              };
+              
+              socket.onclose = () => {
+                // Exponential backoff for reconnection
+                if (retryCount < maxRetries) {
+                    retryCount++;
+                    const delay = Math.min(1000 * (1.5 ** retryCount), 5000);
+                    setTimeout(connect, delay);
+                }
+              };
+              
+              socket.onerror = (err) => {
+                 // Ignore errors, let onclose handle retry
+              };
+            }
+            // Delay initial connection slightly to ensure page load
+            setTimeout(connect, 500);
+          })();
+        </script></body>`;
+      res.end(htmlStr.replace('</body>', liveReloadScript));
+    } else {
+      res.end(content);
+    }
+
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      res.writeHead(404, { 'Content-Type': 'text/html' });
+      res.end('<h1>404 Not Found</h1><p>docmd dev server</p>');
+    } else {
+      res.writeHead(500);
+      res.end(`Server Error: ${err.code}`);
+    }
+  }
+}
+
+// --- 2. Helper Utilities ---
 
 function formatPathForDisplay(absolutePath, cwd) {
   const relativePath = path.relative(cwd, absolutePath);
@@ -32,11 +141,13 @@ function getNetworkIp() {
   return null;
 }
 
+// --- 3. Main Dev Function ---
+
 async function startDevServer(configPathOption, options = { preserve: false, port: undefined }) {
   let config = await loadConfig(configPathOption);
   const CWD = process.cwd();
 
-  // Config Fallback for Watcher
+  // Config Fallback Logic
   let actualConfigPath = path.resolve(CWD, configPathOption);
   if (configPathOption === 'docmd.config.js' && !await fs.pathExists(actualConfigPath)) {
       const legacyPath = path.resolve(CWD, 'config.js');
@@ -57,62 +168,24 @@ async function startDevServer(configPathOption, options = { preserve: false, por
   let paths = resolveConfigPaths(config);
   const DOCMD_ROOT = path.resolve(__dirname, '..');
   
-  const app = express();
-  const server = http.createServer(app);
+  // --- Create Native Server ---
+  const server = http.createServer((req, res) => {
+    serveStatic(req, res, paths.outputDir);
+  });
   
-  // FIX 1: Declare wss here but do not initialize it yet (prevents EADDRINUSE crash)
-  let wss;
+  let wss; // WebSocket instance (initialized later)
 
   function broadcastReload() {
-    if (!wss) return; // Guard against early calls
-    
-    wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send('reload');
-      }
-    });
+    if (wss) {
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send('reload');
+        }
+      });
+    }
   }
 
-  // Inject live reload script
-  app.use((req, res, next) => {
-    if (req.path.endsWith('.html') || req.path === '/' || !req.path.includes('.')) {
-      const originalSend = res.send;
-      res.send = function(body) {
-        if (typeof body === 'string' && body.includes('</body>')) {
-          const liveReloadScript = `
-            <script>
-              (function() {
-                let socket;
-                let reconnectTimer;
-                function connect() {
-                  socket = new WebSocket('ws://' + window.location.host);
-                  socket.onopen = function() {
-                    console.log('⚡ docmd live reload connected');
-                    if (reconnectTimer) clearInterval(reconnectTimer);
-                  };
-                  socket.onmessage = function(event) {
-                    if (event.data === 'reload') window.location.reload();
-                  };
-                  socket.onclose = function() {
-                    reconnectTimer = setTimeout(connect, 1000);
-                  };
-                }
-                connect();
-              })();
-            </script>
-          `;
-          body = body.replace('</body>', `${liveReloadScript}</body>`);
-        }
-        originalSend.call(this, body);
-      };
-    }
-    next();
-  });
-
-  let staticMiddleware = express.static(paths.outputDir);
-  app.use((req, res, next) => staticMiddleware(req, res, next));
-
-  // --- 1. Initial Build ---
+  // --- Initial Build ---
   console.log(chalk.blue('🚀 Performing initial build...'));
   try {
     await buildSite(configPathOption, { isDev: true, preserve: options.preserve, noDoubleProcessing: true });
@@ -120,7 +193,7 @@ async function startDevServer(configPathOption, options = { preserve: false, por
       console.error(chalk.red('❌ Initial build failed:'), error.message);
   }
 
-  // --- 2. Setup Watcher & Logs ---
+  // --- Watcher Setup ---
   const userAssetsDirExists = await fs.pathExists(paths.userAssetsDir);
   const watchedPaths = [paths.srcDirToWatch, paths.configFileToWatch];
   if (userAssetsDirExists) watchedPaths.push(paths.userAssetsDir);
@@ -140,9 +213,6 @@ async function startDevServer(configPathOption, options = { preserve: false, por
   if (userAssetsDirExists) {
     console.log(chalk.dim(`   - Assets: ${chalk.cyan(formatPathForDisplay(paths.userAssetsDir, CWD))}`));
   }
-  if (process.env.DOCMD_DEV === 'true') {
-    console.log(chalk.dim(`   - docmd Internal: ${chalk.magenta(formatPathForDisplay(DOCMD_ROOT, CWD))}`));
-  }
   console.log(''); 
 
   const watcher = chokidar.watch(watchedPaths, {
@@ -159,11 +229,9 @@ async function startDevServer(configPathOption, options = { preserve: false, por
     try {
       if (filePath === paths.configFileToWatch) {
         config = await loadConfig(configPathOption);
-        const newPaths = resolveConfigPaths(config);
-        if (newPaths.outputDir !== paths.outputDir) {
-            staticMiddleware = express.static(newPaths.outputDir);
-        }
-        paths = newPaths;
+        // Note: With native server, we don't need to restart middleware, 
+        // serveStatic reads from disk dynamically on every request.
+        paths = resolveConfigPaths(config);
       }
 
       await buildSite(configPathOption, { isDev: true, preserve: options.preserve, noDoubleProcessing: true });
@@ -175,11 +243,10 @@ async function startDevServer(configPathOption, options = { preserve: false, por
     }
   });
 
-  // --- 3. Server Startup Logic ---
+  // --- Server Startup Logic (Port Checking) ---
   const PORT = parseInt(options.port || process.env.PORT || 3000, 10);
   const MAX_PORT_ATTEMPTS = 10;
 
-  // Helper to check if a port is in use without fully starting the main server
   function checkPortInUse(port) {
     return new Promise((resolve) => {
       const tester = http.createServer()
@@ -194,7 +261,6 @@ async function startDevServer(configPathOption, options = { preserve: false, por
     });
   }
 
-  // Helper to ask user for confirmation
   function askUserConfirmation() {
     return new Promise((resolve) => {
       const rl = readline.createInterface({
@@ -214,11 +280,11 @@ async function startDevServer(configPathOption, options = { preserve: false, por
   }
   
   function tryStartServer(port, attempt = 1) {
-    // 0.0.0.0 allows network access
     server.listen(port, '0.0.0.0')
       .on('listening', async () => {
-        // FIX 1: Initialize WebSocket Server only AFTER successful listen
+        // Initialize WebSocket Server only AFTER successful listen
         wss = new WebSocket.Server({ server });
+        wss.on('error', (e) => console.error('WebSocket Error:', e.message));
 
         const indexHtmlPath = path.join(paths.outputDir, 'index.html');
         const networkIp = getNetworkIp();
@@ -244,22 +310,19 @@ async function startDevServer(configPathOption, options = { preserve: false, por
         }
       })
       .on('error', (err) => {
-        if (err.code === 'EADDRINUSE' && attempt < MAX_PORT_ATTEMPTS) {
-          // FIX 1: Close the failed server instance before retrying to ensure clean state
-          server.close();
-          tryStartServer(port + 1, attempt + 1);
+        if (err.code === 'EADDRINUSE') {
+           server.close(); 
+           tryStartServer(port + 1);
         } else {
-          console.error(chalk.red(`Failed to start server: ${err.message}`));
-          process.exit(1);
+           console.error(chalk.red(`Failed to start server: ${err.message}`));
+           process.exit(1);
         }
       });
   }
 
-  // FIX 2: Check port status before launching logic
+  // --- Main Execution Flow ---
   (async () => {
-    // If the user manually specified a port flag (e.g. --port 8080), 
-    // we assume they want THAT specific port and skip the check/prompt logic,
-    // falling back to standard auto-increment behavior if busy.
+    // Skip check if user manually specified port flag
     if (options.port) {
       tryStartServer(PORT);
       return;
@@ -273,10 +336,8 @@ async function startDevServer(configPathOption, options = { preserve: false, por
         console.log(chalk.dim('Cancelled.'));
         process.exit(0);
       }
-      // If they said yes, start trying from the NEXT port
       tryStartServer(PORT + 1);
     } else {
-      // Port is free, start normally
       tryStartServer(PORT);
     }
   })();
