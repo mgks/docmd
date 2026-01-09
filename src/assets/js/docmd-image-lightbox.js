@@ -1,7 +1,7 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 /* 
- * A simple lightbox implementation for docmd images
+ * A simple lightbox implementation for gallery images
  */
 
 document.addEventListener('DOMContentLoaded', function () {
