@@ -1,10 +1,10 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 /*
  * Generate sitemap.xml in the output directory root
  */
 
-const fs = require('fs-extra');
+const fs = require('../core/fs-utils');
 const path = require('path');
 
 // Function to format paths for display (relative to CWD)

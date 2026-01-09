@@ -1,4 +1,4 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 /*
  * Generate analytics scripts for a page
