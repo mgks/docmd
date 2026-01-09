@@ -1,4 +1,4 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 /**
  * Flattens the navigation tree and finds the previous and next pages relative to the current page.

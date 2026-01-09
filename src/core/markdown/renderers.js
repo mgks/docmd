@@ -1,4 +1,4 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 const customOrderedListOpenRenderer = function(tokens, idx, options, env, self) {
   const token = tokens[idx];

@@ -1,4 +1,4 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 const MarkdownIt = require('markdown-it'); // Required for inner rendering fallback logic
 const { containers } = require('./containers');
@@ -160,7 +160,6 @@ function changelogTimelineRule(state, startLine, endLine, silent) {
       <div class="changelog-meta"><span class="changelog-date">${entry.meta}</span></div>
       <div class="changelog-body">`;
 
-    // --- FIX: Use parent parser to render inner content ---
     // This ensures callouts/cards inside changelogs are parsed
     entryOpen.content += state.md.render(entry.content, state.env);
     

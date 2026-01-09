@@ -1,4 +1,4 @@
-// Source file from the docmd project — https://github.com/mgks/docmd
+// Source file from the docmd project — https://github.com/docmd-io/docmd
 
 const MarkdownIt = require('markdown-it');
 const hljs = require('highlight.js');
