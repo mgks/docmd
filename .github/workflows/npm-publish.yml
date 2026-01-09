@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run Failsafe Test 🛡️
+      - name: Run failsafe
         run: npm test
 
       - name: Publish to npm

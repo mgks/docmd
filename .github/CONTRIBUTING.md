@@ -6,9 +6,9 @@ We welcome contributions of all kinds: bug fixes, new features, documentation im
 
 ## ⚡ Quick Links
 
-*   [**Documentation**](https://docmd.mgks.dev) - Read the docs to understand how the tool works.
-*   [**GitHub Issues**](https://github.com/mgks/docmd/issues) - Browse existing bugs or feature requests.
-*   [**Discussions**](https://github.com/mgks/docmd/discussions) - Ask questions or share ideas.
+*   [**Documentation**](https://docs.docmd.io) - Read the docs to understand how the tool works.
+*   [**GitHub Issues**](https://github.com/docmd-io/docmd/issues) - Browse existing bugs or feature requests.
+*   [**Discussions**](https://github.com/docmd-io/docmd/discussions) - Ask questions or share ideas.
 
 ---
 
@@ -22,7 +22,7 @@ We welcome contributions of all kinds: bug fixes, new features, documentation im
 
 ### 1. Fork and Clone
 1.  Fork the repository to your GitHub account.
-2.  Clone your fork locally:
+2.  Then clone your fork locally:
     ```bash
     git clone https://github.com/YOUR_USERNAME/docmd.git
     cd docmd
@@ -112,7 +112,7 @@ site/                   # The generated output folder (gitignored)
     *   `feat: add search bar`
     *   `fix: resolve css overflow in tables`
     *   `docs: fix typo in readme`
-5.  **Push & Open PR:** Push your branch to your fork and open a Pull Request against the `main` branch of `mgks/docmd`.
+5.  **Push & Open PR:** Push your branch to your fork and open a Pull Request against the `main` branch of `docmd-io/docmd`.
 
 ---
 
