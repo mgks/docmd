@@ -109,8 +109,8 @@ importers:
         specifier: ^11.11.1
         version: 11.11.1
       lucide-static:
-        specifier: ^0.575.0
-        version: 0.575.0
+        specifier: ^0.577.0
+        version: 0.577.0
       markdown-it:
         specifier: ^14.1.1
         version: 14.1.1
@@ -675,8 +675,8 @@ packages:
   lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
 
-  lucide-static@0.575.0:
-    resolution: {integrity: sha512-XbHfIufz9ZDW6iLjUphffUmcEWg6gLjufIQOb6heDjYZCRk+ePRbkp8Ax/Rq3Ek4OkT8tyBO/gTCOPDvFMuC4w==}
+  lucide-static@0.577.0:
+    resolution: {integrity: sha512-hx39J5Tq4JWF2ALY+5YRg+SxQLpeAmLJDXNcqiBJH/UuVwp43it9fyki/onZO7AVFgG5ZbB+fWwZR9mwGHE2XQ==}
 
   markdown-it-abbr@1.0.4:
     resolution: {integrity: sha512-ZeA4Z4SaBbYysZap5iZcxKmlPL6bYA8grqhzJIHB1ikn7njnzaP8uwbtuXc4YXD5LicI4/2Xmc0VwmSiFV04gg==}
@@ -1306,7 +1306,7 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
-  lucide-static@0.575.0: {}
+  lucide-static@0.577.0: {}
 
   markdown-it-abbr@1.0.4: {}
 

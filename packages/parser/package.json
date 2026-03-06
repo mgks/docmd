@@ -7,7 +7,7 @@
     "ejs": "^3.1.10",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.11.1",
-    "lucide-static": "^0.575.0",
+    "lucide-static": "^0.577.0",
     "markdown-it": "^14.1.1",
     "markdown-it-abbr": "^1.0.4",
     "markdown-it-attrs": "^4.3.1",
