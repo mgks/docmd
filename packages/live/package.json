@@ -25,7 +25,7 @@
     "@docmd/themes": "workspace:*",
     "@docmd/ui": "workspace:*",
     "buffer": "^6.0.3",
-    "esbuild": "^0.27.4"
+    "esbuild": "^0.28.0"
   },
   "keywords": [
     "docmd",

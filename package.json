@@ -23,13 +23,13 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.0",
     "chalk": "4.1.2",
-    "esbuild": "^0.27.4",
+    "esbuild": "^0.28.0",
     "eslint": "^10.1.0",
     "prettier": "^3.8.1",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.2"
+    "typescript-eslint": "^8.58.0"
   },
   "engines": {
     "node": ">=18.0.0"
