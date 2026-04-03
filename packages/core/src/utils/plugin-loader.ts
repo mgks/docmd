@@ -24,7 +24,9 @@ export const hooks: any = {
   injectBody: [],
   onPostBuild: [],
   assets: [],
-  getClientAssets: [] // Legacy support
+  getClientAssets: [], // Legacy support
+  actions: {},         // action name → handler function (for WebSocket RPC)
+  events: {}           // event name → handler function (fire-and-forget)
 };
 
 // Map short names to package names
@@ -40,7 +42,9 @@ const ALIASES: Record<string, string> = {
 
 export async function loadPlugins(config: any) {
   // 1. Reset hooks
-  Object.keys(hooks).forEach(key => hooks[key] = []);
+  Object.keys(hooks).forEach(key => {
+    hooks[key] = Array.isArray(hooks[key]) ? [] : {};
+  });
 
   // 2. Initialize Plugin Map (Name -> Options)
   // This ensures unique plugins (last write wins)
@@ -111,4 +115,14 @@ function registerPlugin(name: string, plugin: any, options: any) {
   if (typeof plugin.onPostBuild === 'function') hooks.onPostBuild.push((ctx: any) => plugin.onPostBuild({ ...ctx, options }));
 
   if (typeof plugin.getAssets === 'function') hooks.assets.push(() => plugin.getAssets(options));
+
+  // Plugin actions (WebSocket RPC handlers)
+  if (plugin.actions && typeof plugin.actions === 'object') {
+    Object.assign(hooks.actions, plugin.actions);
+  }
+
+  // Plugin events (fire-and-forget handlers)
+  if (plugin.events && typeof plugin.events === 'object') {
+    Object.assign(hooks.events, plugin.events);
+  }
 }
