@@ -383,7 +383,7 @@ export function createSourceTools({ projectRoot }: { projectRoot: string }): Sou
       allLines.splice(absStart, absEnd - absStart);
 
       // Clean up consecutive blank lines around the removal point
-      let i = absStart;
+      const i = absStart;
       while (i < allLines.length - 1 && allLines[i].trim() === '' && allLines[i + 1].trim() === '') {
         allLines.splice(i, 1);
       }
