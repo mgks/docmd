@@ -37,7 +37,8 @@ const ALIASES: Record<string, string> = {
   'analytics': '@docmd/plugin-analytics',
   'mermaid': '@docmd/plugin-mermaid',
   'llms': '@docmd/plugin-llms',
-  'pwa': '@docmd/plugin-pwa'
+  'pwa': '@docmd/plugin-pwa',
+  'threads': '@docmd/plugin-threads'
 };
 
 export async function loadPlugins(config: any) {
