@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
-    "esbuild": "^0.27.7",
+    "esbuild": "^0.28.0",
     "markdown-it": "^14.1.1",
     "typescript": "^5.9.3"
   },
