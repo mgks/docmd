@@ -20,7 +20,7 @@ jobs:
 
       # Install exact pnpm version (matches package.json)
       - name: Install pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
 
       # Setup Node.js with pnpm cache
       - name: Setup Node.js
