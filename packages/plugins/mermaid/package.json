@@ -50,6 +50,6 @@
   "funding": "https://github.com/sponsors/mgks",
   "license": "MIT",
   "dependencies": {
-    "mermaid": "11.4.1"
+    "mermaid": "11.10.0"
   }
 }
