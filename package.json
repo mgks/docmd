@@ -21,10 +21,10 @@
     "@types/node": "^25.6.0",
     "chalk": "4.1.2",
     "esbuild": "^0.28.0",
-    "eslint": "^10.2.1",
-    "globals": "^17.5.0",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.59.1"
+    "typescript-eslint": "^8.59.2"
   },
   "engines": {
     "node": ">=18.0.0"
