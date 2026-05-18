@@ -7,10 +7,8 @@
  * @license MIT
  */
 
-const MarkdownIt = require('markdown-it');
-
-// Also need the common-containers for createDepthTrackingContainer
-const { setup: setupContainers } = require('../src/plugin/containers.js');
+import MarkdownIt from 'markdown-it';
+import { setup as setupContainers } from '../dist/plugin/containers.js';
 
 let passed = 0;
 let total = 0;
@@ -235,23 +233,43 @@ const html10 = md10.render(markdownBodyInput);
 assertContains(html10, '<strong>bold</strong>', 'bold markdown renders in comment body');
 assertContains(html10, '<em>italic</em>', 'italic markdown renders in comment body');
 
-// ─── Test 11: Empty threads block ───
+// ─── Test 11: Comment body escapes raw HTML while preserving markdown ───
 
-console.log('\nTest 11: Empty threads block');
+console.log('\nTest 11: Comment body escapes raw HTML');
 
 const md11 = createMd();
+const rawHtmlInput = `::: threads
+  ::: thread t-html01
+    ::: comment "alice" "2026-01-01"
+      <span data-test="raw">raw html</span>
+      This still has **bold** text
+    :::
+  :::
+:::
+`;
+
+const html11 = md11.render(rawHtmlInput);
+assert(!html11.includes('<span data-test="raw">raw html</span>'), 'raw HTML is not emitted as an element');
+assert(html11.includes('&lt;span') || html11.includes('&amp;lt;span'), 'raw HTML tag marker is escaped');
+assertContains(html11, '<strong>bold</strong>', 'markdown still renders in escaped comment body');
+
+// ─── Test 12: Empty threads block ───
+
+console.log('\nTest 12: Empty threads block');
+
+const md12 = createMd();
 const emptyInput = `::: threads
 :::
 `;
 
-const html11 = md11.render(emptyInput);
-assertContains(html11, 'class="threads-sidebar"', 'empty threads wrapper still renders');
+const html12 = md12.render(emptyInput);
+assertContains(html12, 'class="threads-sidebar"', 'empty threads wrapper still renders');
 
-// ─── Test 12: Comment with ID (new serialized format) ───
+// ─── Test 13: Comment with ID (new serialized format) ───
 
-console.log('\nTest 12: Comment with ID in info string');
+console.log('\nTest 13: Comment with ID in info string');
 
-const md12 = createMd();
+const md13 = createMd();
 const commentWithIdInput = `::: threads
   ::: thread t-id01
     ::: comment c-abc12345 "alice" "2026-03-07"
@@ -261,16 +279,16 @@ const commentWithIdInput = `::: threads
 :::
 `;
 
-const html12 = md12.render(commentWithIdInput);
-assertContains(html12, 'data-comment-id="c-abc12345"', 'comment has data-comment-id from new format');
-assertContains(html12, 'data-author="alice"', 'comment has correct author from new format');
-assertContains(html12, 'data-date="2026-03-07"', 'comment has correct date from new format');
+const html13 = md13.render(commentWithIdInput);
+assertContains(html13, 'data-comment-id="c-abc12345"', 'comment has data-comment-id from new format');
+assertContains(html13, 'data-author="alice"', 'comment has correct author from new format');
+assertContains(html13, 'data-date="2026-03-07"', 'comment has correct date from new format');
 
-// ─── Test 13: Comment with ID and edited (new serialized format) ───
+// ─── Test 14: Comment with ID and edited (new serialized format) ───
 
-console.log('\nTest 13: Comment with ID and edited');
+console.log('\nTest 14: Comment with ID and edited');
 
-const md13 = createMd();
+const md14 = createMd();
 const commentWithIdEditedInput = `::: threads
   ::: thread t-id02
     ::: comment c-def67890 "bob" "2026-03-07" edited "2026-03-08"
@@ -280,10 +298,10 @@ const commentWithIdEditedInput = `::: threads
 :::
 `;
 
-const html13 = md13.render(commentWithIdEditedInput);
-assertContains(html13, 'data-comment-id="c-def67890"', 'edited comment has data-comment-id');
-assertContains(html13, 'data-author="bob"', 'edited comment has correct author');
-assertContains(html13, 'data-edited="2026-03-08"', 'edited comment has data-edited');
+const html14 = md14.render(commentWithIdEditedInput);
+assertContains(html14, 'data-comment-id="c-def67890"', 'edited comment has data-comment-id');
+assertContains(html14, 'data-author="bob"', 'edited comment has correct author');
+assertContains(html14, 'data-edited="2026-03-08"', 'edited comment has data-edited');
 
 // ─── Done ───
 

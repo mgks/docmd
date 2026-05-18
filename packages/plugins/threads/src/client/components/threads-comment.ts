@@ -96,12 +96,6 @@ export class ThreadsComment extends LitElement {
   }
 
   private renderMarkdown(text: string): ReturnType<typeof html> {
-    if (typeof (window as any).docmd?.compile === 'function') {
-      try {
-        const rendered = (window as any).docmd.compile(text);
-        return html`<div .innerHTML=${this.sanitize(rendered)}></div>`;
-      } catch { /* fall through */ }
-    }
     return html`<div .innerHTML=${this.sanitize(this.simpleMarkdown(text))}></div>`;
   }
 

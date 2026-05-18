@@ -16,6 +16,109 @@ interface CommentInfo {
   editedAt: string | null;
 }
 
+function smartDedent(str: string): string {
+  const lines = str.split('\n');
+
+  while (lines.length && lines[0].trim() === '') lines.shift();
+  while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+
+  let minIndent = Infinity;
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const indent = line.match(/^ */)?.[0].length || 0;
+    minIndent = Math.min(minIndent, indent);
+  }
+
+  if (!isFinite(minIndent) || minIndent === 0) return lines.join('\n');
+
+  return lines.map(line =>
+    line.startsWith(' '.repeat(minIndent)) ? line.slice(minIndent) : line
+  ).join('\n');
+}
+
+function renderMarkdownWithoutRawHtml(md: any, source: string, env: any): string {
+  const previousHtml = md.options.html;
+  md.options.html = false;
+  try {
+    return md.render(source, env);
+  } finally {
+    md.options.html = previousHtml;
+  }
+}
+
+function setupSafeCommentContainer(md: any): void {
+  md.block.ruler.before('fence', 'custom_comment', (state: any, startLine: number, endLine: number, silent: boolean) => {
+    const start = state.bMarks[startLine] + state.tShift[startLine];
+    const max = state.eMarks[startLine];
+    const lineContent = state.src.slice(start, max).trim();
+    const match = lineContent.match(/^:::\s*comment(?:\s+(.*))?$/);
+    if (!match) return false;
+    if (silent) return true;
+
+    let nextLine = startLine;
+    let found = false;
+    let depth = 1;
+    let fenceMarker: string | null = null;
+
+    while (nextLine < endLine) {
+      nextLine++;
+      if (nextLine >= endLine) break;
+
+      const nextStart = state.bMarks[nextLine] + state.tShift[nextLine];
+      const nextMax = state.eMarks[nextLine];
+      const nextContent = state.src.slice(nextStart, nextMax).trim();
+
+      if (!fenceMarker) {
+        const fenceMatch = nextContent.match(/^(`{3,}|~{3,})/);
+        if (fenceMatch) fenceMarker = fenceMatch[1];
+      } else if (nextContent.startsWith(fenceMarker)) {
+        fenceMarker = null;
+      }
+
+      if (!fenceMarker) {
+        if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|embed|tag)\b/)) {
+          depth++;
+        } else if (nextContent.match(/^:::\s*$/)) {
+          depth--;
+          if (depth === 0) {
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!found) return false;
+
+    let rawContent = '';
+    for (let i = startLine + 1; i < nextLine; i++) {
+      rawContent += state.src.slice(state.bMarks[i], state.eMarks[i]) + '\n';
+    }
+    const innerContent = smartDedent(rawContent);
+
+    const openToken = state.push('custom_comment_open', 'div', 1);
+    openToken.info = match[1] || '';
+
+    if (innerContent) {
+      const oldIsInsideContainer = state.env.isInsideContainer;
+      state.env.isInsideContainer = true;
+      let renderedContent = '';
+      try {
+        renderedContent = renderMarkdownWithoutRawHtml(state.md, innerContent, state.env);
+      } finally {
+        state.env.isInsideContainer = oldIsInsideContainer;
+      }
+
+      const htmlToken = state.push('html_block', '', 0);
+      htmlToken.content = renderedContent;
+    }
+
+    state.push('custom_comment_close', 'div', -1);
+    state.line = nextLine + 1;
+    return true;
+  }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
+}
+
 /**
  * Parse a thread info string.
  * Format: `<id> [resolved "<by>" "<date>"]`
@@ -124,33 +227,30 @@ export function setup(md: any): void {
   );
 
   // 3. comment - individual comment
-  createDepthTrackingContainer(
-    md,
-    'comment',
-    (tokens: any[], idx: number) => {
-      const info = tokens[idx].info.trim();
-      const parsed = parseCommentInfo(info);
-      
-      const safeId = parsed.id ? md.utils.escapeHtml(parsed.id) : null;
-      const safeParentId = parsed.parentId ? md.utils.escapeHtml(parsed.parentId) : null;
-      const safeAuthor = md.utils.escapeHtml(parsed.author);
-      const safeDate = md.utils.escapeHtml(parsed.date);
-      const safeEdited = parsed.editedAt ? md.utils.escapeHtml(parsed.editedAt) : null;
+  setupSafeCommentContainer(md);
+  md.renderer.rules.custom_comment_open = (tokens: any[], idx: number) => {
+    const info = tokens[idx].info.trim();
+    const parsed = parseCommentInfo(info);
 
-      const idAttr = safeId ? ` data-comment-id="${safeId}"` : '';
-      const parentAttr = safeParentId ? ` data-parent-id="${safeParentId}"` : '';
-      const editedAttr = safeEdited ? ` data-edited="${safeEdited}"` : '';
-      const replyClass = parsed.parentId ? ' threads-comment--reply' : '';
-      
-      return (
-        `<div class="threads-comment${replyClass}"${idAttr}${parentAttr} data-author="${safeAuthor}" data-date="${safeDate}"${editedAttr}>` +
-        `<div class="threads-comment__avatar-col"></div>` +
-        `<div class="threads-comment__meta"><strong>${safeAuthor}</strong> &middot; ${safeDate}</div>` +
-        `<div class="threads-comment__body">\n`
-      );
-    },
-    () => '</div></div>\n'
-  );
+    const safeId = parsed.id ? md.utils.escapeHtml(parsed.id) : null;
+    const safeParentId = parsed.parentId ? md.utils.escapeHtml(parsed.parentId) : null;
+    const safeAuthor = md.utils.escapeHtml(parsed.author);
+    const safeDate = md.utils.escapeHtml(parsed.date);
+    const safeEdited = parsed.editedAt ? md.utils.escapeHtml(parsed.editedAt) : null;
+
+    const idAttr = safeId ? ` data-comment-id="${safeId}"` : '';
+    const parentAttr = safeParentId ? ` data-parent-id="${safeParentId}"` : '';
+    const editedAttr = safeEdited ? ` data-edited="${safeEdited}"` : '';
+    const replyClass = parsed.parentId ? ' threads-comment--reply' : '';
+
+    return (
+      `<div class="threads-comment${replyClass}"${idAttr}${parentAttr} data-author="${safeAuthor}" data-date="${safeDate}"${editedAttr}>` +
+      `<div class="threads-comment__avatar-col"></div>` +
+      `<div class="threads-comment__meta"><strong>${safeAuthor}</strong> &middot; ${safeDate}</div>` +
+      `<div class="threads-comment__body">\n`
+    );
+  };
+  md.renderer.rules.custom_comment_close = () => '</div></div>\n';
 
   // 4. reactions - reactions container
   createDepthTrackingContainer(
@@ -160,38 +260,4 @@ export function setup(md: any): void {
     () => '</div>\n'
   );
 
-  // 5. Security: Harden comment bodies by disabling raw HTML rendering
-  // We push this to the core ruler to intercept tokens after block parsing
-  md.core.ruler.after('block', 'threads_harden', (state: any) => {
-    let insideComment = false;
-
-    for (const token of state.tokens) {
-      if (token.type === 'container_comment_open') {
-        insideComment = true;
-        continue;
-      }
-      if (token.type === 'container_comment_close') {
-        insideComment = false;
-        continue;
-      }
-
-      if (insideComment) {
-        // Disable raw HTML blocks inside comments
-        if (token.type === 'html_block') {
-          token.type = 'text';
-          token.content = md.utils.escapeHtml(token.content);
-        }
-
-        // Disable raw HTML inline inside comments
-        if (token.type === 'inline' && token.children) {
-          for (const child of token.children) {
-            if (child.type === 'html_inline') {
-              child.type = 'text';
-              child.content = md.utils.escapeHtml(child.content);
-            }
-          }
-        }
-      }
-    }
-  });
 }
