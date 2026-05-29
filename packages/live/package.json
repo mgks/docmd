@@ -29,7 +29,7 @@
     "@docmd/ui": "workspace:*",
     "buffer": "^6.0.3",
     "esbuild": "^0.28.0",
-    "katex": "^0.16.47",
+    "katex": "^0.17.0",
     "markdown-it-texmath": "^1.0.0"
   },
   "devDependencies": {

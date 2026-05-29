@@ -19,7 +19,7 @@
     "@docmd/api": "workspace:*",
     "@types/markdown-it": "^14.1.2",
     "esbuild": "^0.28.0",
-    "markdown-it": "^14.1.1"
+    "markdown-it": "^14.2.0"
   },
   "keywords": [
     "docmd",
