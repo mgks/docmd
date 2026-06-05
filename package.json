@@ -27,7 +27,7 @@
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.60.0"
+    "typescript-eslint": "^8.60.1"
   },
   "engines": {
     "node": ">=18.0.0"
