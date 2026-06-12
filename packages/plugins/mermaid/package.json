@@ -15,8 +15,8 @@
   ],
   "devDependencies": {
     "@docmd/api": "workspace:*",
-    "esbuild": "^0.28.0",
-    "happy-dom": "^20.10.1",
+    "esbuild": "^0.28.1",
+    "happy-dom": "^20.10.2",
     "vitest": "^4.1.8"
   },
   "keywords": [

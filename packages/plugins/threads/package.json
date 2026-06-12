@@ -25,13 +25,13 @@
     "@docmd/parser": "workspace:*"
   },
   "dependencies": {
-    "@awesome.me/webawesome": "^3.7.0",
+    "@awesome.me/webawesome": "^3.8.0",
     "lit": "^3.3.3"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",
     "@playwright/test": "^1.60.0",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "markdown-it": "^14.2.0"
   },
   "keywords": [
