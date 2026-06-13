@@ -27,7 +27,7 @@
     "@types/node": "^25.9.1",
     "chalk": "4.1.2",
     "docmd-search": "0.1.0-alpha.1",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "eslint": "^10.4.1",
     "globals": "^17.6.0",
     "typescript": "^5.9.3",
