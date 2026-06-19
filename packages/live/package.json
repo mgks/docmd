@@ -28,7 +28,7 @@
     "@docmd/tui": "workspace:*",
     "@docmd/ui": "workspace:*",
     "buffer": "^6.0.3",
-    "esbuild": "^0.28.0",
+    "esbuild": "^0.28.1",
     "katex": "^0.17.0",
     "markdown-it-texmath": "^1.0.0"
   },
