@@ -35,10 +35,10 @@
     "chalk": "^4.1.2",
     "docmd-search": "^0.1.0",
     "esbuild": "^0.28.1",
-    "eslint": "^10.5.0",
+    "eslint": "^10.6.0",
     "globals": "^17.7.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.62.0"
+    "typescript-eslint": "^8.62.1"
   },
   "engines": {
     "node": ">=18"
