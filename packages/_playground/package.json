@@ -7,7 +7,7 @@
     "@docmd/plugin-math": "workspace:*",
     "@docmd/template-summer": "workspace:*",
     "@huggingface/transformers": "^4.2.0",
-    "onnxruntime-node": "^1.26.0"
+    "onnxruntime-node": "^1.27.0"
   },
   "scripts": {
     "dev": "node ../core/dist/bin/docmd.js dev",
