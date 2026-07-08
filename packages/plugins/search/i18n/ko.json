@@ -1,0 +1,10 @@
+{
+  "searchPlaceholder": "문서 검색...",
+  "searchNoResults": "검색 결과가 없습니다.",
+  "searchError": "검색 색인을 불러오지 못했습니다.",
+  "searchInitial": "검색어를 입력하세요...",
+  "searchClose": "검색 닫기",
+  "searchNavigate": "이동",
+  "searchEscape": "닫기",
+  "searchVersionBadge": "v{version}"
+}

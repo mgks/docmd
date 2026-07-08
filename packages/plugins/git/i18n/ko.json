@@ -1,0 +1,13 @@
+{
+  "lastUpdated": "마지막 업데이트",
+  "recentCommits": "최근 커밋",
+  "viewCommitHistory": "커밋 기록 보기",
+  "editOnGitHub": "GitHub에서 편집",
+  "editOnGitLab": "GitLab에서 편집",
+  "editOnBitbucket": "Bitbucket에서 편집",
+  "editThisPage": "이 페이지 편집",
+  "justNow": "방금 전",
+  "minutesAgo": "{n}분 전",
+  "hoursAgo": "{n}시간 전",
+  "daysAgo": "{n}일 전"
+}
