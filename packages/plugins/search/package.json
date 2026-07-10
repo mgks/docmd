@@ -12,6 +12,7 @@
     "tagline": "Offline full-text search for docmd.",
     "capabilities": [
       "post-build",
+      "init",
       "head",
       "body",
       "assets",

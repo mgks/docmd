@@ -181,10 +181,26 @@ declare const MiniSearch: any;
 
         // 3. Index Loading - fetches locale-specific index
         async function loadIndex() {
-            const isSemantic = searchModal.dataset.semantic === 'true';
+            // Auto-detect semantic search at runtime. We check BOTH:
+            //   - The build-time hint (data-semantic="true") — set when the
+            //     build pipeline knew semantic was available at render time.
+            //   - A runtime probe (HEAD request to manifest.json) — catches
+            //     the first-build case where deps were installed in onPostBuild
+            //     (after generateScripts already rendered the page without
+            //     data-semantic). The probe is a single network round-trip
+            //     that only runs once per page load, so there's no perf cost.
+            const hasBuildHint = searchModal.dataset.semantic === 'true';
+            let useSemantic = hasBuildHint;
+
+            if (!useSemantic) {
+                try {
+                    const probe = await fetch(`${siteBase}.docmd-search/manifest.json`, { method: 'HEAD' });
+                    if (probe.ok) useSemantic = true;
+                } catch { /* no index → keyword */ }
+            }
 
             try {
-                if (isSemantic) {
+                if (useSemantic) {
                     // ── Semantic search path ──────────────────────────────────
                     const ctx: SemanticSearch.SemanticSearchContext = {
                         siteBase,

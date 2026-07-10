@@ -1,6 +1,6 @@
 {
   "$meta": {
-    "generatedAt": "2026-07-10T15:51:37.674Z",
+    "generatedAt": "2026-07-10T17:11:03.912Z",
     "generator": "scripts/build-plugin-registry.mjs",
     "packageCount": 15
   },
@@ -121,6 +121,7 @@
     "tagline": "Offline full-text search for docmd.",
     "capabilities": [
       "post-build",
+      "init",
       "head",
       "body",
       "assets",

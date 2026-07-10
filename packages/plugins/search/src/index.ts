@@ -29,11 +29,106 @@ const require = createRequire(import.meta.url);
 export const plugin: PluginDescriptor = {
   name: 'search',
   version: '0.8.11',
-  capabilities: ['post-build', 'head', 'body', 'assets', 'translations']
+  // `init` lets onConfigResolved run at config-parse time — that's where we
+  // compute the single `searchConfig` object. The build pipeline reads
+  // it from `config._searchConfig` everywhere else, so there's exactly
+  // one source of truth for "is semantic available at build time".
+  capabilities: ['post-build', 'init', 'head', 'body', 'assets', 'translations']
 };
 
 // Resolve i18n directory (sibling to dist/ in the package)
 const i18nDir = path.resolve(__dirname, '..', 'i18n');
+
+/* ── Search config (computed once at onConfigResolved) ─────────────────── */
+
+/**
+ * Resolved search configuration. Computed once per build, in
+ * `onConfigResolved`, and stamped on `config._searchConfig`. Every
+ * subsequent hook (`onPostBuild`, `getAssets`, `generateScripts`,
+ * EJS templates via the page context) reads from this same object —
+ * no second source of truth, no chance of the `getAssets` and the
+ * `generateScripts` paths disagreeing about whether semantic is
+ * available. The shape is the contract for the search-modal EJS
+ * partial too: every key on this object is exposed to the template
+ * via `locals.searchConfig`.
+ */
+type SearchConfig = {
+  /** User has not opted out of search entirely (optionsMenu / config.search). */
+  enabled: boolean;
+  /** User has explicitly requested semantic search in their config. */
+  semanticRequested: boolean;
+  /** docmd-search is resolvable in the user's project. */
+  docmdSearchInstalled: boolean;
+  /** All peer deps (transformers + onnxruntime-node) are resolvable. */
+  peersInstalled: boolean;
+  /** True only when all three of the above are true — that's when the modal
+   *  emits `data-semantic="true"`, the .docmd-search-client.js asset ships,
+   *  and the page points users at the semantic index. */
+  semanticUsable: boolean;
+  /** The exact names of any peer deps that are missing. Empty when
+   *  `peersInstalled` is true. Useful for the TUI: "Missing: transformers, onnxruntime-node". */
+  missingPeers: string[];
+  /** Stable list of peer-dep package names. Exposed so the TUI can emit
+   *  per-dep `[ DONE ] @huggingface/transformers` lines without
+   *  hard-coding the names in two places. */
+  peerDeps: readonly string[];
+};
+
+/**
+ * Module-level state. Reset on every `onConfigResolved` call so a
+ * dev-server rebuild starts fresh. Currently tracks:
+ *
+ *   - `lastPeersHash` — when the set of "missing peer deps" is
+ *     identical to the previous build, we DON'T re-emit the
+ *     "[ DONE ] Peer X ready" lines. The user only sees them on the
+ *     first build (or the first build after a new dep becomes missing).
+ *     This is the difference between "informative on first install" and
+ *     "spammy on every rebuild".
+ */
+const _searchState: {
+  lastPeersHash: string | null;
+  lastConfig: SearchConfig | null;
+} = { lastPeersHash: null, lastConfig: null };
+
+/**
+ * Compute the full SearchConfig from the resolved config + filesystem.
+ * Idempotent — called once at `onConfigResolved` and again inside
+ * `onPostBuild` if a fresh install was performed. Pure: no I/O
+ * outside of `require.resolve` and `resolveDocmdSearch`.
+ */
+function buildSearchConfig(config: any): SearchConfig {
+  const isEnabled = config.optionsMenu
+    ? config.optionsMenu.components.search !== false
+    : config.search !== false;
+  const pluginOptions = (config.plugins && config.plugins.search) || {};
+  const semanticRequested = pluginOptions.semantic === true;
+  const docmdSearchInstalled = resolveDocmdSearch() !== null;
+  const resolvePaths = [process.cwd(), path.join(process.cwd(), 'node_modules')];
+
+  // List every peer dep and which are missing, in stable order.
+  const missingPeers: string[] = [];
+  for (const pkg of PEER_DEPS) {
+    try { require.resolve(pkg, { paths: resolvePaths }); }
+    catch { missingPeers.push(pkg); }
+  }
+  const peersInstalled = missingPeers.length === 0;
+  const semanticUsable = semanticRequested && docmdSearchInstalled && peersInstalled;
+
+  return {
+    enabled: isEnabled,
+    semanticRequested,
+    docmdSearchInstalled,
+    peersInstalled,
+    semanticUsable,
+    missingPeers,
+    peerDeps: PEER_DEPS,
+  };
+}
+
+/** Hash used to decide whether to re-emit the peer-deps TUI block. */
+function peersHash(sc: SearchConfig): string {
+  return sc.peersInstalled ? 'ok' : 'missing:' + sc.missingPeers.join(',');
+}
 
 /* ── Semantic search peer-dep detection ─────────────────────────────────── */
 
@@ -331,6 +426,57 @@ function loadPluginStrings(localeId: string): Record<string, string> {
 }
 
 /**
+ * Print a per-peer-dep TUI block when `semantic: true` is requested.
+ * Idempotent: suppresses the block on subsequent builds when the set
+ * of missing peer deps is unchanged, so the user only sees it on the
+ * first build (or when a new peer dep goes missing).
+ *
+ * Called by `onConfigResolved` AND by `onPostBuild` after a fresh
+ * install. Each call is a no-op when the peer status is unchanged.
+ */
+function maybeReportPeerStatus(tui: any, sc: SearchConfig, quiet: boolean): void {
+  if (quiet || !tui) return;
+  if (!sc.semanticRequested) return;   // user never asked for semantic — stay silent
+  const h = peersHash(sc);
+  if (h === _searchState.lastPeersHash) return;   // already reported this state
+  _searchState.lastPeersHash = h;
+
+  if (sc.peersInstalled) {
+    tui.step('All semantic search dependencies ready', 'DONE');
+    return;
+  }
+  // List each missing dep as its own TUI line so the user sees exactly
+  // which package is the blocker. We keep the order stable (the same
+  // order as `PEER_DEPS`) so logs read consistently across builds.
+  for (const dep of sc.peerDeps) {
+    const present = !sc.missingPeers.includes(dep);
+    tui.step(`${dep}`, present ? 'DONE' : 'SKIP');
+  }
+  tui.warn(
+    '  Semantic search requires: ' + sc.missingPeers.join(', ') +
+    '\n  Falling back to keyword search. To enable semantic: install the missing packages,'
+  );
+}
+
+/**
+ * `init` capability. Runs at config-parse time, before any page is
+ * rendered. Computes the single `searchConfig` object and stamps it
+ * on `config._searchConfig` for the rest of the build pipeline. Also
+ * emits the first-install peer-status TUI block if appropriate.
+ */
+export function onConfigResolved(config: any): void {
+  const sc = buildSearchConfig(config);
+  config._searchConfig = sc;
+  _searchState.lastConfig = sc;
+  // `tui` isn't passed to onConfigResolved (the lifecycle signature is
+  // `onConfigResolved(config: any): void`), so we don't emit the TUI
+  // block here — the equivalent emission happens inside `onPostBuild`
+  // where the TUI is in scope. We do, however, keep this hook for
+  // future extensions (e.g. warming the require cache, pre-computing
+  // derived values that the EJS partial needs at template time).
+}
+
+/**
  * Plugin translations hook - called by the engine for each locale.
  * Returns search-specific UI strings keyed by locale.
  */
@@ -358,6 +504,13 @@ export async function onPostBuild({ config, pages, outputDir, tui, options, runW
   if (!isEnabled) return;
 
   const showTui = tui && !options?.quiet;
+
+  // Per-peer-dep TUI block (idempotent). Fires once on the first build
+  // (or when the dep status changes); suppressed on subsequent rebuilds
+  // when the status is unchanged. Stays silent when semantic wasn't
+  // requested. The hook lives in the post-build path because the TUI
+  // is in scope here but isn't in onConfigResolved's signature.
+  maybeReportPeerStatus(tui, config._searchConfig, !showTui);
 
   // ── Semantic search path ────────────────────────────────────────────────
   if (pluginOptions.semantic === true) {
@@ -797,20 +950,13 @@ export function generateScripts(config: any, options: any) {
   const isEnabled = config.optionsMenu ? config.optionsMenu.components.search !== false : config.search !== false;
   if (!isEnabled) return {};
 
-  const semanticRequested = (options || {}).semantic === true;
-  // Only emit `data-semantic="true"` when the full semantic stack is
-  // usable — docmd-search resolvable AND its peer deps (the embedding
-  // model + ONNX runtime) resolvable. The indexing step (`onPostBuild`)
-  // silently falls back to keyword when either is missing; if we set
-  // the attribute unconditionally, the browser tries to load a
-  // non-existent `.docmd-search/` index and surfaces "Failed to load
-  // search index." even though keyword search would work fine.
-  const searchResolvePaths = [process.cwd(), path.join(process.cwd(), 'node_modules')];
-  const isSemantic = semanticRequested
-    && resolveDocmdSearch() !== null
-    && findMissingPeerDep(searchResolvePaths) === null;
+  // Use the resolved searchConfig as the single source of truth.
+  // The client also auto-detects at runtime (HEAD probe to manifest.json)
+  // so even if this build-time hint is wrong (e.g. first-build dep install),
+  // the browser still picks the right mode.
+  const sc: SearchConfig = config._searchConfig || buildSearchConfig(config);
+  const isSemantic = sc.semanticUsable;
   const showConfidence = (options || {}).showConfidence === true;
-  // showFilters defaults to true; set false to hide the version filter bar
   const showFilters = (options || {}).showFilters !== false;
 
   // Load strings for the active locale (available at render time)
@@ -855,7 +1001,12 @@ export function generateScripts(config: any, options: any) {
 }
 
 export function getAssets(options: any) {
-  const isSemantic = (options || {}).semantic === true;
+  // Use searchConfig for semanticRequested, but keep the broader
+  // resolution paths for finding the client bundle (which lives in
+  // the plugin's own node_modules, not just the user's project).
+  const sc = _searchState.lastConfig;
+  const semanticRequested = sc?.semanticRequested ?? (options || {}).semantic === true;
+  const isSemantic = semanticRequested;
 
   if (isSemantic) {
     // Semantic mode: serve the docmd-search client bundle at a known path
