@@ -462,18 +462,6 @@ async function processContentAsync(rawString: string, mdInstance: any, config: a
   }
 
   let htmlContent = mdInstance.render(markdownContent, env);
-
-  // #167 + M-5: rewrite internal hrefs so the output is correct in both
-  // file:// and HTTP-server deployment, and in both default and non-default
-  // locales. Two transforms in order:
-  //   1. `stripDefaultLocalePrefix` (M-5) — if the source page is in a
-  //      non-default locale (e.g. `fr/`) and an href targets the default
-  //      locale's prefix (e.g. `/en/foo`), drop the prefix so it points to
-  //      where the default-locale page actually lives (`/foo`). Without
-  //      this, `fr/index.md` linking to `[English](/en/)` produces a 404
-  //      because the default locale's content is at root, not under `/en/`.
-  //   2. `fixHtmlLinks` (#167) — make paths relative + offline-safe.
-  // The order matters: M-5 runs first so #167 sees a clean, correct path.
   if (env) {
     htmlContent = stripDefaultLocalePrefix(htmlContent, env.defaultLocale, env.allLocales, env.relativePathToRoot || './');
     if (env.isOfflineMode === true) {

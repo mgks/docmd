@@ -1,6 +1,6 @@
 {
   "name": "@docmd/api",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "description": "Plugin API surface for docmd.",
   "type": "module",
   "main": "dist/index.js",

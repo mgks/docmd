@@ -1,6 +1,6 @@
 {
   "name": "@docmd/utils",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "description": "Zero-dependency shared utilities for docmd core.",
   "type": "module",
   "main": "dist/index.js",

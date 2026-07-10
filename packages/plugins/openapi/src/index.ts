@@ -24,7 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const plugin: PluginDescriptor = {
   name: 'openapi',
-  version: '0.8.10',
+  version: '0.8.11',
   capabilities: ['markdown', 'assets']
 };
 

@@ -1,6 +1,6 @@
 {
   "name": "@docmd/monorepo",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "private": true,
   "description": "The minimalist, zero-config documentation generator monorepo.",
   "scripts": {

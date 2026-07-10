@@ -28,7 +28,7 @@ const require = createRequire(import.meta.url);
 
 export const plugin: PluginDescriptor = {
   name: 'search',
-  version: '0.8.10',
+  version: '0.8.11',
   capabilities: ['post-build', 'head', 'body', 'assets', 'translations']
 };
 
