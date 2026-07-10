@@ -109,8 +109,16 @@ export async function buildSite(configPath: string, opts: any = {}) {
     // check, `docmd build` exits 0 even when a plugin is missing — the
     // site still builds but the user has no way to know a plugin was
     // dropped unless they read the warning text.
+    // N-12: list each failed plugin by name and reason in the TUI, so
+    // the operator doesn't have to dig through the error message string.
     const loadErrors = getPluginLoadErrors();
     if (loadErrors.length > 0) {
+      if (!options.isDev && !options.quiet) {
+        TUI.error(`${loadErrors.length} plugin(s) could not be loaded`, '');
+        for (const e of loadErrors) {
+          console.error(`  ${TUI.red('•')} ${e.plugin} — ${e.message}`);
+        }
+      }
       const lines = loadErrors.map((e) => `${e.plugin}: ${e.message}`);
       throw new Error(
         `Build failed: ${loadErrors.length} plugin(s) could not be loaded:\n` +
@@ -383,6 +391,18 @@ export async function buildSite(configPath: string, opts: any = {}) {
     const { getPluginErrors } = await import('@docmd/api');
     const errors = getPluginErrors();
     if (errors.length > 0) {
+      // N-12: surface every plugin error in one place. Previously the
+      // user saw "Build complete" and only later discovered failures when
+      // a generated page was missing or a downstream tool choked on a
+      // bad artifact. The summary lists every error with its plugin +
+      // hook, so the operator can grep for any of them.
+      if (!options.isDev && !options.quiet) {
+        TUI.error('Plugin errors during build', '');
+        for (const err of errors) {
+          const filePart = err.filePath ? ` (${err.filePath})` : '';
+          console.error(`  ${TUI.red('•')} ${err.plugin} :: ${err.hook}${filePart} — ${err.message}`);
+        }
+      }
       throw new Error(`Build failed: ${errors.length} plugin error(s) occurred during execution.`);
     }
 

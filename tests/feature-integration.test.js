@@ -173,6 +173,42 @@ console.log('\n🌍 Test 3: i18n standalone (Hindi default)');
   assert('English guide falls back from Hindi', siteExists(dir, 'en/guide/index.html'));
 }
 
+// ─── TEST 3.5 (M-5): i18n cross-locale link to default locale prefix ───
+console.log('\n🌍 Test 3.5: i18n cross-locale link to default locale (M-5)');
+{
+  // M-5: when the default locale lives at root and a non-default-locale
+  // page writes `[link](/<defaultLocale>/foo)`, the build used to emit
+  // `<a href="/en/foo">` which 404s because the default-locale page is
+  // at `/foo`, not `/en/foo`. The fix strips the default-locale prefix
+  // from absolute hrefs in the rendered HTML so the link points to the
+  // actual location of the default-locale page.
+  const dir = setup('03.5-m5-cross-locale-link');
+  writeFile(dir, 'docmd.config.js', `module.exports = {
+    title: 'M5 test',
+    src: 'docs',
+    i18n: { default: 'en', locales: [
+      { id: 'en', label: 'English' },
+      { id: 'fr', label: 'Français' }
+    ]}
+  };`);
+  writeFile(dir, 'docs/en/index.md', '# Welcome');
+  writeFile(dir, 'docs/en/setup.md', '# Setup page');
+  writeFile(dir, 'docs/fr/index.md', 'Voir la [version anglaise](/en/) et le [setup anglais](/en/setup).');
+  const r = build(dir);
+  assert('builds M-5 scenario', r.ok);
+  const fr = readSite(dir, 'fr/index.html');
+  assert('fr page does NOT link to /en/ (would 404)', fr && !/href="\/en\/"/.test(fr));
+  assert('fr page does NOT link to /en/setup (would 404)', fr && !/href="\/en\/setup"/.test(fr));
+  // The rewritten links should still resolve. Default-locale pages live
+  // at root, so `/en/` → `/` and `/en/setup` → `/setup` (or
+  // `/setup/`). Both should be present.
+  assert('default-locale index exists at root', siteExists(dir, 'index.html'));
+  assert('default-locale setup page exists', siteExists(dir, 'setup/index.html'));
+  // Online build keeps clean URLs — verify the link does NOT carry
+  // `/index.html` suffix (that would be the offline build behaviour).
+  assert('online build keeps clean URLs', fr && !/href="[^"]*index\.html"/.test(fr));
+}
+
 // ─── TEST 4: Versioning standalone ───
 console.log('\n📚 Test 4: Versioning standalone (no i18n)');
 {

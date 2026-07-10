@@ -140,6 +140,71 @@ export async function migrateProject(options: { docusaurus?: boolean; mkdocs?: b
     return root.length > 0 ? root : null;
   };
 
+  /**
+   * T-Z14 / T-Z17: walk a freshly-copied docs directory and translate
+   * Docusaurus-specific frontmatter keys to their docmd equivalents.
+   *
+   *   `id:`           → removed (docmd derives route ids from filenames)
+   *   `sidebar_label:`→ `nav_title:` (the docmd-supported nav override)
+   *
+   * The translation is best-effort: a file that fails to parse keeps
+   * its original content. Returns the count of files touched.
+   */
+  const translateDocusaurusFrontmatter = async (docsDir: string): Promise<number> => {
+    const targets: string[] = [];
+    const walk = async (dir: string): Promise<void> => {
+      const entries = await nativeFs.promises.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (entry.name === 'node_modules' || entry.name.startsWith('.')) continue;
+          await walk(full);
+        } else if (entry.isFile() && /\.(md|mdx|markdown)$/i.test(entry.name)) {
+          targets.push(full);
+        }
+      }
+    };
+    await walk(docsDir);
+
+    let count = 0;
+    for (const file of targets) {
+      const raw = await nativeFs.promises.readFile(file, 'utf8');
+      const m = raw.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+      if (!m) continue;
+      // Line-by-line parse: we only care about top-level `key: value`
+      // lines. Docusaurus lets these be unquoted, single-quoted, or
+      // double-quoted. Nested objects (e.g. `sidebar:` with sub-keys)
+      // are preserved as-is.
+      const lines = m[1].split('\n');
+      let changed = false;
+      const newLines = lines.map((line) => {
+        const stripped = line.replace(/\r$/, '');
+        const idMatch = stripped.match(/^\s*id\s*:\s*(.*?)\s*$/);
+        if (idMatch) { changed = true; return null; }
+        const slMatch = stripped.match(/^(\s*)sidebar_label\s*:\s*(.*?)\s*$/);
+        if (slMatch) {
+          changed = true;
+          const indent = slMatch[1];
+          let val = slMatch[2];
+          // Strip wrapping quotes if present so the rewritten value
+          // matches the original document's quote style as closely as
+          // possible. docmd accepts both forms.
+          const qm = val.match(/^['"](.*)['"]$/);
+          if (qm) val = qm[1];
+          return `${indent}nav_title: ${val}`;
+        }
+        return stripped;
+      }).filter((l) => l !== null) as string[];
+
+      if (!changed) continue;
+      const newFm = newLines.join('\n');
+      const newContent = raw.replace(/^---\r?\n[\s\S]*?\r?\n---/, `---\n${newFm}\n---`);
+      await nativeFs.promises.writeFile(file, newContent);
+      count++;
+    }
+    return count;
+  };
+
   if (options.docusaurus) {
     TUI.section('Docusaurus Migration');
     const configPath = path.resolve(CWD, 'docusaurus.config.js');
@@ -188,6 +253,23 @@ export async function migrateProject(options: { docusaurus?: boolean; mkdocs?: b
     } else {
       await fs.ensureDir(newDocsDir);
       TUI.step('Created new docs directory', 'DONE');
+    }
+
+    // T-Z14 / T-Z17: translate Docusaurus-specific frontmatter keys.
+    // docmd derives route ids from filenames, so Docusaurus `id:` is
+    // dropped. `sidebar_label:` is preserved as `nav_title:` (a
+    // docmd-supported override of the auto-generated nav title).
+    // The translation is best-effort: files that fail to parse keep
+    // their original frontmatter, and a TUI line reports the count.
+    let fmTranslated = 0;
+    try {
+      const translated = await translateDocusaurusFrontmatter(newDocsDir);
+      fmTranslated = translated;
+    } catch (err: any) {
+      TUI.warn(`Frontmatter translation skipped: ${err.message}`);
+    }
+    if (fmTranslated > 0) {
+      TUI.step(`Translated Docusaurus frontmatter in ${fmTranslated} file(s)`, 'DONE');
     }
 
     await nativeFs.promises.writeFile(path.resolve(CWD, 'docmd.config.js'), serializeConfig(docmdConfig));

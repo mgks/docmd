@@ -483,6 +483,12 @@ export async function renderPages({ config, srcDir, fallbackSrcDir, outputDir, h
           // #167: offline-mode + relative-path context for the markdown post-processor.
           isOfflineMode: options.offline === true,
           relativePathToRoot: relativePathToRootForMarkdown,
+          // M-5: tell the post-processor which locale is the default so it
+          // can strip the default-locale prefix from absolute hrefs
+          // (e.g. `/en/foo` from a `fr/` page → `/foo`, since the default
+          // locale lives at root, not under its own prefix).
+          defaultLocale: config._defaultLocale || null,
+          allLocales: (config._allLocales || []).map((l: any) => l.id),
           config: { base: config.base || '/' }
         },
         hooks

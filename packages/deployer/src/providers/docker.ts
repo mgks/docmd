@@ -24,7 +24,7 @@ export async function generateDocker(ctx: DeployContext): Promise<{ dockerfile: 
 # ---------------------------------------------------
 
 # Stage 1: Build the docmd site
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Copy dependency manifests first for optimal layer caching

@@ -463,16 +463,28 @@ async function processContentAsync(rawString: string, mdInstance: any, config: a
 
   let htmlContent = mdInstance.render(markdownContent, env);
 
-  // #167 (permanent fix): in offline mode, rewrite every internal href in
-  // the rendered markdown so the output works in file://, HTTP servers, and
-  // custom domains identically. The button container (`:::`) already goes
-  // through `fixHtmlLinks` via the template helper, but the markdown-rendered
-  // HTML never did — that's why `<a href="/destination/">` survived into the
-  // offline HTML and broke `file://` navigation. The post-process pass uses
-  // the same `fixHtmlLinks` logic so the two paths stay aligned. Non-offline
-  // builds are unchanged (clean URLs preserved).
-  if (env && env.isOfflineMode === true) {
-    htmlContent = rewriteInternalHrefsForOffline(htmlContent, env.relativePathToRoot || './', env.config?.base || '/');
+  // #167 + M-5: rewrite internal hrefs so the output is correct in both
+  // file:// and HTTP-server deployment, and in both default and non-default
+  // locales. Two transforms in order:
+  //   1. `stripDefaultLocalePrefix` (M-5) — if the source page is in a
+  //      non-default locale (e.g. `fr/`) and an href targets the default
+  //      locale's prefix (e.g. `/en/foo`), drop the prefix so it points to
+  //      where the default-locale page actually lives (`/foo`). Without
+  //      this, `fr/index.md` linking to `[English](/en/)` produces a 404
+  //      because the default locale's content is at root, not under `/en/`.
+  //   2. `fixHtmlLinks` (#167) — make paths relative + offline-safe.
+  // The order matters: M-5 runs first so #167 sees a clean, correct path.
+  if (env) {
+    htmlContent = stripDefaultLocalePrefix(htmlContent, env.defaultLocale, env.allLocales, env.relativePathToRoot || './');
+    if (env.isOfflineMode === true) {
+      htmlContent = rewriteInternalHrefsForOffline(htmlContent, env.relativePathToRoot || './', env.config?.base || '/');
+    } else {
+      // M-5 also affects online builds: `fr/index.html` linking to
+      // `/en/` is a 404 on HTTP servers too, not just file://. Run the
+      // same fixHtmlLinks pass (without the offline-specific `index.html`
+      // suffix) so cross-locale paths stay clean and correct.
+      htmlContent = fixHtmlLinks(htmlContent, env.relativePathToRoot || './', env.config?.base || '/');
+    }
   }
 
   if (hooks && hooks.onAfterParse) {
@@ -493,6 +505,33 @@ async function processContentAsync(rawString: string, mdInstance: any, config: a
   }
 
   return { frontmatter, htmlContent, headings, searchData };
+}
+
+/**
+ * M-5: strip the default-locale prefix from absolute hrefs in the rendered
+ * HTML. The default locale lives at root, not under its own prefix, so a
+ * link like `/en/foo` from a non-default-locale page is a 404 unless the
+ * prefix is dropped. We only run this when the source page is in a
+ * non-default locale (which is when the default-locale prefix could
+ * actually appear in author-written links).
+ *
+ * The function only touches absolute paths under root, only when the
+ * first segment matches the default locale id, and never touches
+ * external URLs / anchors / mailto.
+ */
+function stripDefaultLocalePrefix(html: string, defaultLocale: string | null, allLocales: string[] | undefined, _relativePathToRoot: string): string {
+  if (!defaultLocale || !allLocales || allLocales.length < 2) return html;
+  // Escape regex special chars in the locale id (e.g. "en-us" with hyphen).
+  const escaped = defaultLocale.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Match `<a href="/xx/...">` and `<a href='/xx/...'>` where xx is the
+  // default locale. We do NOT touch `src=` (img) because images are
+  // typically under /assets/ and never locale-prefixed. We do NOT touch
+  // bare `/xx` at end of attribute (rare author pattern) — that case is
+  // ambiguous and the user can write `/` instead.
+  const re = new RegExp(`(<a\\s+[^>]*?\\bhref\\s*=\\s*)(["'])(\\/${escaped}\\/)([^"'#]*)\\2`, 'gi');
+  return html.replace(re, (_full, prefix, quote, _stripped, rest) => {
+    return `${prefix}${quote}/${rest}${quote}`;
+  });
 }
 
 /**
