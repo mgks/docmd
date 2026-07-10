@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@awesome.me/webawesome": "^3.10.0",
+    "@docmd/utils": "workspace:*",
     "lit": "^3.3.3"
   },
   "devDependencies": {

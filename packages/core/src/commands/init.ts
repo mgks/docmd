@@ -60,7 +60,7 @@ const defaultConfigContent = `{
   "pageNavigation": true,
   "navigation": [
     { "title": "Quick Start", "path": "/", "icon": "zap" },
-    { "title": "Agent Skills", "path": "/skills/", "icon": "brain-circuit" }
+    { "title": "Agent Skills", "path": "/skills/", "icon": "brain-circuit" },
     {
       "title": "Quick Guide",
       "icon": "book-open",

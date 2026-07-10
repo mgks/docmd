@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url';
 import { setup as setupContainers } from './plugin/containers.js';
 import { setup as setupHighlightRule } from './plugin/highlight-rule.js';
 import { actions } from './plugin/actions.js';
+import { scriptLiteral } from '@docmd/utils';
 import type { PluginDescriptor } from '@docmd/api';
 
 export const plugin: PluginDescriptor = {
@@ -41,26 +42,28 @@ export function markdownSetup(md: any, _options?: any): void {
 }
 
 export function generateScripts(config: any, options?: any): { headScriptsHtml: string; bodyScriptsHtml: string } {
-  let authorsJson = '{}';
+  // S-7: parse authors.json, never inline the raw file text. scriptLiteral
+  // escapes </script, <!--, U+2028, U+2029 so the JSON is safe inside <script>.
+  let authors: unknown = {};
   try {
     const srcDir = config.src || 'docs';
     const authorsPath = path.resolve(srcDir, '.threads', 'authors.json');
-    authorsJson = fs.readFileSync(authorsPath, 'utf8');
-  } catch {
-    // File doesn't exist yet - that's fine
+    if (fs.existsSync(authorsPath)) {
+      const parsed = JSON.parse(fs.readFileSync(authorsPath, 'utf8'));
+      // Runtime schema is a plain object — coerce arrays/primitives to {}.
+      authors = (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+    }
+  } catch (err: any) {
+    console.error(`[threads] Failed to parse .threads/authors.json: ${err.message}. Using empty authors.`);
+    authors = {};
   }
 
-  const clientConfig = JSON.stringify({
-    sidebar: options?.sidebar === true,
-  });
-
-  // Load i18n strings for the active locale
-  const localeId = config._activeLocale?.id || 'en';
-  const i18nStrings = JSON.stringify(loadPluginStrings(localeId));
+  const clientConfig = { sidebar: options?.sidebar === true };
+  const i18nStrings = loadPluginStrings(config._activeLocale?.id || 'en');
 
   return {
     headScriptsHtml: '',
-    bodyScriptsHtml: `<script>window.__threads_authors=${authorsJson};window.__threads_config=${clientConfig};window.__threads_i18n=${i18nStrings}</script>`
+    bodyScriptsHtml: `<script>window.__threads_authors=${scriptLiteral(authors)};window.__threads_config=${scriptLiteral(clientConfig)};window.__threads_i18n=${scriptLiteral(i18nStrings)}</script>`
   };
 }
 
