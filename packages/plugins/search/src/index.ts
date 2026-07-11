@@ -505,13 +505,6 @@ export async function onPostBuild({ config, pages, outputDir, tui, options, runW
 
   const showTui = tui && !options?.quiet;
 
-  // Per-peer-dep TUI block (idempotent). Fires once on the first build
-  // (or when the dep status changes); suppressed on subsequent rebuilds
-  // when the status is unchanged. Stays silent when semantic wasn't
-  // requested. The hook lives in the post-build path because the TUI
-  // is in scope here but isn't in onConfigResolved's signature.
-  maybeReportPeerStatus(tui, config._searchConfig, !showTui);
-
   // ── Semantic search path ────────────────────────────────────────────────
   if (pluginOptions.semantic === true) {
     // Strip sourcemap comment from the copied .docmd-search-client.js to avoid
@@ -568,6 +561,10 @@ export async function onPostBuild({ config, pages, outputDir, tui, options, runW
         reason === 'peers'     ? 'semantic peer dependencies missing' :
         reason === 'docmd-search' ? 'docmd-search not installed' :
                                     'docmd-search not installed';
+      // Only now — after the install ACTUALLY failed — report which deps
+      // were missing. This avoids the false-alarm where the warning showed
+      // "missing" and then the install succeeded below it.
+      maybeReportPeerStatus(tui, buildSearchConfig(config), !showTui);
       if (showTui) tui.warn(`  Falling back to keyword search (${why})`);
     } else if (freshInstall) {
       // docmd-search was just installed in this process. Node's module cache
