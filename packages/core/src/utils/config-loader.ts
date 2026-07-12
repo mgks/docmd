@@ -369,6 +369,10 @@ export async function loadConfig(configPath: string, options: any = {}) {
 
       const normalized = normalizeConfig(mergedConfig);
 
+      if (normalized._baseAutoDerived) {
+        TUI.info(`${TUI.dim('base auto-derived from url:')} ${TUI.cyan(normalized._baseAutoDerived)}`);
+      }
+
       // Navigation Handling: Prioritize local navigation.json in the project folder
       let navScanDir = path.resolve(cwd, normalized.srcDir);
       let localNavPath = path.join(navScanDir, 'navigation.json');

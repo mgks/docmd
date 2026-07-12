@@ -64,7 +64,64 @@ export function normalizeConfig(userConfig: any) {
     config.url = config.url || config.siteUrl || config.baseUrl || '';
     config.src = config.src || config.srcDir || config.source || 'docs';
     config.out = process.env.DOCMD_PROJECT_OUT || config.out || config.outDir || config.outputDir || 'site';
+
+    // Track whether the user explicitly set base (vs. the default '/').
+    // The env var (DOCMD_PROJECT_PREFIX) counts as explicit; only a truly
+    // absent base triggers auto-derivation from url below.
+    const _userSetBaseExplicitly = !!process.env.DOCMD_PROJECT_PREFIX || userConfig.base !== undefined;
     config.base = process.env.DOCMD_PROJECT_PREFIX || config.base || '/';
+
+    // --- 1.1 Normalise base slashes + auto-derive from URL ---
+    //
+    // DESIGN PRINCIPLE: `base` is an internal implementation detail. Users
+    // should NEVER have to think about it. They set `url` (the canonical
+    // production URL) and docmd derives everything else. The only time
+    // `base` is needed is the rare case where the deployment path differs
+    // from the URL path (e.g. a CDN that strips a prefix).
+    //
+    // What this block does, in order:
+    //   1. If the user explicitly set base, normalise its slashes:
+    //      "repo" → "/repo/", "/repo" → "/repo/", "repo/" → "/repo/".
+    //      Users should not have to remember whether slashes are needed.
+    //   2. If base was NOT explicitly set, derive it from url's pathname.
+    //      This handles GitHub Pages project sites and any subpath deploy
+    //      where the user set url to match their deployment.
+    //   3. If neither base nor url is informative, default to "/".
+    //
+    // The derivation is slash-tolerant on url too:
+    //   url = "https://user.github.io/repo"   → base = "/repo/"
+    //   url = "https://user.github.io/repo/"  → base = "/repo/"
+    //   url = "https://docs.example.com"      → base = "/"
+    //   url = "https://example.com/docs/"     → base = "/docs/"
+    //
+    // If derivation cannot fire (no url, or url is a root), base stays "/"
+    // and the build will warn if assets turn out to be unreachable.
+    if (_userSetBaseExplicitly && config.base !== '/') {
+        // User set base explicitly: fix the slashes for them.
+        let b = config.base.trim();
+        if (!b.startsWith('/')) b = '/' + b;       // "repo" → "/repo"
+        if (!b.endsWith('/')) b = b + '/';         // "/repo" → "/repo/"
+        // Collapse accidental double slashes (e.g. "//repo///" → "/repo/").
+        b = b.replace(/([^:])\/{2,}/g, '$1/');
+        if (b !== config.base) config._baseNormalised = config.base;
+        config.base = b;
+    } else if (!_userSetBaseExplicitly && config.url) {
+        // Derive base from url. Slash-tolerant on both ends.
+        try {
+            const parsedUrl = new URL(config.url);
+            // Strip trailing slashes to get a clean path, then re-add one.
+            // Empty or "/" → root deployment, base stays "/".
+            const pathname = parsedUrl.pathname.replace(/\/+$/, '');
+            if (pathname && pathname !== '/') {
+                const derivedBase = pathname + '/';
+                config.base = derivedBase;
+                config._baseAutoDerived = derivedBase;
+            }
+        } catch {
+            // Invalid url (placeholder, typo, empty-ish) — leave base as "/".
+            // The build will surface a clear warning if assets end up missing.
+        }
+    }
     // Top-level QoL defaults — opt out by setting `false`.
     if (config.pageNavigation === undefined) config.pageNavigation = true;
     if (config.copyCode === undefined) config.copyCode = true;
