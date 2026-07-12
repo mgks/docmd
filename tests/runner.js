@@ -150,6 +150,11 @@ addInProcess(
   'Asset base-URL + engine-key (URL-1, URL-2 — <base> + KNOWN_KEYS)',
   await import('./cli-contracts/asset-base-url.test.js')
 );
+addInProcess(
+  'runtime-deps',
+  'Runtime-deps shared auto-install pipeline (RD-1..RD-CWE, CWE-78 fix)',
+  await import('./cli-contracts/runtime-deps.test.js')
+);
 
 // --- Section 2: Container parser (Phase 2 PR 1+2+3) ----------------------
 addExternal(

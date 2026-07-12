@@ -28,6 +28,12 @@ import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { safePath, asUserPath } from '@docmd/utils';
 import type { PluginDescriptor, PluginHooks, PluginModule, Capability, TemplateHook, TemplateAssetHook } from './types.js';
+import {
+  loadRuntimeRegistry,
+  installRuntimeDep,
+  tryLoadAfterInstall,
+  shortKey,
+} from './runtime-deps.js';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -283,12 +289,12 @@ function warnOnce(key: string, message: string): void {
 
 export function resolvePluginName(key: string): string {
   if (key.includes('/')) return key;
-  
-  const registry = getPluginRegistry();
+
+  const registry = loadRuntimeRegistry();
   if (registry[key]) {
     return `@docmd/plugin-${key}`;
   }
-  
+
   const corePlugins = CORE_PLUGINS;
   if (corePlugins.includes(key)) {
     return `@docmd/plugin-${key}`;
@@ -319,130 +325,12 @@ export function resolveTemplateName(key: string): string {
 // ---------------------------------------------------------------------------
 // Auto-Install for Official Plugins
 // ---------------------------------------------------------------------------
-
-// Load the official plugin registry
-let _pluginRegistry: Record<string, any> | null = null;
-
-function getPluginRegistry(): Record<string, any> {
-  if (_pluginRegistry) return _pluginRegistry;
-
-  // The registry is generated at build time by `scripts/build-plugin-registry.mjs`
-  // and lives at <package-root>/registry/plugins.generated.json. It is the
-  // single source of truth for the official plugin / template / engine
-  // catalog — regenerated from each package's `package.json#docmd`
-  // namespace, so the hand-maintained
-  // packages/plugins/installer/registry/plugins.json that used to be
-  // here is no longer consulted.
-  //
-  // Two resolution paths:
-  //   1. Monorepo dev: <repo>/packages/api/registry/plugins.generated.json
-  //   2. Published package: <pkg>/registry/plugins.generated.json
-  //      (listed in this package's `files` array)
-  const candidates = [
-    path.resolve(__dirname, '..', 'registry', 'plugins.generated.json'),
-    path.resolve(__monorepoRoot, 'packages', 'api', 'registry', 'plugins.generated.json'),
-  ];
-  for (const candidate of candidates) {
-    if (nativeFs.existsSync(candidate)) {
-      _pluginRegistry = JSON.parse(nativeFs.readFileSync(candidate, 'utf8'));
-      return _pluginRegistry!;
-    }
-  }
-  return {};
-}
-
-/**
- * Detect the package manager used in the current project.
- */
-function detectPackageManager(cwd: string): 'pnpm' | 'yarn' | 'bun' | 'npm' {
-  let dir = cwd;
-  while (dir !== path.parse(dir).root) {
-    if (nativeFs.existsSync(path.join(dir, 'pnpm-lock.yaml'))) return 'pnpm';
-    if (nativeFs.existsSync(path.join(dir, 'yarn.lock'))) return 'yarn';
-    if (nativeFs.existsSync(path.join(dir, 'bun.lockb'))) return 'bun';
-    if (nativeFs.existsSync(path.join(dir, 'package-lock.json'))) return 'npm';
-    dir = path.dirname(dir);
-  }
-  return 'npm';
-}
-
-/**
- * Get the current docmd version for version-matched installs.
- */
-function getDocmdVersion(): string {
-  try {
-    const corePkgPath = require.resolve('@docmd/core/package.json', {
-      paths: [process.cwd(), __dirname, __monorepoRoot]
-    });
-    const pkg = JSON.parse(nativeFs.readFileSync(corePkgPath, 'utf8'));
-    return pkg.version || 'latest';
-  } catch {
-    return 'latest';
-  }
-}
-
-/**
- * Auto-install an official plugin from npm.
- * Only works for plugins in the official registry.
- * Installs the exact version matching the current docmd version.
- */
-async function autoInstallPlugin(packageName: string): Promise<boolean> {
-  const shortName = packageName
-    .replace('@docmd/plugin-', '')
-    .replace('@docmd/template-', '');
-  const registry = getPluginRegistry();
-  
-  // Security: Only auto-install plugins in the official registry
-  if (!registry[shortName]) {
-    warnOnce(`registry:${packageName}`, TUI.yellow(`Plugin "${shortName}" not found in official registry - manual installation required`));
-    return false;
-  }
-
-  const cwd = process.cwd();
-  const pkgManager = detectPackageManager(cwd);
-  const version = getDocmdVersion();
-  const versionedPackage = version === 'latest' ? packageName : `${packageName}@${version}`;
-
-  TUI.step(`Downloading missing plugin: ${shortName}`, 'WAIT');
-
-  let installCmd = '';
-  switch (pkgManager) {
-    case 'pnpm': installCmd = `pnpm add ${versionedPackage}`; break;
-    case 'yarn': installCmd = `yarn add ${versionedPackage}`; break;
-    case 'bun': installCmd = `bun add ${versionedPackage}`; break;
-    default: installCmd = `npm install ${versionedPackage}`; break;
-  }
-
-  try {
-    const { execSync } = await import('node:child_process');
-    execSync(installCmd, { stdio: 'pipe', cwd, timeout: 60000 });
-    TUI.step(`Plugin installed: ${shortName}`, 'DONE');
-    return true;
-  } catch (err: any) {
-    TUI.step(`Failed to install: ${shortName}`, 'FAIL');
-    // Surface the underlying error so users (and CI logs) can see
-    // exactly why the install failed — e.g. ETARGET when the version
-    // isn't on the registry, or EACCES/EPERM when CI has no permission
-    // to mutate the project directory. Without this, "Could not load
-    // … after auto-install" looks like a bug in docmd when it's really
-    // a sandbox/CI issue.
-    const stderr = ((err && (err.stderr || err.message)) || '').toString().split('\n').filter(Boolean).slice(0, 3).join(' | ');
-    const isTemplate = packageName.startsWith('@docmd/template-');
-    // For templates the most reliable fix is to add the package to the
-    // project's `dependencies` (or `devDependencies`) so the user's
-    // normal package manager pulls it during the install step. Doing
-    // it that way survives CI sandboxes that block ad-hoc `pnpm add`
-    // invocations from docmd's runtime.
-    const hint = isTemplate
-      ? `Add "${packageName}" to your package.json dependencies, then run your normal install step.`
-      : `Run "docmd add ${shortName}" to install it, or add "${packageName}" to your package.json.`;
-    warnOnce(`install:${packageName}`, TUI.yellow(
-      `Auto-install of ${packageName} failed: ${stderr || 'unknown error'}\n` +
-      TUI.dim(`  > ${hint}`)
-    ));
-    return false;
-  }
-}
+//
+// The registry loader, package-manager detector, version pinner, and
+// `spawn`-based installer live in `./runtime-deps.ts`. This module
+// replaces the previous inline `execSync(\`pnpm add ${pkg}\`)` which
+// was a CWE-78 (shell injection) surface. The shared module is also
+// consumed by `engine.ts` for engine auto-install.
 
 // ---------------------------------------------------------------------------
 // Load & Register
@@ -621,38 +509,30 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
       // Auto-install official plugins AND templates that are missing
       const isOfficial = name.startsWith('@docmd/plugin-') || name.startsWith('@docmd/template-');
       if (needsAutoInstall && isOfficial) {
-        const installed = await autoInstallPlugin(name);
+        const installed = await installRuntimeDep(name);
         if (installed) {
           // Defense in depth: re-verify the package is in the official registry
-          // before loading. autoInstallPlugin already passed this check, but we
+          // before loading. installRuntimeDep already passed this check, but we
           // re-check here so a future change to that function cannot silently
           // turn the auto-install path into a generic npm-loader.
-          const shortName = name
-            .replace('@docmd/plugin-', '')
-            .replace('@docmd/template-', '');
-          if (!getPluginRegistry()[shortName]) {
-            warnOnce(`registry:${name}`, TUI.yellow(`Plugin "${shortName}" not in official registry`));
+          const shortNameLocal = shortKey(name);
+          const registry = loadRuntimeRegistry();
+          if (!shortNameLocal || !registry[shortNameLocal]) {
+            warnOnce(`registry:${name}`, TUI.yellow(`Plugin "${shortNameLocal ?? name}" not in official registry`));
             continue;
           }
           // Retry loading after install. We use dynamic `import()` (not
           // `require.resolve` + file:// import) so packages that declare
           // `exports` with only an `import` condition are still resolvable.
-          try {
-            rawModule = await import(name);
-          } catch (err: any) {
-            // Surface the real error so the user can act on it.
-            // `err.code` is the most useful bit (e.g. ERR_PACKAGE_PATH_NOT_EXPORTED,
-            // ERR_MODULE_NOT_FOUND). The default "Could not load X after auto-install"
-            // used to look like a docmd bug when the real cause was a bad
-            // package.json in the dependency.
-            const errCode = err && err.code ? ` [${err.code}]` : '';
-            const errMsg = err && err.message ? err.message.split('\n')[0] : 'unknown error';
+          const reloaded = await tryLoadAfterInstall(name);
+          if (!reloaded) {
             warnOnce(
               `autoinstall:${name}`,
-              TUI.yellow(`Could not load ${name} after auto-install${errCode}: ${errMsg}`)
+              TUI.yellow(`Could not load ${name} after auto-install`),
             );
             continue;
           }
+          rawModule = reloaded;
         } else {
           continue; // Skip if auto-install failed
         }
@@ -664,8 +544,8 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
 
       // Stage 4: pull the manifest's declared capabilities (from the
       // registry) so registerPlugin can cross-check the JS descriptor.
-      const shortKey = name.replace('@docmd/plugin-', '').replace('@docmd/template-', '');
-      const manifestCapabilities = (getPluginRegistry()[shortKey]?.capabilities) as string[] | undefined;
+      const shortNameForManifest = shortKey(name) ?? name;
+      const manifestCapabilities = (loadRuntimeRegistry()[shortNameForManifest]?.capabilities) as string[] | undefined;
 
       try {
         registerPlugin(name, pluginModule, options, manifestCapabilities);
@@ -699,7 +579,7 @@ const _capabilityCache: Map<string, Set<string>> = new Map();
 function getCapabilitySet(shortName: string): Set<string> {
   let set = _capabilityCache.get(shortName);
   if (set) return set;
-  const entry = getPluginRegistry()[shortName];
+  const entry = loadRuntimeRegistry()[shortName];
   set = new Set<string>(Array.isArray(entry?.capabilities) ? entry.capabilities : []);
   _capabilityCache.set(shortName, set);
   return set;

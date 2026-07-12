@@ -14,6 +14,7 @@
 
 import type { Engine, EngineResult } from './types.js';
 import { engineRegistry, registerEngine } from './types.js';
+import { installRuntimeDep, tryLoadAfterInstall, isValidRuntimeDepName } from './runtime-deps.js';
 export { engineRegistry, registerEngine };
 
 // ---------------------------------------------------------------------------
@@ -57,11 +58,34 @@ export async function loadEngine(name: string = 'js'): Promise<Engine> {
   }
 
   if (name === 'js') {
-    const { createJsEngine } = await import('@docmd/engine-js');
-    return createJsEngine();
+    // JS engine is a hard requirement. Auto-install if it's missing
+    // (e.g. user opted out of @docmd/api optionalDependencies at
+    // install time), then retry once. There is no JS fallback for a
+    // JS engine — call it a fatal loader failure if install also fails.
+    try {
+      const { createJsEngine } = await import('@docmd/engine-js');
+      return createJsEngine();
+    } catch (err) {
+      if (!isValidRuntimeDepName('@docmd/engine-js')) throw err;
+      const installed = await installRuntimeDep('@docmd/engine-js');
+      if (installed) {
+        const reloaded = await tryLoadAfterInstall('@docmd/engine-js');
+        if (reloaded) {
+          const { createJsEngine } = reloaded as any;
+          return createJsEngine();
+        }
+      }
+      throw new Error(
+        `[docmd] JS engine unavailable after auto-install: ${(err as Error).message}. ` +
+        `Add "@docmd/engine-js" to your package.json dependencies.`,
+      );
+    }
   }
 
   if (name === 'rust') {
+    // Rust engine is an optional performance accelerator. Try to load
+    // it; if the package is missing, auto-install it; if install fails
+    // OR the binary isn't usable on this platform, fall back to JS.
     try {
       const { createRustEngine, isRustEngineAvailable } = await import('@docmd/engine-rust');
       if (!isRustEngineAvailable()) {
@@ -70,6 +94,18 @@ export async function loadEngine(name: string = 'js'): Promise<Engine> {
       }
       return createRustEngine();
     } catch (error) {
+      if (isValidRuntimeDepName('@docmd/engine-rust')) {
+        const installed = await installRuntimeDep('@docmd/engine-rust');
+        if (installed) {
+          const reloaded = await tryLoadAfterInstall('@docmd/engine-rust');
+          if (reloaded) {
+            const { createRustEngine, isRustEngineAvailable } = reloaded as any;
+            if (isRustEngineAvailable && isRustEngineAvailable()) {
+              return createRustEngine();
+            }
+          }
+        }
+      }
       console.warn(`[docmd] Rust engine unavailable (${(error as Error).message}), falling back to JS engine.`);
       return loadEngine('js');
     }

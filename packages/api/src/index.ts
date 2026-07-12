@@ -15,6 +15,18 @@
 // Plugin loader & hook registry
 export { loadPlugins, hooks, resolvePluginName, resolveTemplateName, getPluginErrors, getPluginLoadErrors, CORE_PLUGINS, isCorePlugin } from './hooks.js';
 
+// Runtime dependency bootstrap (auto-install pipeline shared by hooks + engines)
+export {
+  loadRuntimeRegistry,
+  detectPackageManager,
+  getDocmdVersion,
+  isValidRuntimeDepName,
+  installRuntimeDep,
+  tryLoadAfterInstall,
+  shortKey as shortRuntimeDepKey,
+  getBuildStatusReporter,
+} from './runtime-deps.js';
+
 // RPC action/event dispatcher
 export { createActionDispatcher } from './rpc.js';
 
