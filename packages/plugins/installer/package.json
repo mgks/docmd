@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-installer",
-  "version": "0.8.11",
+  "version": "0.8.12",
   "description": "Installer utility to add and remove plugins for docmd.",
   "type": "module",
   "main": "dist/index.js",

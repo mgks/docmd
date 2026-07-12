@@ -1,6 +1,6 @@
 {
   "name": "@docmd/playground",
-  "version": "0.8.11",
+  "version": "0.8.12",
   "private": true,
   "dependencies": {
     "@docmd/core": "workspace:*",
