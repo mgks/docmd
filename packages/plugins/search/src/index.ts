@@ -975,6 +975,7 @@ export function generateScripts(config: any, options: any) {
        data-search-placeholder="${escape(strings.searchPlaceholder || 'Search documentation...')}"
        data-search-no-results="${escape(strings.searchNoResults || 'No results found.')}"
        data-search-error="${escape(strings.searchError || 'Failed to load search index.')}"
+       data-search-offline="${escape(strings.searchOffline || 'Search requires a web server. Open this site via http://localhost instead of file:// to enable search.')}"
        data-search-initial="${escape(strings.searchInitial || 'Type to start searching...')}"
        data-search-navigate="${escape(strings.searchNavigate || 'to navigate')}"
        data-search-escape="${escape(strings.searchEscape || 'to close')}">

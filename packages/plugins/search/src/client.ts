@@ -49,7 +49,8 @@ declare const MiniSearch: any;
         const strings = {
             initial: searchModal.dataset.searchInitial || 'Type to start searching...',
             noResults: searchModal.dataset.searchNoResults || 'No results found.',
-            error: searchModal.dataset.searchError || 'Failed to load search index.'
+            error: searchModal.dataset.searchError || 'Failed to load search index.',
+            offline: searchModal.dataset.searchOffline || 'Search requires a web server. Open this site via http://localhost instead of file:// to enable search.'
         };
 
         // Use Site Root if available (for versioning), fallback to Context Root
@@ -181,6 +182,16 @@ declare const MiniSearch: any;
 
         // 3. Index Loading - fetches locale-specific index
         async function loadIndex() {
+            // file:// detection: browsers block fetch() from file:// URLs for
+            // security (CORS). Show a helpful message instead of the generic
+            // "Failed to load" error. The user needs to serve the site via a
+            // local HTTP server (e.g. `npx serve site`) for search to work.
+            if (window.location.protocol === 'file:') {
+                const sanitized = `<div class="search-error">${escapeHtml(strings.offline)}</div>`;
+                searchResults.innerHTML = sanitized;
+                return;
+            }
+
             // Auto-detect semantic search at runtime. We check BOTH:
             //   - The build-time hint (data-semantic="true") — set when the
             //     build pipeline knew semantic was available at render time.

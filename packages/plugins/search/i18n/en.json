@@ -2,6 +2,7 @@
   "searchPlaceholder": "Search documentation...",
   "searchNoResults": "No results found.",
   "searchError": "Failed to load search index.",
+  "searchOffline": "Search requires a web server. Open this site via http://localhost instead of file:// to enable search.",
   "searchInitial": "Type to start searching...",
   "searchClose": "Close search",
   "searchNavigate": "to navigate",

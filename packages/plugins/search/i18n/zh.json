@@ -2,6 +2,7 @@
   "searchPlaceholder": "搜索文档...",
   "searchNoResults": "未找到结果。",
   "searchError": "无法加载搜索索引。",
+  "searchOffline": "搜索需要网页服务器。请通过 http://localhost 而非 file:// 打开站点以启用搜索。",
   "searchInitial": "输入开始搜索...",
   "searchClose": "关闭搜索",
   "searchNavigate": "导航",

@@ -2,6 +2,7 @@
   "searchPlaceholder": "문서 검색...",
   "searchNoResults": "검색 결과가 없습니다.",
   "searchError": "검색 색인을 불러오지 못했습니다.",
+  "searchOffline": "검색하려면 웹 서버가 필요합니다. file:// 대신 http://localhost로 사이트를 열어 검색을 활성화하세요.",
   "searchInitial": "검색어를 입력하세요...",
   "searchClose": "검색 닫기",
   "searchNavigate": "이동",

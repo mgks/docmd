@@ -2,6 +2,7 @@
   "searchPlaceholder": "दस्तावेज़ खोजें...",
   "searchNoResults": "कोई परिणाम नहीं मिला।",
   "searchError": "खोज अनुक्रमणिका लोड करने में विफल।",
+  "searchOffline": "खोज के लिए वेब सर्वर आवश्यक है। खोज सक्षम करने के लिए file:// के बजाय http://localhost से साइट खोलें।",
   "searchInitial": "खोजने के लिए टाइप करें...",
   "searchClose": "खोज बंद करें",
   "searchNavigate": "नेविगेट करें",
