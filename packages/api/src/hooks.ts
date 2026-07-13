@@ -327,27 +327,60 @@ export function resolveTemplateName(key: string): string {
 // ---------------------------------------------------------------------------
 //
 // The registry loader, package-manager detector, version pinner, and
-// `spawn`-based installer live in `./runtime-deps.ts`. This module
-// replaces the previous inline `execSync(\`pnpm add ${pkg}\`)` which
-// was a CWE-78 (shell injection) surface. The shared module is also
-// consumed by `engine.ts` for engine auto-install.
+// `spawn`-based installer live in `./runtime-deps.ts`. We import them
+// here and wrap `installRuntimeDep` with the project's warn-once
+// deduper so a dev-server rebuild can't flood the TUI.
 
 // ---------------------------------------------------------------------------
 // Load & Register
 // ---------------------------------------------------------------------------
 
 export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] }): Promise<PluginHooks> {
-  // 1. Resolution paths for plugin imports - the caller (e.g. @docmd/core) should
-  // pass its own __dirname so plugins that are core's dependencies can be found
-  // even under pnpm's strict node_modules layout.
-  const resolvePaths = [
-    process.cwd(),
-    __dirname,
-    __monorepoRoot,
-    path.join(__monorepoRoot, 'packages/plugins'),
-    path.join(__monorepoRoot, 'packages/templates'),
-    ...(opts?.resolvePaths || [])
-  ];
+  // The monorepo dev fallback (loading plugins/templates from
+  // packages/plugins or packages/templates in the monorepo source)
+  // should ONLY fire when the process is running from inside the
+  // monorepo itself. When an external project runs the monorepo's
+  // dist binary (e.g. docs/ running `node ../docmd/packages/core/
+  // dist/bin/docmd.js dev`), the monorepo root is resolvable but the
+  // external project's node_modules is the right place to look.
+  // Without this gate, a template like @docmd/template-summer is found
+  // in the monorepo source, loaded directly, and auto-install never
+  // fires — so the package never lands in the user's package.json or
+  // node_modules. (Search plugin already scopes itself to
+  // process.cwd()/node_modules; this applies the same principle to
+  // the generic plugin/template loader.)
+  const isMonorepoContext = process.cwd().startsWith(__monorepoRoot + path.sep) || process.cwd() === __monorepoRoot;
+
+  // 1. Resolution paths for plugin imports.
+  //
+  // When running INSIDE the monorepo (dev/test), we include __dirname
+  // and the monorepo package dirs so workspace packages resolve during
+  // development.
+  //
+  // When running OUTSIDE the monorepo (an external consumer project like
+  // docs/ running `dev:local`), we deliberately EXCLUDE __dirname. Why:
+  // __dirname inside the monorepo binary points to docmd/packages/api/dist/,
+  // and Node walks up from there to docmd/node_modules/ where EVERY workspace
+  // package is symlinked. That means template-summer, math, pwa — packages
+  // the consumer never installed — resolve silently from the monorepo. The
+  // consumer never sees the auto-install path fire, the package never lands
+  // in their package.json, and CI/production breaks. Restricting to
+  // process.cwd() means core plugins (deps of @docmd/core) resolve from the
+  // consumer's own node_modules, and optional plugins trigger auto-install.
+  const resolvePaths = isMonorepoContext
+    ? [
+        process.cwd(),
+        __dirname,
+        __monorepoRoot,
+        path.join(__monorepoRoot, 'packages/plugins'),
+        path.join(__monorepoRoot, 'packages/templates'),
+        ...(opts?.resolvePaths || []),
+      ]
+    : [
+        process.cwd(),
+        path.join(process.cwd(), 'node_modules'),
+        ...(opts?.resolvePaths || []),
+      ];
 
   // 1. Reset hooks
   hooks.markdownSetup = [];
@@ -436,14 +469,17 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
         // 1. Monorepo Priority: if it's an official plugin OR template, try local
         // monorepo source first. This prevents older versions installed in project
         // node_modules from taking precedence during monorepo development.
-        if (name.startsWith('@docmd/plugin-')) {
+        // Gated on isMonorepoContext so external projects running the monorepo
+        // binary (e.g. via `node ../docmd/.../docmd.js`) don't accidentally load
+        // from the monorepo source and bypass auto-install.
+        if (isMonorepoContext && name.startsWith('@docmd/plugin-')) {
           const id = name.replace('@docmd/plugin-', '');
           const localPath = path.resolve(__monorepoRoot, 'packages/plugins', id, 'dist/index.js');
           if (nativeFs.existsSync(localPath)) {
             rawModule = await import(pathToFileURL(localPath).href);
             loadedFromMonorepo = true;
           }
-        } else if (name.startsWith('@docmd/template-')) {
+        } else if (isMonorepoContext && name.startsWith('@docmd/template-')) {
           // Templates live under packages/templates/<name>/ in the monorepo.
           const id = name.replace('@docmd/template-', '');
           const localPath = path.resolve(__monorepoRoot, 'packages/templates', id, 'dist/index.js');
@@ -521,10 +557,10 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
             warnOnce(`registry:${name}`, TUI.yellow(`Plugin "${shortNameLocal ?? name}" not in official registry`));
             continue;
           }
-          // Retry loading after install. We use dynamic `import()` (not
-          // `require.resolve` + file:// import) so packages that declare
-          // `exports` with only an `import` condition are still resolvable.
-          const reloaded = await tryLoadAfterInstall(name);
+          // Retry loading after install, scoped to the consumer's
+          // node_modules (not the monorepo's, which is what bare
+          // `import(name)` would walk into).
+          const reloaded = await tryLoadAfterInstall(name, process.cwd());
           if (!reloaded) {
             warnOnce(
               `autoinstall:${name}`,

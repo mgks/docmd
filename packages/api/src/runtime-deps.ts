@@ -44,7 +44,7 @@
 import path from 'node:path';
 import nativeFs from 'node:fs';
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { spawn } from 'node:child_process';
 import { TUI } from '@docmd/tui';
@@ -349,14 +349,24 @@ export function shortKey(packageName: string): string | null {
 }
 
 /**
- * Re-load `pkg` after an install attempt. Returns the module reference
- * or null when the import still fails. We use dynamic `import(pkgName)`
- * (not file:// resolution) so `exports` with only the `import`
- * condition still resolves on modern Node.
+ * Re-load `pkg` after an install attempt. Resolves the entry point via
+ * `createRequire(consumerCwd)` so the resolution is rooted in the
+ * consumer's directory, then imports via file URL. This is critical:
+ * a bare `import(pkgName)` uses Node's default resolution which walks
+ * up from the calling module's location — when this code runs from
+ * the docmd monorepo, that walk would find a stale workspace copy of
+ * the package instead of the one we just installed for the consumer.
+ *
+ * Returns the module reference or null on failure.
  */
-export async function tryLoadAfterInstall(packageName: string): Promise<any | null> {
+export async function tryLoadAfterInstall(
+  packageName: string,
+  consumerCwd: string = process.cwd(),
+): Promise<any | null> {
   try {
-    return await import(packageName);
+    const consumerRequire = createRequire(consumerCwd + '/');
+    const entry = consumerRequire.resolve(packageName);
+    return await import(pathToFileURL(entry).href);
   } catch {
     return null;
   }

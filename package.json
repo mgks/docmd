@@ -18,6 +18,8 @@
     "docmd-live": "node packages/live/bin/docmd-live.js --cwd packages/_playground",
     "prep": "node tools/prep.js",
     "verify": "node tools/verify.js",
+    "simulate": "echo 'Run from a consumer project: cd ../docs && npm run sim' && exit 1",
+    "simulate:local": "echo 'Run from a consumer project: cd ../docs && npm run sim' && exit 1",
     "lint": "eslint .",
     "bump": "node tools/bump.js",
     "docker:build": "docker build -t docmd:latest -f docker/Dockerfile .",

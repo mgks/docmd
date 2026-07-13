@@ -40,6 +40,7 @@ import {
 } from '../shared.js';
 import fs from 'node:fs';
 import path from 'path';
+import { execFileSync } from 'node:child_process';
 
 let passed = 0;
 let failed = 0;
@@ -99,8 +100,10 @@ export const test = runTestFile({
       const result = build(proj);
       assert(result.ok, 'URL-1c: sub-project build with summer template succeeds');
       const html = fs.readFileSync(path.join(proj, 'site/index.html'), 'utf8');
-      assert(/<base\s+href="\/"\s*>/.test(html),
-        'URL-1c: rendered HTML contains <base href="/"> (root project) so ./assets/... resolves at any URL shape');
+      // Root deploys no longer emit <base href="/"> — relies on
+      // relativePathToRoot + ./assets/...
+      assert(!/<base\s+href="\/"\s*>/.test(html),
+        'URL-1c: root project does NOT emit <base href="/"> (fixes #175 and #177)');
       assert(/href="\.\/assets\/template\/summer\.css/.test(html),
         'URL-1c: rendered HTML uses relative ./assets/template/summer.css');
       assert(/src="\.\/assets\/template\/summer\.js/.test(html),
@@ -123,8 +126,10 @@ export const test = runTestFile({
       const result = build(proj);
       assert(result.ok, 'URL-1d: default-template build succeeds');
       const html = fs.readFileSync(path.join(proj, 'site/index.html'), 'utf8');
-      assert(/<base\s+href="\/"\s*>/.test(html),
-        'URL-1d: default-template HTML also contains <base href="/">');
+      // Root deploys with default template: no <base> tag (relies on
+      // relative ./assets/... resolution
+      assert(!/<base\s+href="\/"\s*>/.test(html),
+        'URL-1d: root deploy default template does NOT emit <base href="/">');
     }
 
     // URL-1e: the workspace sub-site case — a /search project must
@@ -162,6 +167,53 @@ export const test = runTestFile({
         'URL-1e: /search/ sub-site has <base href="/search/"> (absolute, not relative)');
       assert(/window\.DOCMD_SITE_ROOT\s*=\s*"\/search\/"/.test(searchHtml),
         'URL-1e: /search/ sub-site has window.DOCMD_SITE_ROOT = "/search/"');
+    }
+
+    // URL-1f: issue #175 — GitHub Pages project site (url has subpath,
+    // no explicit base). base must be auto-derived to the subpath and
+    // <base href> must point at it so assets resolve correctly.
+    {
+      const proj = setup('asset-base-url-gh-pages-subpath');
+      writeFile(proj, 'docs/index.md', '# Home\n');
+      writeFile(proj, 'docmd.config.json', JSON.stringify({
+        title: 'URL-1f',
+        url: 'https://alexhelms.github.io/some-project',
+        src: './docs',
+        out: './site'
+      }, null, 2) + '\n');
+
+      const result = build(proj);
+      assert(result.ok, 'URL-1f: GH Pages subpath build succeeds');
+      const html = fs.readFileSync(path.join(proj, 'site/index.html'), 'utf8');
+      assert(/<base\s+href="\/some-project\/"\s*>/.test(html),
+        'URL-1f: GH Pages subpath emits <base href="/some-project/"> (fixes #175)');
+      assert(/href="\.\/assets\/css\/docmd-main\.css/.test(html),
+        'URL-1f: CSS link is relative (resolves via base)');
+    }
+
+    // URL-1g: issue #177 — --offline mode must NOT emit a <base> tag.
+    // file:// resolution breaks if <base href="/"> is present because
+    // it re-roots every relative URL to the filesystem root.
+    {
+      const proj = setup('asset-base-url-offline-mode');
+      fs.mkdirSync(path.join(proj, 'docs/guide'), { recursive: true });
+      writeFile(proj, 'docs/index.md', '# Home\n');
+      writeFile(proj, 'docs/guide/page.md', '# Guide\n');
+      writeFile(proj, 'docmd.config.json', JSON.stringify({
+        title: 'URL-1g',
+        src: './docs',
+        out: './site'
+      }, null, 2) + '\n');
+
+      const result = execFileSync('node', [path.resolve(import.meta.dirname, '..', '..', 'packages', 'core', 'dist', 'bin', 'docmd.js'), 'build', '--offline'], {
+        cwd: proj, encoding: 'utf8', stdio: 'pipe'
+      });
+      assert(result.includes('Build complete'), 'URL-1g: --offline build completes');
+      const pageHtml = fs.readFileSync(path.join(proj, 'site/guide/page/index.html'), 'utf8');
+      assert(!/<base\s+href=/.test(pageHtml),
+        'URL-1g: --offline mode emits NO <base> tag (fixes #177)');
+      assert(/href="\.\.\/\.\.\/assets\/css\/docmd-main\.css/.test(pageHtml),
+        'URL-1g: nested page uses page-relative CSS path (resolves under file://)');
     }
 
     // URL-2: `engine: "rust"` (and `engines: { rust: {...} }`) is in

@@ -32,7 +32,9 @@
   <meta name="theme-color" content="#13110d" media="(prefers-color-scheme: dark)">
   <title><%= pageTitle %><% if (siteTitle && pageTitle !== siteTitle) { %> · <%= siteTitle %><% } %></title>
 
-  <base href="<%= siteRootAbs %>">
+  <% if (!locals.isOfflineMode && siteRootAbs && siteRootAbs !== '/') { %>
+    <base href="<%= siteRootAbs %>">
+    <% } %>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
