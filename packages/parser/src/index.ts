@@ -58,5 +58,6 @@ export {
   createUrlContext,
   computePageUrls,
   buildAbsoluteUrl,
+  normaliseBaseTag,
 } from './utils/url-utils.js';
 export type { UrlContext, PageUrls } from './utils/url-utils.js';

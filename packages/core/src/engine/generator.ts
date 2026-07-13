@@ -46,7 +46,7 @@ import nativeFs from 'fs';
 const _require = createRequire(import.meta.url);
 import * as parser from '@docmd/parser';
 import { TUI } from '@docmd/tui';
-import { findPageNeighbors, findBreadcrumbs, normalizeNavPaths, createUrlContext, buildContextualUrl, computePageUrls, buildAbsoluteUrl, sanitizeUrl } from '@docmd/parser';
+import { findPageNeighbors, findBreadcrumbs, normalizeNavPaths, createUrlContext, buildContextualUrl, computePageUrls, buildAbsoluteUrl, sanitizeUrl, normaliseBaseTag } from '@docmd/parser';
 import * as ui from '@docmd/ui';
 
 
@@ -540,6 +540,19 @@ export async function renderPages({ config, srcDir, fallbackSrcDir, outputDir, h
       else relativePathToRoot += '/';
       relativePathToRoot = relativePathToRoot.replace(/\\/g, '/');
 
+      // Canonical absolute site root (subpath deployment). The generator
+      // owns this decision — templates never compute it themselves.
+      //   root deploy            → '/'
+      //   locale/version subpath → '/de/' or '/v1/'
+      //   explicit `config.base` → '/my-repo/' (3rd-party deploys)
+      let siteRootAbs = '/';
+      if (config._activePrefix && config._activePrefix !== '/') {
+        siteRootAbs = config._activePrefix;
+      } else if (config.base && config.base !== '/') {
+        siteRootAbs = config.base;
+      }
+      if (siteRootAbs !== '/' && !siteRootAbs.endsWith('/')) siteRootAbs += '/';
+
       // Navigation Context
       let navPath = '/' + page.outputPath.replace(/\\/g, '/').replace(/\/index\.html$/, '').replace(/^index\.html$/, '');
       if (navPath === '/.') navPath = '/';
@@ -777,16 +790,7 @@ export async function renderPages({ config, srcDir, fallbackSrcDir, outputDir, h
         localePrefix: config._localeOutputPrefix || '',
         currentPagePath: navPath,
         outputPrefix,
-        siteRootAbs: (() => {
-          let root = '/';
-          if (config._activePrefix && config._activePrefix !== '/') {
-            root = config._activePrefix;
-          } else if (config.base && config.base !== '/') {
-            root = config.base;
-          }
-          if (root !== '/' && !root.endsWith('/')) root += '/';
-          return root;
-        })(),
+        siteRootAbs,
         t,
         buildAbsoluteUrl,
         sanitizeUrl,
@@ -814,6 +818,20 @@ export async function renderPages({ config, srcDir, fallbackSrcDir, outputDir, h
       }
 
       fullHtml = pageObj.html;
+
+      // ── Centralised <base href> enforcement (single source of truth) ──
+      // The generator is the ONLY authority for the <base> tag. Templates
+      // must not emit one themselves — anything they emit will be stripped
+      // here and replaced with the canonical one computed from
+      // (siteRootAbs, isOfflineMode). This way old templates, third-party
+      // templates, and the default template all produce identical <base>
+      // behaviour without any per-template logic to drift.
+      //
+      // Emit rules:
+      //   isOfflineMode=true                          → no <base> (file://)
+      //   siteRootAbs === '/'   (root deploy)         → no <base>
+      //   siteRootAbs !== '/'   (subpath deploy)      → <base href="siteRootAbs">
+      fullHtml = normaliseBaseTag(fullHtml, !!options.offline, siteRootAbs);
 
       // Queue the write
       writeQueue.push({ finalPath, html: fullHtml });

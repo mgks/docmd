@@ -1,6 +1,6 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.8.12",
+  "version": "0.8.13",
   "description": "Discontinued. Legacy wrapper for docmd. Please use @docmd/core.",
   "bin": {
     "docmd": "bin/docmd.js"

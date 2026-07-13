@@ -133,6 +133,20 @@ function finishStep(s, status, summary) {
     );
 }
 
+// Same shape as finishStep() but prints a FRESH line below the streamed
+// content instead of rewriting the [WAIT] line via cursor-up. Use this
+// for steps whose child process has written lines of its own between
+// startStep() and now, because the cursor is no longer on the WAIT
+// line — finishStep()'s `\x1b[1A` would clobber an unrelated output line.
+function writeVerdictLine(s, status, summary) {
+    const ms = Date.now() - s.startMs;
+    const t = ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
+    const tag = status === 'done'
+        ? `${C.green}[ DONE ]${C.reset}`
+        : `${C.red}[ FAIL ]${C.reset}`;
+    console.log(`${s.bar}  ${s.text.padEnd(52)}${tag} ${C.dim}${t}${C.reset}  ${C.dim}${summary}${C.reset}`);
+}
+
 function run(cmd, opts = {}) {
     // opts.silent   — when true (default), suppress output unless cmd failed.
     // opts.capture  — return stdout/stderr as strings; never stream to the TUI.
@@ -215,62 +229,6 @@ function runLint() {
     else if (warnings > 0) addIssue('warning', 'Lint', `${warnings} lint warning(s)`, details);
 }
 
-// ── Collapsed-mode test runner ────────────────────────────────────────
-// Captures test output, parses pass/fail counts and any failure
-// titles, then renders a one-line summary. Verbose mode bypasses
-// the capture and streams raw output as it arrives instead.
-function summariseTests(stdout) {
-    // tests/runner.js emits a single aggregate line at the end.
-    // Pattern: "Test summary: 367 passed, 0 failed across 9 files"
-    let m = stdout.match(/Test summary:\s+(\d+)\s+passed,\s+(\d+)\s+failed\s+across\s+(\d+)\s+files?/i);
-    if (m) {
-        return {
-            tests: parseInt(m[1]) + parseInt(m[2]),
-            pass:  parseInt(m[1]),
-            fail:  parseInt(m[2]),
-            units: parseInt(m[3]),
-            unitLabel: 'files',
-            failures: extractFailures(stdout),
-        };
-    }
-
-    // Per-package output (pnpm -r run test): each suite prints its own
-    // ℹ tests N / ℹ pass N / ℹ fail N block, so we sum them all up.
-    let tests = 0, pass = 0, fail = 0, pkgs = 0;
-    for (const t of stdout.matchAll(/ℹ\s+tests\s+(\d+)/g)) tests += parseInt(t[1]);
-    for (const p of stdout.matchAll(/ℹ\s+pass\s+(\d+)/g))  pass  += parseInt(p[1]);
-    for (const f of stdout.matchAll(/ℹ\s+fail\s+(\d+)/g))  fail  += parseInt(f[1]);
-    // Count distinct packages that reported a result. Look for the
-    // pnpm-recursive "Done" line which marks each package's end.
-    for (const _ of stdout.matchAll(/\bDone$/gm)) pkgs++;
-    // Fallback when no "Done" markers are present: count `ℹ tests` lines.
-    if (pkgs === 0) {
-        for (const _ of stdout.matchAll(/ℹ\s+tests\s+\d+/g)) pkgs++;
-    }
-    return {
-        tests, pass, fail,
-        units: pkgs,
-        unitLabel: pkgs === 1 ? 'package' : 'packages',
-        failures: extractFailures(stdout),
-    };
-}
-
-function extractFailures(stdout) {
-    // node:test prints "not ok N - <name>" lines on failure. Trim
-    // surrounding ANSI noise and keep the title only — full diagnostics
-    // remain in --verbose output.
-    const out = [];
-    // Build the ANSI-stripping regex at runtime so the static linter
-    // doesn't flag the embedded ESC (\x1b) control character.
-    const ANSI_RE = new RegExp(`${String.fromCharCode(0x1b)}\\[[0-9;]*m`, 'g');
-    for (const m of stdout.matchAll(/not ok \d+ - (.+)/g)) {
-        const t = m[1].replace(ANSI_RE, '').trim();
-        if (t) out.push(t);
-        if (out.length >= 20) break;
-    }
-    return out;
-}
-
 function runTestStep(label, cmd, statLabel = label) {
     const s = startStep(label);
 
@@ -287,27 +245,36 @@ function runTestStep(label, cmd, statLabel = label) {
         return;
     }
 
-    // Default (collapsed) mode: capture output, summarise, render one line.
-    const result = run(cmd, { capture: true });
-    const sum = summariseTests(result.stdout + result.stderr);
+    // Default (collapsed) mode: STREAM LIVE so the operator sees the
+    // runner's own per-section TUI (each `┌─ <name>` is a new section
+    // starting, each `[ PASS ]` / `[ FAIL ]` is a section finishing).
+    // Previously this branch captured stdout into a buffer and printed a
+    // single summary line at the end — useful for clean logs but useless
+    // when a multi-minute test suite looks completely silent. Inheriting
+    // stdio lets the runner talk to the operator directly; the runner's
+    // own `Test summary: N passed, M failed across K files` line (printed
+    // inline at the end of its run) is now the canonical counts source.
+    // The cursor is no longer on the WAIT line after streaming, so we use
+    // writeVerdictLine() to print a fresh verdict line BELOW the streamed
+    // content instead of trying to rewrite the WAIT line in place.
+    let exitCode = 0;
+    try {
+        execSync(cmd, { stdio: 'inherit', maxBuffer: 64 * 1024 * 1024 });
+    } catch (e) {
+        exitCode = e.status ?? 1;
+    }
 
-    if (result.ok && sum.fail === 0 && sum.tests > 0) {
-        finishStep(s, 'done');
-        addStat(statLabel, `${sum.pass} passed across ${sum.units} ${sum.unitLabel}`, 'ok');
-    } else if (result.ok && sum.tests === 0) {
-        // No tests ran at all (e.g. --only matched nothing). Be honest
-        // about that rather than printing a misleading "0 passed".
-        finishStep(s, 'warn');
-        addStat(statLabel, 'no tests ran', 'warn');
+    if (exitCode === 0) {
+        writeVerdictLine(s, 'done', 'all sections passed — see runner summary above');
+        addStat(statLabel, 'passed (see runner output for counts)', 'ok');
     } else {
-        const statValue = sum.fail > 0
-            ? `${sum.fail} of ${sum.tests} failed across ${sum.units} ${sum.unitLabel}`
-            : `command exited with status ${result.status}`;
-        finishStep(s, 'fail');
-        addStat(statLabel, statValue, 'fail');
-        addIssue('error', label,
-            sum.fail > 0 ? `${sum.fail} test failure(s)` : 'test command failed',
-            sum.failures);
+        const statusLine = `runner exited with status ${exitCode}`;
+        writeVerdictLine(s, 'fail', statusLine);
+        addStat(statLabel, `failed (exit ${exitCode})`, 'fail');
+        addIssue('error', label, 'test command failed', [
+            statusLine,
+            're-run with --verbose to see the full failure output inline',
+        ]);
     }
 }
 

@@ -474,7 +474,9 @@ function cleanup() {
   }
   try {
     fs.rmSync(TMP, { recursive: true, force: true });
-  } catch {}
+  } catch {
+    // intentional: best-effort temp cleanup, never fatal
+  }
 }
 
 async function main() {

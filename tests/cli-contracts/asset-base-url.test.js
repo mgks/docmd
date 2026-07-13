@@ -62,24 +62,24 @@ export const test = runTestFile({
   emoji: '🔗',
   run: async () => {
 
-    // URL-1a: default layout emits a <base> tag using the absolute
-    // siteRootAbs exposed by the renderer. Lock the requirement in by
-    // source so a future template edit can't silently break the
-    // no-trailing-slash case (e.g. serving `/search` resolves
-    // `./assets/...` to `/search/assets/...` instead of root).
+    // URL-1a: the <base> tag is now centralised in the generator, NOT in
+    // the template. Templates must NOT emit a <base> tag themselves — the
+    // generator strips any existing one and injects the canonical decision
+    // based on (isOfflineMode, siteRootAbs). This assertion guards that
+    // contract: the default layout must not contain a <base> tag.
     {
       const layoutPath = path.resolve(import.meta.dirname, '..', '..', 'packages', 'ui', 'templates', 'layout.ejs');
       const source = fs.readFileSync(layoutPath, 'utf8');
-      assert(/<base\s+href="<\%=\s*siteRootAbs\s*\%>"\s*>/.test(source),
-        'URL-1a: default layout emits <base href="<%= siteRootAbs %>"> using the absolute site path');
+      assert(!/<base\s/i.test(source),
+        'URL-1a: default layout does NOT emit <base> (generator owns it centrally)');
     }
 
-    // URL-1b: same for the summer template (the user-reported 404 path).
+    // URL-1b: same contract for the summer template — no <base> in template.
     {
       const layoutPath = path.resolve(import.meta.dirname, '..', '..', 'packages', 'templates', 'summer', 'templates', 'layout.ejs');
       const source = fs.readFileSync(layoutPath, 'utf8');
-      assert(/<base\s+href="<\%=\s*siteRootAbs\s*\%>"\s*>/.test(source),
-        'URL-1b: summer template emits <base href="<%= siteRootAbs %>"> for absolute path resolution');
+      assert(!/<base\s/i.test(source),
+        'URL-1b: summer template does NOT emit <base> (generator owns it centrally)');
       assert(/window\.DOCMD_SITE_ROOT\s*=\s*"<\%=\s*siteRootAbs\s*\%>"/.test(source),
         'URL-1b: summer template sets window.DOCMD_SITE_ROOT to siteRootAbs so JS plugins (search semantic client) resolve ./ URLs correctly');
     }

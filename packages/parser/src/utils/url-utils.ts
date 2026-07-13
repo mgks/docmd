@@ -292,3 +292,68 @@ export function buildAbsoluteUrl(
   const result = normalizedBase + localePrefix + versionPrefix + pagePath;
   return sanitizeUrl(result);
 }
+
+/**
+ * Normalise the `<base href="...">` tag in a fully-rendered HTML document.
+ *
+ * The generator is the single source of truth for the `<base>` tag. Templates
+ * are NOT allowed to emit one themselves — anything a template emits is
+ * stripped here and replaced with the canonical decision:
+ *
+ *   • offline mode (`--offline`)    → no `<base>` tag (file:// re-roots)
+ *   • root deploy (`siteRootAbs === '/'`) → no `<base>` tag (relative URLs
+ *                                            resolve against document path)
+ *   • subpath deploy (`siteRootAbs !== '/'`) → `<base href="siteRootAbs">`
+ *
+ * Implementation notes:
+ *
+ *   • Removes ALL existing `<base>` tags (any source: template, partial,
+ *     stray plugin output) using a regex that handles attributes in any
+ *     order, self-closing forms, single/double quotes.
+ *   • When emitting, inserts the canonical `<base>` immediately after the
+ *     `<title>` tag so it applies to all subsequent `<link>`, `<script>`,
+ *     and asset references in the document head.
+ *   • Idempotent: running it twice is a no-op.
+ *
+ * Centralising this means old templates (pre-0.8.13 with unconditional
+ * `<base href="/">`), the default template, and any third-party template
+ * all produce the same correct output. Templates do not need to know about
+ * base tags at all.
+ *
+ * @param html       - The fully-rendered HTML string from the layout template
+ * @param isOffline  - Whether the build was invoked with `--offline`
+ * @param siteRootAbs - The absolute subpath root, e.g. `'/'`, `'/repo/'`, `'/docs/v1/'`
+ * @returns          - The HTML with the canonical `<base>` (or none) in place
+ */
+export function normaliseBaseTag(html: string, isOffline: boolean, siteRootAbs: string): string {
+  // Step 1: strip every existing <base> tag (self-closing or with close, any attribute order)
+  const BASE_TAG_RE = /<base\b[^>]*\/?>/gi;
+  const cleaned = html.replace(BASE_TAG_RE, '');
+
+  // Step 2: decide whether to emit a canonical one
+  if (isOffline) return cleaned;
+  if (!siteRootAbs || siteRootAbs === '/') return cleaned;
+
+  // Inject right after <title>...</title>. If no <title> exists, inject before </head>.
+  const canonical = `<base href="${escapeHtmlAttr(siteRootAbs)}">`;
+
+  const titleClose = cleaned.match(/<\/title>/i);
+  if (titleClose && typeof titleClose.index === 'number') {
+    return cleaned.slice(0, titleClose.index + titleClose[0].length)
+         + canonical
+         + cleaned.slice(titleClose.index + titleClose[0].length);
+  }
+  const headClose = cleaned.match(/<\/head>/i);
+  if (headClose && typeof headClose.index === 'number') {
+    return cleaned.slice(0, headClose.index)
+         + canonical
+         + cleaned.slice(headClose.index);
+  }
+  // Final fallback: prepend (shouldn't happen for valid HTML)
+  return canonical + cleaned;
+}
+
+/** Minimal attribute-value escaper for the canonical <base href="...">. */
+function escapeHtmlAttr(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}

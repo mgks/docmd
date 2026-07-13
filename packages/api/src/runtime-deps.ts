@@ -137,6 +137,11 @@ export function detectPackageManager(cwd: string): 'pnpm' | 'yarn' | 'bun' | 'np
  * a CI image without node_modules linked).
  */
 export function getDocmdVersion(): string {
+  // DOCMD_INSTALL_VERSION overrides everything. Lets users / CI pin auto-installs
+  // to a specific version (or 'latest') independent of the installed core.
+  if (process.env.DOCMD_INSTALL_VERSION) {
+    return process.env.DOCMD_INSTALL_VERSION.trim() || 'latest';
+  }
   try {
     const corePkgPath = require.resolve('@docmd/core/package.json', {
       paths: [process.cwd(), __dirname, __monorepoRoot],
@@ -349,13 +354,52 @@ export function shortKey(packageName: string): string | null {
 }
 
 /**
- * Re-load `pkg` after an install attempt. Resolves the entry point via
- * `createRequire(consumerCwd)` so the resolution is rooted in the
- * consumer's directory, then imports via file URL. This is critical:
- * a bare `import(pkgName)` uses Node's default resolution which walks
- * up from the calling module's location — when this code runs from
- * the docmd monorepo, that walk would find a stale workspace copy of
- * the package instead of the one we just installed for the consumer.
+ * Manually resolve a package entry point by walking up from `startDir`
+ * looking for `node_modules/<packageName>/package.json`. This bypasses
+ * Node's internal module resolution cache, which can fail to find a
+ * package that was just installed during the same process (the cache
+ * remembers the "not found" result from the initial failed resolve).
+ *
+ * Returns the absolute path to the entry JS file, or null if not found.
+ */
+function manualResolvePackageEntry(packageName: string, startDir: string): string | null {
+  const pkgSubPath = path.join('node_modules', packageName);
+  let dir = path.resolve(startDir);
+  // Walk up the directory tree looking for node_modules/<pkg>
+  while (dir !== path.dirname(dir)) {
+    const candidate = path.join(dir, pkgSubPath, 'package.json');
+    if (nativeFs.existsSync(candidate)) {
+      try {
+        const pkg = JSON.parse(nativeFs.readFileSync(candidate, 'utf8'));
+        // Resolve the entry point: exports['.'] > main > index.js
+        let entry: string | undefined;
+        if (pkg.exports && typeof pkg.exports === 'object' && pkg.exports['.']) {
+          const exp = pkg.exports['.'];
+          entry = typeof exp === 'string' ? exp : (exp.import || exp.require || exp.default);
+        }
+        if (!entry) entry = pkg.main || 'index.js';
+        const cleanEntry = (entry || 'index.js').replace(/^\.\//, '');
+        const entryPath = path.join(dir, pkgSubPath, cleanEntry);
+        if (nativeFs.existsSync(entryPath)) return entryPath;
+        // Try dist/index.js as a common fallback
+        const distEntry = path.join(dir, pkgSubPath, 'dist', 'index.js');
+        if (nativeFs.existsSync(distEntry)) return distEntry;
+      } catch {
+        // Malformed package.json — keep walking
+      }
+    }
+    dir = path.dirname(dir);
+  }
+  return null;
+}
+
+/**
+ * Re-load `pkg` after an install attempt. Tries `createRequire` first
+ * (honours exports conditions), then falls back to a manual node_modules
+ * walk-up that bypasses Node's internal resolution cache. The cache can
+ * stale-fail when a package was just `npm install`ed during the same
+ * process — the initial `require.resolve` failure is remembered even
+ * after the package appears on disk.
  *
  * Returns the module reference or null on failure.
  */
@@ -363,11 +407,29 @@ export async function tryLoadAfterInstall(
   packageName: string,
   consumerCwd: string = process.cwd(),
 ): Promise<any | null> {
+  // Strategy 1: createRequire (honours exports field, but may stale-cache)
   try {
     const consumerRequire = createRequire(consumerCwd + '/');
     const entry = consumerRequire.resolve(packageName);
     return await import(pathToFileURL(entry).href);
   } catch {
-    return null;
+    // Fall through to manual resolution
   }
+
+  // Strategy 2: manual node_modules walk-up (bypasses cache, always
+  // does a fresh filesystem check). This is the reliable path when
+  // the package was installed seconds ago in the same process.
+  const manualEntry = manualResolvePackageEntry(packageName, consumerCwd);
+  if (manualEntry) {
+    try {
+      return await import(pathToFileURL(manualEntry).href);
+    } catch (e: any) {
+      const detail = e?.code ? `${e.code}: ${e.message}` : (e?.message || String(e));
+      TUI.warn(`Post-install load of ${packageName} (manual resolve to ${manualEntry}) failed: ${detail}`);
+      return null;
+    }
+  }
+
+  TUI.warn(`Post-install load of ${packageName} from ${consumerCwd} failed: package not found in node_modules tree`);
+  return null;
 }

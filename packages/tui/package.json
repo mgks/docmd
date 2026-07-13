@@ -1,6 +1,6 @@
 {
   "name": "@docmd/tui",
-  "version": "0.8.12",
+  "version": "0.8.13",
   "description": "Terminal User Interface (TUI) design system for docmd.",
   "type": "module",
   "main": "dist/index.js",

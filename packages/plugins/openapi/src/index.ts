@@ -24,7 +24,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const plugin: PluginDescriptor = {
   name: 'openapi',
-  version: '0.8.12',
+  version: '0.8.13',
   capabilities: ['markdown', 'assets']
 };
 
@@ -143,7 +143,7 @@ function resolveRef(ref: string, spec: OASpec): OASchema | null {
   return node as OASchema | null;
 }
 
-function resolveSchema(schema: OASchema | undefined, spec: OASpec, depth = 0): OASchema {
+function resolveSchema(schema: OASchema | undefined, spec: OASpec, _depth = 0): OASchema {
   if (!schema) return {};
   if (schema.$ref) return resolveRef(schema.$ref, spec) || schema;
   return schema;
@@ -195,7 +195,6 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
   let paramsHtml = '';
   if (!summaryOnly && op.parameters && op.parameters.length > 0) {
     const rows = op.parameters.map(p => {
-      const r = resolveSchema(p.schema, spec);
       return `<tr>
         <td><code>${esc(p.name)}</code>${p.required ? ' <span class="oa-required">*</span>' : ''}</td>
         <td><span class="oa-param-in">${esc(p.in)}</span></td>
@@ -274,7 +273,6 @@ function parseSpec(specPath: string): OASpec {
   // We avoid a full YAML dep by using JSON if possible, otherwise note the limitation
   try {
     // Try to require js-yaml if available (won't throw at import time since it's optional)
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const yaml = require('js-yaml');
     return yaml.load(raw) as OASpec;
   } catch {

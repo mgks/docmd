@@ -1,6 +1,6 @@
 {
   "name": "@docmd/core",
-  "version": "0.8.12",
+  "version": "0.8.13",
   "description": "Build production-ready documentation from Markdown in seconds. No React, no bloat, just content.",
   "type": "module",
   "browser": false,
