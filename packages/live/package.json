@@ -32,7 +32,7 @@
     "@docmd/ui": "workspace:*",
     "buffer": "^6.0.3",
     "esbuild": "^0.28.1",
-    "katex": "^0.17.0",
+    "katex": "^0.18.1",
     "markdown-it-texmath": "^1.0.0"
   },
   "devDependencies": {

@@ -23,7 +23,7 @@ importers:
         version: 5.6.2
       docmd-search:
         specifier: ^0.1.1
-        version: 0.1.1(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0)
+        version: 0.1.1(@docmd/engine-js@0.8.17)(@docmd/engine-rust@0.8.17)(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0)
       esbuild:
         specifier: ^0.28.1
         version: 0.28.1
@@ -193,8 +193,8 @@ importers:
         specifier: ^0.28.1
         version: 0.28.1
       katex:
-        specifier: ^0.17.0
-        version: 0.17.0
+        specifier: ^0.18.1
+        version: 0.18.1
       markdown-it-texmath:
         specifier: ^1.0.0
         version: 1.0.0
@@ -292,8 +292,8 @@ importers:
   packages/plugins/math:
     dependencies:
       katex:
-        specifier: ^0.17.0
-        version: 0.17.0
+        specifier: ^0.18.1
+        version: 0.18.1
       markdown-it-texmath:
         specifier: ^1.0.0
         version: 1.0.0
@@ -359,7 +359,7 @@ importers:
     dependencies:
       docmd-search:
         specifier: '>=0.1.1'
-        version: 0.1.1(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0)
+        version: 0.1.1(@docmd/engine-js@0.8.17)(@docmd/engine-rust@0.8.17)(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0)
       markdown-it:
         specifier: ^14.3.0
         version: 14.3.0
@@ -488,6 +488,14 @@ packages:
   '@ctrl/tinycolor@4.2.0':
     resolution: {integrity: sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==}
     engines: {node: '>=14'}
+
+  '@docmd/engine-js@0.8.17':
+    resolution: {integrity: sha512-gw90zYdXhmPDElOx9Rix42p96yXjNBB2WYRDUQbvPR+fO2KQrkcJtGTYgxfXhLFR06aavQAjAFx5KkirWv8+9g==}
+    engines: {node: '>=18'}
+
+  '@docmd/engine-rust@0.8.17':
+    resolution: {integrity: sha512-cLXuLF9g/o6De5zzMAl57M3TKL/DTNKCwb8poTyWlDcVkc9gO4MfVqi1u5lBGeRwIk27DsuwIb4c/ZV9pYwxBA==}
+    engines: {node: '>=18'}
 
   '@emnapi/runtime@1.11.2':
     resolution: {integrity: sha512-kyOl3X0DuTiT1h2ft8r2fYO8JYtU9a9Xis/zBSiGArNaagCOWx90N1k2wxp18czFDH+OgcWGb5ZP/XMt3dcyPA==}
@@ -1310,8 +1318,8 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
-  katex@0.17.0:
-    resolution: {integrity: sha512-Vdw0ATsQ9V+LuegM/BTwQqV/6cTl5lbGcIrU+BCgLxyf6bo38ybOr372tuSIxir3CN720flu1meYR6XzNMwQnw==}
+  katex@0.18.1:
+    resolution: {integrity: sha512-Td8GCYSxDAoMhHOlKmCFMJ/hz5qlAAb71n66Dryw9nfCVfumLo7nhuotbvKom/XPADmrYC3O5QR71EPq4DarJQ==}
     hasBin: true
 
   keyv@4.5.4:
@@ -1586,6 +1594,12 @@ packages:
 snapshots:
 
   '@ctrl/tinycolor@4.2.0': {}
+
+  '@docmd/engine-js@0.8.17':
+    optional: true
+
+  '@docmd/engine-rust@0.8.17':
+    optional: true
 
   '@emnapi/runtime@1.11.2':
     dependencies:
@@ -2109,8 +2123,10 @@ snapshots:
   detect-libc@2.1.2:
     optional: true
 
-  docmd-search@0.1.1(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0):
+  docmd-search@0.1.1(@docmd/engine-js@0.8.17)(@docmd/engine-rust@0.8.17)(@huggingface/transformers@4.2.0)(onnxruntime-node@1.27.0):
     optionalDependencies:
+      '@docmd/engine-js': 0.8.17
+      '@docmd/engine-rust': 0.8.17
       '@huggingface/transformers': 4.2.0
       onnxruntime-node: 1.27.0
 
@@ -2309,7 +2325,7 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
-  katex@0.17.0:
+  katex@0.18.1:
     dependencies:
       commander: 8.3.0
 

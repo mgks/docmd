@@ -25,7 +25,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "katex": "^0.17.0",
+    "katex": "^0.18.1",
     "markdown-it-texmath": "^1.0.0"
   },
   "devDependencies": {
