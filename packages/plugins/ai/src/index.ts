@@ -35,6 +35,7 @@ export interface AIPluginOptions {
   enabled?: boolean;
   assistant?: boolean;
   chat?: boolean;
+  captcha?: boolean;
   endpoint?: string;
   projectId?: string;
   siteId?: string;
@@ -96,6 +97,7 @@ export async function onConfigResolved(config: any): Promise<void> {
     enabled: isAssistantEnabled,
     assistant: isAssistantEnabled,
     chat: isAssistantEnabled,
+    captcha: pluginOptions.captcha !== false,
     endpoint,
     projectId: targetProjectId,
     siteId: targetProjectId,
@@ -374,6 +376,7 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     endpoint: pluginOptions.endpoint || (targetProjectId ? 'https://api.docmd.io/v1/ai/chat' : ''),
     projectId: targetProjectId,
     cloud: { siteId: targetProjectId, projectId: targetProjectId, ...(pluginOptions.cloud || {}) },
+    captcha: pluginOptions.captcha !== false,
     position: pluginOptions.position || 'bottom-center',
     greeting: pluginOptions.greeting,
     placeholder: pluginOptions.placeholder,

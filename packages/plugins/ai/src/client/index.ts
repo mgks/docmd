@@ -14,6 +14,7 @@ interface AIConfig {
   model?: string;
   endpoint?: string;
   projectId?: string;
+  captcha?: boolean;
   cloud?: {
     siteId?: string;
     projectId?: string;
@@ -45,6 +46,7 @@ class DocmdAIAssistant {
   private ws: WebSocket | null = null;
   private pendingCalls = new Map<string, { resolve: (val: any) => void; reject: (err: any) => void }>();
   private callIdCounter = 0;
+  private captchaVerified = false;
 
   constructor() {
     const rawConfig = (window as any).__docmd_ai_config || {};
@@ -61,6 +63,7 @@ class DocmdAIAssistant {
       model: rawConfig.model || '',
       endpoint: rawConfig.endpoint || '',
       projectId: rawConfig.projectId || rawConfig.cloud?.projectId || rawConfig.cloud?.siteId || '',
+      captcha: rawConfig.captcha !== false,
       cloud: rawConfig.cloud || {}
     };
 
@@ -367,10 +370,44 @@ class DocmdAIAssistant {
     this.renderInitialMessages();
   }
 
+  private isBotDetected(): boolean {
+    if (typeof navigator !== 'undefined') {
+      if (navigator.webdriver || (window as any).Cypress || (window as any).__nightmare || (window as any).phantom) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private async handleUserSend() {
     if (!this.inputElement || this.isThinking) return;
     const userText = this.inputElement.value.trim();
     if (!userText) return;
+
+    let captchaId: string | undefined;
+    let captchaSolution: string | undefined;
+
+    // Server-Side Cryptographic CAPTCHA Challenge & Anti-Bot Verification
+    if (this.config.captcha || this.isBotDetected()) {
+      try {
+        const challengeUrl = this.config.endpoint
+          ? this.config.endpoint.replace('/v1/ai/chat', '/v1/ai/captcha/challenge').replace('/v1/chat', '/v1/captcha')
+          : 'https://api.docmd.io/v1/ai/captcha/challenge';
+
+        const challengeRes = await fetch(challengeUrl).then(r => r.json()).catch(() => null);
+        if (challengeRes && challengeRes.captchaId) {
+          const answer = prompt('Security Verification: Solve equation to verify human user:');
+          if (!answer) {
+            alert('Verification cancelled. Request not sent.');
+            return;
+          }
+          captchaId = challengeRes.captchaId;
+          captchaSolution = answer.trim();
+        }
+      } catch (err) {
+        console.warn('CAPTCHA challenge fetch error:', err);
+      }
+    }
 
     this.inputElement.value = '';
     this.appendMessage('user', userText);
@@ -389,7 +426,9 @@ class DocmdAIAssistant {
         message: userText,
         history: this.messages.slice(-6),
         pageUrl: window.location.pathname,
-        pageTitle: document.title
+        pageTitle: document.title,
+        captchaId,
+        captchaSolution
       });
 
       this.hideTypingIndicator();
