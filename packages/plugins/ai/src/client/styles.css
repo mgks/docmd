@@ -1,0 +1,528 @@
+/* docmd AI Chat Plugin Styles */
+:root {
+  --docmd-ai-primary: #6366f1;
+  --docmd-ai-primary-hover: #4f46e5;
+  --docmd-ai-primary-glow: rgba(99, 102, 241, 0.22);
+  --docmd-ai-bg: rgba(255, 255, 255, 0.94);
+  --docmd-ai-card: #ffffff;
+  --docmd-ai-border: rgba(226, 232, 240, 0.85);
+  --docmd-ai-text: #0f172a;
+  --docmd-ai-muted: #64748b;
+  --docmd-ai-user-bubble: #6366f1;
+  --docmd-ai-user-text: #ffffff;
+  --docmd-ai-assistant-bubble: rgba(248, 250, 252, 0.9);
+  --docmd-ai-assistant-text: #1e293b;
+  --docmd-ai-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.15), 0 0 30px rgba(99, 102, 241, 0.12);
+  --docmd-ai-backdrop: blur(24px);
+  --docmd-ai-radius: 20px;
+  --docmd-ai-font: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --docmd-ai-halo-1: rgba(99, 102, 241, 0.2);
+  --docmd-ai-halo-2: rgba(168, 85, 247, 0.15);
+}
+
+/* Dark mode theme override */
+[data-theme="dark"] :root,
+html.dark :root,
+body.dark :root {
+  --docmd-ai-bg: rgba(15, 23, 42, 0.94);
+  --docmd-ai-card: #1e293b;
+  --docmd-ai-border: rgba(51, 65, 85, 0.8);
+  --docmd-ai-text: #f8fafc;
+  --docmd-ai-muted: #94a3b8;
+  --docmd-ai-assistant-bubble: rgba(30, 41, 59, 0.85);
+  --docmd-ai-assistant-text: #f1f5f9;
+  --docmd-ai-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.65), 0 0 35px rgba(99, 102, 241, 0.25);
+  --docmd-ai-halo-1: rgba(99, 102, 241, 0.32);
+  --docmd-ai-halo-2: rgba(168, 85, 247, 0.22);
+}
+
+/* Backdrop Overlay */
+.docmd-ai-overlay-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 99998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.docmd-ai-overlay-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Floating Pill Bar Trigger (Bottom Center default) */
+.docmd-ai-trigger-pill {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  height: 44px;
+  border-radius: 9999px;
+  background: var(--docmd-ai-bg);
+  backdrop-filter: var(--docmd-ai-backdrop);
+  -webkit-backdrop-filter: var(--docmd-ai-backdrop);
+  border: 1px solid var(--docmd-ai-border);
+  color: var(--docmd-ai-text);
+  font-family: var(--docmd-ai-font);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.12), 0 0 15px var(--docmd-ai-primary-glow);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.docmd-ai-trigger-pill.position-right {
+  left: auto;
+  right: 24px;
+  transform: none;
+}
+
+.docmd-ai-trigger-pill.position-left {
+  left: 24px;
+  transform: none;
+}
+
+.docmd-ai-trigger-pill:hover {
+  border-color: var(--docmd-ai-primary);
+  box-shadow: 0 14px 35px -5px rgba(99, 102, 241, 0.35);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.docmd-ai-trigger-pill.position-right:hover,
+.docmd-ai-trigger-pill.position-left:hover {
+  transform: translateY(-2px);
+}
+
+.docmd-ai-spark-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--docmd-ai-primary);
+  flex-shrink: 0;
+}
+
+.docmd-ai-spark-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.docmd-ai-pill-text {
+  color: var(--docmd-ai-muted);
+  white-space: nowrap;
+}
+
+.docmd-ai-shortcut-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--docmd-ai-muted);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: inherit;
+  margin-left: 4px;
+}
+
+/* Modal Window (AI Overlay Panel) */
+.docmd-ai-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -48%) scale(0.96);
+  z-index: 99999;
+  width: 640px;
+  max-width: calc(100vw - 32px);
+  height: 560px;
+  max-height: calc(100vh - 80px);
+  background: var(--docmd-ai-bg);
+  backdrop-filter: var(--docmd-ai-backdrop);
+  -webkit-backdrop-filter: var(--docmd-ai-backdrop);
+  border: 1px solid var(--docmd-ai-border);
+  border-radius: var(--docmd-ai-radius);
+  box-shadow: var(--docmd-ai-shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: var(--docmd-ai-font);
+}
+
+.docmd-ai-modal.open {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+  pointer-events: all;
+}
+
+/* Organic Slow Faded AI Halo Background Effect */
+.docmd-ai-halo-bg {
+  position: absolute;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 420px;
+  height: 320px;
+  background: radial-gradient(circle, var(--docmd-ai-halo-1) 0%, var(--docmd-ai-halo-2) 45%, rgba(0, 0, 0, 0) 70%);
+  filter: blur(60px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: docmdAiHaloPulse 12s ease-in-out infinite alternate;
+}
+
+@keyframes docmdAiHaloPulse {
+  0% {
+    transform: translateX(-50%) scale(0.92) translateY(0);
+    opacity: 0.65;
+  }
+  50% {
+    transform: translateX(-47%) scale(1.15) translateY(18px);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-53%) scale(1.02) translateY(-12px);
+    opacity: 0.7;
+  }
+}
+
+/* Header */
+.docmd-ai-header {
+  position: relative;
+  z-index: 1;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--docmd-ai-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.docmd-ai-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.docmd-ai-header-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--docmd-ai-text);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.docmd-ai-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.docmd-ai-btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--docmd-ai-muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.docmd-ai-btn-icon:hover {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--docmd-ai-text);
+}
+
+.docmd-ai-btn-icon svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+/* Body / Chat Stream */
+.docmd-ai-body {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scroll-behavior: smooth;
+}
+
+.docmd-ai-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 90%;
+  animation: docmdAiFadeIn 0.25s ease forwards;
+}
+
+@keyframes docmdAiFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.docmd-ai-message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.docmd-ai-message.assistant {
+  align-self: flex-start;
+}
+
+.docmd-ai-avatar-spark {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(168, 85, 247, 0.15) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--docmd-ai-primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.docmd-ai-avatar-spark svg {
+  width: 15px;
+  height: 15px;
+  fill: currentColor;
+}
+
+.docmd-ai-bubble {
+  padding: 12px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.docmd-ai-message.user .docmd-ai-bubble {
+  background: var(--docmd-ai-user-bubble);
+  color: var(--docmd-ai-user-text);
+  border-bottom-right-radius: 4px;
+}
+
+.docmd-ai-message.assistant .docmd-ai-bubble {
+  background: var(--docmd-ai-assistant-bubble);
+  color: var(--docmd-ai-assistant-text);
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--docmd-ai-border);
+}
+
+.docmd-ai-bubble p {
+  margin: 0 0 10px 0;
+}
+.docmd-ai-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.docmd-ai-bubble pre {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.docmd-ai-bubble code {
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--docmd-ai-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.docmd-ai-bubble pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* Source Citations */
+.docmd-ai-citations {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--docmd-ai-border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.docmd-ai-citations-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--docmd-ai-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 4px;
+}
+
+.docmd-ai-citation-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: var(--docmd-ai-primary);
+  padding: 3px 10px;
+  border-radius: 9999px;
+  text-decoration: none;
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.docmd-ai-citation-link:hover {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--docmd-ai-primary);
+}
+
+/* Prompt Suggestions */
+.docmd-ai-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+  margin-left: 38px;
+}
+
+.docmd-ai-pill {
+  background: var(--docmd-ai-card);
+  border: 1px solid var(--docmd-ai-border);
+  color: var(--docmd-ai-text);
+  padding: 7px 14px;
+  border-radius: 9999px;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.docmd-ai-pill:hover {
+  border-color: var(--docmd-ai-primary);
+  color: var(--docmd-ai-primary);
+  background: rgba(99, 102, 241, 0.08);
+}
+
+/* Typing Indicator */
+.docmd-ai-typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 14px;
+}
+
+.docmd-ai-typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--docmd-ai-primary);
+  border-radius: 50%;
+  animation: docmdAiBounce 1.4s infinite ease-in-out both;
+}
+
+.docmd-ai-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.docmd-ai-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes docmdAiBounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1.0); }
+}
+
+/* Footer & Input Box */
+.docmd-ai-footer {
+  position: relative;
+  z-index: 1;
+  padding: 14px 18px;
+  border-top: 1px solid var(--docmd-ai-border);
+  background: var(--docmd-ai-card);
+}
+
+.docmd-ai-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--docmd-ai-bg);
+  border: 1px solid var(--docmd-ai-border);
+  border-radius: 12px;
+  padding: 6px 8px 6px 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.docmd-ai-form:focus-within {
+  border-color: var(--docmd-ai-primary);
+  box-shadow: 0 0 0 3px var(--docmd-ai-primary-glow);
+}
+
+.docmd-ai-input {
+  flex: 1;
+  border: none;
+  padding: 6px 0;
+  font-family: var(--docmd-ai-font);
+  font-size: 13.5px;
+  background: transparent;
+  color: var(--docmd-ai-text);
+  outline: none;
+}
+
+.docmd-ai-send-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--docmd-ai-primary);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.docmd-ai-send-btn:hover:not(:disabled) {
+  background: var(--docmd-ai-primary-hover);
+  transform: scale(1.04);
+}
+
+.docmd-ai-send-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.docmd-ai-send-btn svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
