@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-search",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "description": "Offline full-text search for docmd.",
   "type": "module",
   "main": "dist/index.js",

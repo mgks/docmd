@@ -160,7 +160,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 把 docmd 指向任意 Markdown 目录，它就会运行。导航会根据你的目录结构自动生成。你可以在不到一分钟的时间内写好第一篇文档并上线 —— 没有模板代码，没有需要配置的构建流程，也不需要提前做技术决策。
 
 ### 默认轻量，处处高速
-默认的 JavaScript 体积约 18 kb，页面以即时 SPA 的方式切换。输出为静态 HTML —— 已做好 SEO 优化，包含 sitemap、canonical URL 与 Open Graph 元数据。内置离线全文搜索，无需任何云服务。
+默认的 JavaScript 体积约 25 kb，页面以即时 SPA 的方式切换。输出为静态 HTML —— 已做好 SEO 优化，包含 sitemap、canonical URL 与 Open Graph 元数据。内置离线全文搜索，无需任何云服务。
 
 ### AI 原生
 docmd 的设计贴合文档在当今被阅读与使用的方式：

@@ -1,6 +1,6 @@
 {
   "name": "@docmd/core",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "description": "Build production-ready documentation from Markdown in seconds. No React, no bloat, just content.",
   "type": "module",
   "browser": false,
@@ -24,6 +24,7 @@
     "@docmd/deployer": "workspace:*",
     "@docmd/live": "workspace:*",
     "@docmd/parser": "workspace:*",
+    "@docmd/plugin-ai": "workspace:*",
     "@docmd/plugin-analytics": "workspace:*",
     "@docmd/plugin-git": "workspace:*",
     "@docmd/plugin-installer": "workspace:*",

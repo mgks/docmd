@@ -288,7 +288,9 @@ function runDocmd(command) {
     delete env.npm_config_npm_globalconfig;
     delete env.npm_config_verify_deps_before_run;
     delete env.npm_config__jsr_registry;
-    const child = spawn('npx', ['docmd', command], { cwd: SOURCE_DIR, stdio: 'inherit', env });
+    const localBin = path.join(SOURCE_DIR, 'node_modules', '.bin', 'docmd');
+    const executable = fs.existsSync(localBin) ? localBin : 'docmd';
+    const child = spawn(executable, [command], { cwd: SOURCE_DIR, stdio: 'inherit', env });
     child.on('exit', (code) => {
       const tag = code === 0 ? `${GREEN('DONE')}` : `${RED('FAIL')}`;
       process.stdout.write(`\r  ${tag} docmd ${command} (source)               \n`);
