@@ -31,6 +31,7 @@ const KNOWN_KEYS = [
   'logo', 'sidebar', 'theme', 'customJs', 'autoTitleFromH1',
   'copyCode', 'plugins', 'navigation', 'footer', 'sponsor', 'favicon',
   'search', 'minify', 'editLink', 'pageNavigation', 'i18n',
+  'markdown', 'security',
 
   // Workspace
   'workspace'

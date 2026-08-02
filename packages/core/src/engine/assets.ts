@@ -58,6 +58,18 @@ export async function prepareAssets(config: any, outputDir: string, options: any
   const uiAssets = ui.getAssetsDir();
   if (await fs.exists(uiAssets)) await fs.copy(uiAssets, path.join(outputDir, 'assets'));
 
+  // When stringMode is enabled, translations are baked into HTML at
+  // build time. The client-side i18n runtime (docmd-i18n-strings.js) is
+  // redundant and harmful — it reads/writes localStorage for locale
+  // preferences which can cause client-side re-translation of already-
+  // baked HTML. Remove it from the output so it's never fetched.
+  if (config.i18n?.stringMode === true) {
+    const i18nRuntimePath = path.join(outputDir, 'assets', 'js', 'docmd-i18n-strings.js');
+    if (nativeFs.existsSync(i18nRuntimePath)) {
+      nativeFs.unlinkSync(i18nRuntimePath);
+    }
+  }
+
   // 2. Theme Assets
   const themesDir = themes.getThemesDir();
   if (await fs.exists(themesDir)) await fs.copy(themesDir, path.join(outputDir, 'assets/css'));
@@ -78,12 +90,10 @@ export async function prepareAssets(config: any, outputDir: string, options: any
   }
 }
 
-// ---------------------------------------------------------------------------
-// Template Assets (new in 0.8.7)
+// Template Assets
 // Templates ship their own CSS/JS bundles. We copy them into
 // `assets/template/<basename>` so they survive minification and
 // can be referenced with a stable URL.
-// ---------------------------------------------------------------------------
 export async function prepareTemplateAssets(config: any, outputDir: string) {
   // The hooks object is exported by @docmd/api. We import lazily to avoid
   // a hard build-time cycle between @docmd/core ↔ @docmd/api.

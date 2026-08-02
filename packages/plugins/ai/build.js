@@ -12,6 +12,7 @@ async function build() {
     target: 'es2022',
     format: 'esm',
     outdir: path.resolve(__dirname, 'dist/client'),
+    external: ['aiplug'],
     minify: false,
     sourcemap: 'inline',
     loader: { '.css': 'css' },

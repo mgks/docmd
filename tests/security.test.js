@@ -3,7 +3,7 @@
  * docmd Security Test Suite
  * ==========================
  * End-to-end tests for the Phase 0 security primitives:
- *   - security.html = 'escape' (default) | 'allow' | 'strip'
+ *   - security.html = 'allow' (default) | 'escape' | 'strip'
  *   - escape helpers (escHtml / attrEsc / jsonInject / scriptLiteral) integration
  *   - safePath() path-traversal guard
  *
@@ -93,18 +93,16 @@ function assert(testName, condition, detail = '') {
   }
 }
 
-// ─── TEST S1: Default security.html = 'escape' blocks raw HTML ──────────
-console.log('\n🔒 Test S1: Default html policy is escape (Phase 0.D)');
+// ─── TEST S1: Default security.html = 'allow' passes raw HTML through ───
+console.log('\n🔒 Test S1: Default html policy is allow (industry standard)');
 {
-  const dir = setup('s1-default-escape');
+  const dir = setup('s1-default-allow');
   writeFile(dir, 'docs/index.md', [
     '---',
     'title: Raw HTML Test',
     '---',
     '',
     '# Heading',
-    '',
-    '<script>alert("xss")</script>',
     '',
     '<details><summary>Click</summary>Hidden</details>',
     ''
@@ -113,8 +111,28 @@ console.log('\n🔒 Test S1: Default html policy is escape (Phase 0.D)');
   assert('build succeeds', r.ok, r.output);
   const html = readSite(dir, 'index.html');
   assert('output exists', html !== null);
-  assert('default policy escapes the user canary', html && !html.includes('alert("xss")'));
-  assert('default policy escapes <details>', html && !html.includes('<details>'));
+  assert('default policy allows <details>', html && html.includes('<details>'));
+  assert('default policy allows <summary>', html && html.includes('<summary>'));
+}
+
+// ─── TEST S1b: Explicit 'escape' blocks raw HTML ────────────────────────
+console.log('\n🔒 Test S1b: Explicit security.html = "escape" blocks raw HTML');
+{
+  const dir = setup('s1b-explicit-escape');
+  writeFile(dir, 'docmd.config.json', JSON.stringify({
+    title: 'Escape',
+    security: { html: 'escape' }
+  }));
+  writeFile(dir, 'docs/index.md', [
+    '# Heading',
+    '',
+    '<script>alert("xss")</script>',
+    ''
+  ].join('\n'));
+  const r = build(dir);
+  assert('build succeeds', r.ok, r.output);
+  const html = readSite(dir, 'index.html');
+  assert('escape policy blocks the canary', html && !html.includes('alert("xss")'));
   assert('escaped output shows &lt;script&gt;', html && html.includes('&lt;script&gt;'));
 }
 
@@ -166,31 +184,31 @@ console.log('\n🔒 Test S3: security.html = "strip" removes raw HTML');
   assert('strip policy keeps surrounding text', html && html.includes('before') && html.includes('after'));
 }
 
-// ─── TEST S4: Invalid policy value falls back to 'escape' ────────────────
-console.log('\n🔒 Test S4: Invalid policy value defaults to escape');
+// ─── TEST S4: Invalid policy value falls back to 'allow' (default) ───────
+console.log('\n🔒 Test S4: Invalid policy value defaults to allow');
 {
   const dir = setup('s4-invalid-policy');
   writeFile(dir, 'docmd.config.json', JSON.stringify({
     title: 'Invalid',
     security: { html: 'bogus' }
   }));
-  writeFile(dir, 'docs/index.md', '# Hi\n\n<script>x</script>\n');
+  writeFile(dir, 'docs/index.md', '# Hi\n\n<details>visible</details>\n');
   const r = build(dir);
   assert('build succeeds with bogus policy', r.ok, r.output);
   const html = readSite(dir, 'index.html');
-  assert('bogus value falls back to escape', html && !html.includes('<script>x'));
+  assert('bogus value falls back to allow', html && html.includes('<details>'));
 }
 
-// ─── TEST S5: No security config still defaults to escape ───────────────
-console.log('\n🔒 Test S5: No security block at all defaults to escape');
+// ─── TEST S5: No security config still defaults to allow ────────────────
+console.log('\n🔒 Test S5: No security block at all defaults to allow');
 {
   const dir = setup('s5-no-security');
   writeFile(dir, 'docmd.config.json', JSON.stringify({ title: 'No Security' }));
-  writeFile(dir, 'docs/index.md', '# Hi\n\n<script>x</script>\n');
+  writeFile(dir, 'docs/index.md', '# Hi\n\n<details>visible</details>\n');
   const r = build(dir);
   assert('build succeeds with no security block', r.ok, r.output);
   const html = readSite(dir, 'index.html');
-  assert('no security block falls back to escape', html && !html.includes('<script>x'));
+  assert('no security block defaults to allow', html && html.includes('<details>'));
 }
 
 // ─── TEST S6: Markdown text outside HTML is unaffected by the policy ─────

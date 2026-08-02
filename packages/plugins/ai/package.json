@@ -31,7 +31,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "aiplug": "file:/Users/mac/Workspace/GitHub/memoryblock-io/aiplug"
+    "docmd-assistant": "^0.1.0"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",

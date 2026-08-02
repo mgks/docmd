@@ -1,554 +1,250 @@
 /**
- * Client-side script for @docmd/plugin-ai
- * Modern AI Assistant for docmd documentation framework.
+ * Client-side entry for @docmd/plugin-ai
+ * docmd UI wrapper around docmd-assistant headless AI engine.
  */
 
-import './styles.css';
+import { DocmdAssistantEngine } from 'docmd-assistant';
 
-interface AIConfig {
-  greeting?: string;
-  placeholder?: string;
-  position?: 'bottom-center' | 'bottom-right' | 'bottom-left';
-  suggestions?: string[];
-  provider?: string;
-  model?: string;
-  endpoint?: string;
-  projectId?: string;
-  captcha?: boolean;
-  cloud?: {
-    siteId?: string;
-    projectId?: string;
-  };
-}
-
-interface Message {
-  sender: 'user' | 'assistant';
-  text: string;
-  citations?: Array<{ title: string; url: string }>;
-  timestamp: number;
-}
-
-const STORAGE_KEY = 'docmd_ai_history_v1';
-const MAX_HISTORY = 10;
-
-class DocmdAIAssistant {
-  private config: AIConfig;
-  private rootElement: HTMLElement | null = null;
-  private backdropElement: HTMLElement | null = null;
-  private modalElement: HTMLElement | null = null;
-  private triggerElement: HTMLElement | null = null;
-  private messageListElement: HTMLElement | null = null;
-  private inputElement: HTMLInputElement | null = null;
-  private sendButtonElement: HTMLButtonElement | null = null;
-  private isOpen = false;
-  private isThinking = false;
-  private messages: Message[] = [];
-  private ws: WebSocket | null = null;
-  private pendingCalls = new Map<string, { resolve: (val: any) => void; reject: (err: any) => void }>();
-  private callIdCounter = 0;
-  private captchaVerified = false;
+export class DocmdAIAssistantUI {
+  private engine: DocmdAssistantEngine;
+  private container: HTMLElement | null = null;
+  private isOpened = false;
 
   constructor() {
-    const rawConfig = (window as any).__docmd_ai_config || {};
-    this.config = {
-      greeting: rawConfig.greeting || 'How can I help with these docs today?',
-      placeholder: rawConfig.placeholder || 'Ask AI a question...',
-      position: rawConfig.position || 'bottom-center',
-      suggestions: rawConfig.suggestions || [
-        'How do I get started?',
-        'Show configuration options',
-        'Explain key concepts'
-      ],
-      provider: rawConfig.provider || 'AI',
-      model: rawConfig.model || '',
-      endpoint: rawConfig.endpoint || '',
-      projectId: rawConfig.projectId || rawConfig.cloud?.projectId || rawConfig.cloud?.siteId || '',
-      captcha: rawConfig.captcha !== false,
-      cloud: rawConfig.cloud || {}
-    };
+    const cfg = (window as any).__DOCMD_AI_CONFIG__ || {};
+    const projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId;
 
-    this.loadHistory();
-    this.initWebSocket();
-    this.initDOM();
-  }
+    this.engine = new DocmdAssistantEngine({
+      projectId,
+      endpoint: cfg.endpoint || 'https://api.docmd.io/v1/ai/chat',
+      provider: cfg.provider,
+      model: cfg.model,
+      systemPrompt: cfg.systemPrompt
+    });
 
-  private loadHistory() {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          this.messages = parsed.slice(-MAX_HISTORY);
+    // Register docmd search Tool if docmd-search is active on window
+    this.engine.registerTool({
+      name: 'search_documentation',
+      description: 'Search documentation content via docmd-search index',
+      execute: async ({ query }: { query: string }) => {
+        if ((window as any).docmdSearch && typeof (window as any).docmdSearch.search === 'function') {
+          return await (window as any).docmdSearch.search(query);
         }
-      }
-    } catch {
-      this.messages = [];
-    }
-  }
-
-  private saveHistory() {
-    try {
-      const sliced = this.messages.slice(-MAX_HISTORY);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sliced));
-    } catch {
-      // Ignore storage errors
-    }
-  }
-
-  private clearHistoryStorage() {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // Ignore storage errors
-    }
-  }
-
-  private initWebSocket() {
-    // Only connect WebSocket if no explicit remote HTTP endpoint was specified
-    if (this.config.endpoint) return;
-
-    try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/`;
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        this.ws = ws;
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'response' && data.id && this.pendingCalls.has(data.id)) {
-            const { resolve, reject } = this.pendingCalls.get(data.id)!;
-            this.pendingCalls.delete(data.id);
-            if (data.error) {
-              reject(new Error(data.error));
-            } else {
-              resolve(data.result);
-            }
-          }
-        } catch {
-          // Ignore non-JSON or unrelated WS messages
-        }
-      };
-
-      ws.onclose = () => {
-        this.ws = null;
-      };
-    } catch {
-      this.ws = null;
-    }
-  }
-
-  private callAction(actionName: string, payload: any): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        const id = `ai_${++this.callIdCounter}_${Date.now()}`;
-        this.pendingCalls.set(id, { resolve, reject });
-        this.ws.send(JSON.stringify({
-          type: 'call',
-          id,
-          action: actionName,
-          payload
-        }));
-      } else {
-        const targetUrl = this.config.endpoint || '/_docmd/api/ai/chat';
-        fetch(targetUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Docmd-Plugin': '@docmd/plugin-ai'
-          },
-          body: JSON.stringify(payload)
-        })
-          .then(async (res) => {
-            if (!res.ok) {
-              const err = await res.json().catch(() => ({ message: res.statusText }));
-              throw new Error(err.message || 'Server request failed');
-            }
-            return res.json();
-          })
-          .then(resolve)
-          .catch(reject);
+        return [];
       }
     });
+
+    if (typeof document !== 'undefined') {
+      this.mount();
+    }
   }
 
-  private initDOM() {
-    let root = document.getElementById('docmd-ai-root');
-    if (!root) {
-      root = document.createElement('div');
-      root.id = 'docmd-ai-root';
-      document.body.appendChild(root);
-    }
-    this.rootElement = root;
+  private mount(): void {
+    if (document.getElementById('docmd-ai-plugin-root')) return;
 
-    let posClass = '';
-    if (this.config.position === 'bottom-right') posClass = 'position-right';
-    else if (this.config.position === 'bottom-left') posClass = 'position-left';
+    this.container = document.createElement('div');
+    this.container.id = 'docmd-ai-plugin-root';
+    this.container.innerHTML = `
+      <style>
+        #docmd-ai-plugin-root {
+          font-family: var(--docmd-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 9999;
+        }
+        .docmd-ai-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 18px;
+          background: var(--docmd-primary, #3b82f6);
+          color: #ffffff;
+          border-radius: 9999px;
+          border: none;
+          font-size: 14px;
+          font-weight: 600;
+          cursor: pointer;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .docmd-ai-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px -5px rgba(0, 0, 0, 0.4);
+        }
+        .docmd-ai-box {
+          position: absolute;
+          bottom: 60px;
+          right: 0;
+          width: 380px;
+          height: 520px;
+          max-width: calc(100vw - 32px);
+          max-height: calc(100vh - 100px);
+          background: var(--docmd-bg-card, #111827);
+          border: 1px solid var(--docmd-border, rgba(255,255,255,0.12));
+          border-radius: 16px;
+          box-shadow: 0 20px 40px -10px rgba(0,0,0,0.5);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          opacity: 0;
+          transform: translateY(16px) scale(0.96);
+          pointer-events: none;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .docmd-ai-box.open {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          pointer-events: auto;
+        }
+        .docmd-ai-header {
+          padding: 14px 16px;
+          background: var(--docmd-bg-header, #1f2937);
+          border-bottom: 1px solid var(--docmd-border, rgba(255,255,255,0.08));
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 14px;
+        }
+        .docmd-ai-close {
+          background: transparent;
+          border: none;
+          color: #9ca3af;
+          cursor: pointer;
+          font-size: 18px;
+        }
+        .docmd-ai-messages {
+          flex: 1;
+          padding: 16px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .docmd-ai-msg {
+          max-width: 85%;
+          padding: 10px 14px;
+          border-radius: 12px;
+          font-size: 13.5px;
+          line-height: 1.5;
+        }
+        .docmd-ai-msg.user {
+          align-self: flex-end;
+          background: var(--docmd-primary, #3b82f6);
+          color: #ffffff;
+        }
+        .docmd-ai-msg.assistant {
+          align-self: flex-start;
+          background: var(--docmd-bg-bubble, #1f2937);
+          color: #e5e7eb;
+          border: 1px solid rgba(255,255,255,0.08);
+        }
+        .docmd-ai-input-row {
+          padding: 12px;
+          background: var(--docmd-bg-card, #111827);
+          border-top: 1px solid var(--docmd-border, rgba(255,255,255,0.08));
+          display: flex;
+          gap: 8px;
+        }
+        .docmd-ai-input {
+          flex: 1;
+          background: var(--docmd-bg-input, #1f2937);
+          border: 1px solid var(--docmd-border, rgba(255,255,255,0.1));
+          border-radius: 8px;
+          padding: 8px 12px;
+          color: #ffffff;
+          font-size: 13.5px;
+          outline: none;
+        }
+        .docmd-ai-send {
+          background: var(--docmd-primary, #3b82f6);
+          border: none;
+          color: #ffffff;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+      </style>
 
-    const sparkIconSvg = `<svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
-
-    this.rootElement.innerHTML = `
-      <!-- Backdrop Overlay -->
-      <div class="docmd-ai-overlay-backdrop"></div>
-
-      <!-- Floating Pill Bar Trigger -->
-      <div class="docmd-ai-trigger-pill ${posClass}" role="button" tabindex="0" aria-label="Ask AI Assistant">
-        <span class="docmd-ai-spark-icon">${sparkIconSvg}</span>
-        <span class="docmd-ai-pill-text">${this.escapeHTML(this.config.placeholder || 'Ask AI a question...')}</span>
-        <kbd class="docmd-ai-shortcut-kbd">⌘K</kbd>
-      </div>
-
-      <!-- AI Overlay Modal Window (Floating Bottom-Center) -->
-      <div class="docmd-ai-modal ${posClass}">
-        <!-- Ambient Faded AI Halo Glow -->
-        <div class="docmd-ai-halo-bg"></div>
-
-        <!-- Header -->
+      <div class="docmd-ai-box" id="docmd-ai-box">
         <div class="docmd-ai-header">
-          <div class="docmd-ai-title-wrap">
-            <h3 class="docmd-ai-header-title">
-              <span class="docmd-ai-spark-icon">${sparkIconSvg}</span>
-              Ask AI Assistant
-            </h3>
-          </div>
-          <div class="docmd-ai-header-actions">
-            <button class="docmd-ai-btn-icon docmd-ai-clear" title="Clear Conversation">
-              <svg viewBox="0 0 24 24"><path d="M19 4h-3.5l-1-1h-5l-1 1H5v2h14M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6v12z"/></svg>
-            </button>
-            <button class="docmd-ai-btn-icon docmd-ai-close" title="Close (Esc)">
-              <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-            </button>
+          <span>docmd AI Assistant</span>
+          <button class="docmd-ai-close" id="docmd-ai-close-btn">&times;</button>
+        </div>
+        <div class="docmd-ai-messages" id="docmd-ai-messages">
+          <div class="docmd-ai-msg assistant">
+            Hello! Ask me anything about this documentation.
           </div>
         </div>
-
-        <!-- Body / Message List -->
-        <div class="docmd-ai-body"></div>
-
-        <!-- Footer / Input Form -->
-        <div class="docmd-ai-footer">
-          <form class="docmd-ai-form" onsubmit="return false;">
-            <input type="text" class="docmd-ai-input" placeholder="${this.escapeHTML(this.config.placeholder || '')}" autocomplete="off"/>
-            <button type="submit" class="docmd-ai-send-btn" aria-label="Send query">
-              <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-            </button>
-          </form>
-        </div>
+        <form class="docmd-ai-input-row" id="docmd-ai-form">
+          <input type="text" class="docmd-ai-input" id="docmd-ai-input" placeholder="Ask a question..." autocomplete="off" />
+          <button type="submit" class="docmd-ai-send">Send</button>
+        </form>
       </div>
+
+      <button class="docmd-ai-btn" id="docmd-ai-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <span>Ask AI</span>
+      </button>
     `;
 
-    // Elements
-    this.backdropElement = this.rootElement.querySelector('.docmd-ai-overlay-backdrop');
-    this.triggerElement = this.rootElement.querySelector('.docmd-ai-trigger-pill');
-    this.modalElement = this.rootElement.querySelector('.docmd-ai-modal');
-    this.messageListElement = this.rootElement.querySelector('.docmd-ai-body');
-    this.inputElement = this.rootElement.querySelector('.docmd-ai-input');
-    this.sendButtonElement = this.rootElement.querySelector('.docmd-ai-send-btn');
+    document.body.appendChild(this.container);
+    this.bindEvents();
+  }
 
-    // Render initial messages / history
-    this.renderInitialMessages();
+  private bindEvents(): void {
+    const btn = document.getElementById('docmd-ai-btn');
+    const closeBtn = document.getElementById('docmd-ai-close-btn');
+    const form = document.getElementById('docmd-ai-form');
+    const input = document.getElementById('docmd-ai-input') as HTMLInputElement;
 
-    // Event listeners
-    this.triggerElement?.addEventListener('click', () => this.toggleModal());
-    this.backdropElement?.addEventListener('click', () => this.closeModal());
-    this.rootElement.querySelector('.docmd-ai-close')?.addEventListener('click', () => this.closeModal());
-    this.rootElement.querySelector('.docmd-ai-clear')?.addEventListener('click', () => this.clearChat());
+    btn?.addEventListener('click', () => this.toggle());
+    closeBtn?.addEventListener('click', () => this.toggle(false));
 
-    const form = this.rootElement.querySelector('.docmd-ai-form');
-    form?.addEventListener('submit', (e) => {
+    form?.addEventListener('submit', async (e) => {
       e.preventDefault();
-      this.handleUserSend();
-    });
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
 
-    // Suggestion pills click
-    this.messageListElement?.addEventListener('click', (e) => {
-      const target = e.target as HTMLElement;
-      if (target && target.classList.contains('docmd-ai-pill')) {
-        const text = target.textContent || '';
-        if (text && this.inputElement) {
-          this.inputElement.value = text;
-          this.handleUserSend();
-        }
-      }
-    });
+      this.appendMsg('user', text);
+      const typing = this.appendMsg('assistant', 'Thinking...');
 
-    // Global keyboard listener (Cmd+K, Ctrl+K, Esc)
-    window.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault();
-        this.toggleModal();
-      } else if (e.key === 'Escape' && this.isOpen) {
-        e.preventDefault();
-        this.closeModal();
-      }
-    });
-  }
-
-  private renderInitialMessages() {
-    if (!this.messageListElement) return;
-
-    const sparkIconSvg = `<svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
-
-    let html = `
-      <div class="docmd-ai-message assistant">
-        <div class="docmd-ai-avatar-spark">${sparkIconSvg}</div>
-        <div class="docmd-ai-bubble">
-          ${this.escapeHTML(this.config.greeting || '')}
-        </div>
-      </div>
-    `;
-
-    if (this.messages.length > 0) {
-      this.messages.forEach(msg => {
-        const citationsHtml = msg.citations && msg.citations.length > 0
-          ? `<div class="docmd-ai-citations">
-              <div class="docmd-ai-citations-title">Sources</div>
-              ${msg.citations.map(c => `<a class="docmd-ai-citation-link" href="${this.escapeHTML(c.url)}">📄 ${this.escapeHTML(c.title)}</a>`).join('')}
-            </div>`
-          : '';
-
-        const formatted = msg.sender === 'assistant' ? this.formatMarkdown(msg.text) : this.escapeHTML(msg.text);
-
-        if (msg.sender === 'assistant') {
-          html += `
-            <div class="docmd-ai-message assistant">
-              <div class="docmd-ai-avatar-spark">${sparkIconSvg}</div>
-              <div class="docmd-ai-bubble">
-                ${formatted}
-                ${citationsHtml}
-              </div>
-            </div>
-          `;
-        } else {
-          html += `
-            <div class="docmd-ai-message user">
-              <div class="docmd-ai-bubble">
-                ${formatted}
-              </div>
-            </div>
-          `;
-        }
-      });
-    } else if (this.config.suggestions && this.config.suggestions.length > 0) {
-      html += `
-        <div class="docmd-ai-suggestions">
-          ${this.config.suggestions.map(s => `<button class="docmd-ai-pill">${this.escapeHTML(s)}</button>`).join('')}
-        </div>
-      `;
-    }
-
-    this.messageListElement.innerHTML = html;
-    this.messageListElement.scrollTop = this.messageListElement.scrollHeight;
-  }
-
-  private toggleModal() {
-    if (this.isOpen) {
-      this.closeModal();
-    } else {
-      this.openModal();
-    }
-  }
-
-  private openModal() {
-    this.isOpen = true;
-    this.backdropElement?.classList.add('open');
-    this.modalElement?.classList.add('open');
-    setTimeout(() => this.inputElement?.focus(), 120);
-  }
-
-  private closeModal() {
-    this.isOpen = false;
-    this.backdropElement?.classList.remove('open');
-    this.modalElement?.classList.remove('open');
-  }
-
-  private clearChat() {
-    this.messages = [];
-    this.clearHistoryStorage();
-    this.renderInitialMessages();
-  }
-
-  private isBotDetected(): boolean {
-    if (typeof navigator !== 'undefined') {
-      if (navigator.webdriver || (window as any).Cypress || (window as any).__nightmare || (window as any).phantom) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private async handleUserSend() {
-    if (!this.inputElement || this.isThinking) return;
-    const userText = this.inputElement.value.trim();
-    if (!userText) return;
-
-    let captchaId: string | undefined;
-    let captchaSolution: string | undefined;
-
-    // Server-Side Cryptographic CAPTCHA Challenge & Anti-Bot Verification
-    if (this.config.captcha || this.isBotDetected()) {
       try {
-        const challengeUrl = this.config.endpoint
-          ? this.config.endpoint.replace('/v1/ai/chat', '/v1/ai/captcha/challenge').replace('/v1/chat', '/v1/captcha')
-          : 'https://api.docmd.io/v1/ai/captcha/challenge';
-
-        const challengeRes = await fetch(challengeUrl).then(r => r.json()).catch(() => null);
-        if (challengeRes && challengeRes.captchaId) {
-          const answer = prompt('Security Verification: Solve equation to verify human user:');
-          if (!answer) {
-            alert('Verification cancelled. Request not sent.');
-            return;
-          }
-          captchaId = challengeRes.captchaId;
-          captchaSolution = answer.trim();
-        }
-      } catch (err) {
-        console.warn('CAPTCHA challenge fetch error:', err);
+        const res = await this.engine.sendMessage(text);
+        typing.textContent = res.message;
+      } catch (err: any) {
+        typing.textContent = `Error: ${err.message || 'Request failed'}`;
       }
-    }
-
-    this.inputElement.value = '';
-    this.appendMessage('user', userText);
-    this.messages.push({ sender: 'user', text: userText, timestamp: Date.now() });
-    this.saveHistory();
-
-    this.showTypingIndicator();
-    this.isThinking = true;
-    if (this.sendButtonElement) this.sendButtonElement.disabled = true;
-
-    try {
-      const targetId = this.config.projectId || this.config.cloud?.projectId || this.config.cloud?.siteId || '';
-      const response = await this.callAction('ai:chat', {
-        projectId: targetId,
-        siteId: targetId,
-        message: userText,
-        history: this.messages.slice(-6),
-        pageUrl: window.location.pathname,
-        pageTitle: document.title,
-        captchaId,
-        captchaSolution
-      });
-
-      this.hideTypingIndicator();
-
-      const assistantText = response?.text || 'Sorry, I could not generate a response.';
-      const citations = response?.citations || [];
-
-      this.appendMessage('assistant', assistantText, citations);
-      this.messages.push({ sender: 'assistant', text: assistantText, citations, timestamp: Date.now() });
-      this.saveHistory();
-    } catch (err: any) {
-      this.hideTypingIndicator();
-      const errMsg = err?.message || 'Error communicating with AI service.';
-      this.appendMessage('assistant', `⚠️ **Error**: ${errMsg}`);
-    } finally {
-      this.isThinking = false;
-      if (this.sendButtonElement) this.sendButtonElement.disabled = false;
-    }
+    });
   }
 
-  private appendMessage(sender: 'user' | 'assistant', text: string, citations?: Array<{ title: string; url: string }>) {
-    if (!this.messageListElement) return;
+  private toggle(open?: boolean): void {
+    this.isOpened = open !== undefined ? open : !this.isOpened;
+    const box = document.getElementById('docmd-ai-box');
+    if (box) box.classList.toggle('open', this.isOpened);
+  }
 
-    if (sender === 'user') {
-      const suggestionsEl = this.messageListElement.querySelector('.docmd-ai-suggestions');
-      if (suggestionsEl) suggestionsEl.remove();
+  private appendMsg(sender: 'user' | 'assistant', text: string): HTMLElement {
+    const msgs = document.getElementById('docmd-ai-messages');
+    const div = document.createElement('div');
+    div.className = `docmd-ai-msg ${sender}`;
+    div.textContent = text;
+    if (msgs) {
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
     }
-
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `docmd-ai-message ${sender}`;
-
-    let citationsHtml = '';
-    if (citations && citations.length > 0) {
-      citationsHtml = `
-        <div class="docmd-ai-citations">
-          <div class="docmd-ai-citations-title">Sources</div>
-          ${citations.map(c => `<a class="docmd-ai-citation-link" href="${this.escapeHTML(c.url)}">📄 ${this.escapeHTML(c.title)}</a>`).join('')}
-        </div>
-      `;
-    }
-
-    const formattedText = sender === 'assistant' ? this.formatMarkdown(text) : this.escapeHTML(text);
-    const sparkIconSvg = `<svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
-
-    if (sender === 'assistant') {
-      messageDiv.innerHTML = `
-        <div class="docmd-ai-avatar-spark">${sparkIconSvg}</div>
-        <div class="docmd-ai-bubble">
-          ${formattedText}
-          ${citationsHtml}
-        </div>
-      `;
-    } else {
-      messageDiv.innerHTML = `
-        <div class="docmd-ai-bubble">
-          ${formattedText}
-        </div>
-      `;
-    }
-
-    this.messageListElement.appendChild(messageDiv);
-    this.messageListElement.scrollTop = this.messageListElement.scrollHeight;
-  }
-
-  private showTypingIndicator() {
-    if (!this.messageListElement) return;
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'docmd-ai-message assistant docmd-ai-typing-wrap';
-    const sparkIconSvg = `<svg viewBox="0 0 24 24"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`;
-    typingDiv.innerHTML = `
-      <div class="docmd-ai-avatar-spark">${sparkIconSvg}</div>
-      <div class="docmd-ai-bubble docmd-ai-typing">
-        <div class="docmd-ai-typing-dot"></div>
-        <div class="docmd-ai-typing-dot"></div>
-        <div class="docmd-ai-typing-dot"></div>
-      </div>
-    `;
-    this.messageListElement.appendChild(typingDiv);
-    this.messageListElement.scrollTop = this.messageListElement.scrollHeight;
-  }
-
-  private hideTypingIndicator() {
-    const typingEl = this.messageListElement?.querySelector('.docmd-ai-typing-wrap');
-    if (typingEl) typingEl.remove();
-  }
-
-  private formatMarkdown(text: string): string {
-    let html = this.escapeHTML(text);
-
-    // Code blocks ```code```
-    html = html.replace(/```([\s\S]*?)```/g, (_match, p1) => `<pre><code>${p1.trim()}</code></pre>`);
-    // Inline code `code`
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    // Bold **text**
-    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    // Italic *text*
-    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
-    // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--docmd-ai-primary)">$1</a>');
-    // Line breaks
-    html = html.replace(/\n/g, '<br>');
-
-    return html;
-  }
-
-  private escapeHTML(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
+    return div;
   }
 }
 
-// Auto-instantiate on DOM load
 if (typeof document !== 'undefined') {
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => new DocmdAIAssistant());
+    document.addEventListener('DOMContentLoaded', () => new DocmdAIAssistantUI());
   } else {
-    new DocmdAIAssistant();
+    new DocmdAIAssistantUI();
   }
 }

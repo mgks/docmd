@@ -18,7 +18,7 @@ import nativeFs from 'fs';
 import { fileURLToPath } from 'url';
 import type { PluginDescriptor, ActionContext, Asset } from '@docmd/api';
 import { scriptLiteral } from '@docmd/utils';
-import { loadConfig as loadAIPlugConfig, createLLMAdapter } from 'aiplug';
+import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
@@ -59,11 +59,14 @@ export interface AIPluginOptions {
 }
 
 /** Default system prompt for documentation assistant */
-const DEFAULT_SYSTEM_PROMPT = `You are a helpful, polite, and precise AI documentation assistant for this website.
-Your goal is to answer user questions accurately based on the documentation context provided below.
-If the answer is found in the documentation context, cite the source title/path when relevant.
-If the answer cannot be determined from the documentation, politely explain that and provide a clear, helpful response.
-Keep your answers formatted cleanly in markdown with code blocks where appropriate.`;
+const DEFAULT_SYSTEM_PROMPT = `You are the official AI Assistant for this documentation site, powered by docmd.
+Your primary role is to assist users by providing accurate, concise, and helpful answers based on the documentation context and site structure.
+
+Guidelines:
+1. Grounding & Accuracy: Primary responses must be derived from the provided documentation context below. Reference relevant section titles or URLs when citing sources.
+2. docmd Framework Awareness: Understand that this site is built using docmd (the zero-config documentation framework). Be helpful if users ask about markdown documentation features, navigation, code snippets, search, or site structure.
+3. Fallback & Politeness: If a query cannot be answered using the provided documentation context, politely explain what is missing and offer clear, general assistance if appropriate.
+4. Response Formatting: Format your answers clearly using clean Markdown (headers, bullet lists, code blocks with language syntax highlighting).`;
 
 /** Resolved configuration cache per build */
 let _resolvedOptions: AIPluginOptions = {};
@@ -293,72 +296,24 @@ export const actions = {
       throw new Error(`Rate limit exceeded (${maxReq} requests/min). Please wait a moment before sending another query.`);
     }
 
-    // 1. Resolve API key strictly on server-side
-    const loadedAIPlugConfig = loadAIPlugConfig();
-    const providerKeyEnv = `${(opts.provider || 'openai').toUpperCase()}_API_KEY`;
-    const apiKey = opts.apiKey || process.env[providerKeyEnv] || process.env.AI_API_KEY || loadedAIPlugConfig.profiles[opts.provider || 'openai']?.apiKey;
-
-    if (!apiKey && opts.provider !== 'ollama') {
-      throw new Error(
-        `AI Assistant error: Missing API key for provider "${opts.provider}". Set your ${providerKeyEnv} environment variable on the server.`
-      );
-    }
-
-    // 2. Perform RAG via search index
     const docsContext = await searchDocumentationRAG(ctx.projectRoot, message, opts.contextLimit || 5);
-    
-    let contextPrompt = '';
-    const citations: Array<{ title: string; url: string }> = [];
+    const citations: Array<{ title: string; url: string }> = docsContext.map(d => ({ title: d.title, url: d.url }));
 
-    if (docsContext.length > 0) {
-      contextPrompt = '\n\nRelevant Documentation Context:\n';
-      docsContext.forEach((doc, idx) => {
-        citations.push({ title: doc.title, url: doc.url });
-        contextPrompt += `--- [Doc ${idx + 1}: ${doc.title} (${doc.url})] ---\n${doc.content}\n\n`;
-      });
-    }
+    const engine = new DocmdAssistantEngine({
+      endpoint: opts.endpoint || 'https://api.docmd.io/v1/ai/chat',
+      projectId: opts.projectId || opts.siteId,
+      provider: opts.provider,
+      model: opts.model,
+      systemPrompt: opts.systemPrompt
+    });
 
-    const fullSystemPrompt = `${opts.systemPrompt || DEFAULT_SYSTEM_PROMPT}${contextPrompt}`;
-
-    try {
-      // 3. Instantiate LLM Adapter from aiplug
-      const adapter = createLLMAdapter({
-        provider: opts.provider || 'openai',
-        model: opts.model || 'gpt-4o-mini',
-        apiKey: apiKey || ''
-      });
-
-      // 4. Format message history for aiplug
-      const formattedMessages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [
-        { role: 'system', content: fullSystemPrompt }
-      ];
-
-      if (Array.isArray(history)) {
-        for (const item of history) {
-          if (item.sender === 'user' || item.role === 'user') {
-            formattedMessages.push({ role: 'user', content: item.text || item.content });
-          } else if (item.sender === 'assistant' || item.role === 'assistant') {
-            formattedMessages.push({ role: 'assistant', content: item.text || item.content });
-          }
-        }
-      }
-
-      formattedMessages.push({ role: 'user', content: message });
-
-      // 5. Request chat response via aiplug adapter
-      const response = await adapter.converse(formattedMessages);
-
-      return {
-        text: response.message?.content || 'No response returned from AI.',
-        citations,
-        provider: opts.provider,
-        model: opts.model
-      };
-
-    } catch (err: any) {
-      const errMsg = err.message || String(err);
-      throw new Error(`AI request failed: ${errMsg}`);
-    }
+    const res = await engine.sendMessage(message);
+    return {
+      text: res.message,
+      citations,
+      provider: opts.provider,
+      model: opts.model
+    };
   }
 };
 
@@ -399,7 +354,7 @@ export function getAssets(config?: any): Asset[] {
   }
 
   const distDir = path.resolve(__dirname, '..', 'dist', 'client');
-  return [
+  const assets: Asset[] = [
     {
       src: path.join(distDir, 'index.js'),
       dest: 'assets/js/ai.js',
@@ -407,13 +362,20 @@ export function getAssets(config?: any): Asset[] {
       location: 'body',
       attributes: { type: 'module' }
     },
-    {
-      src: path.join(distDir, 'index.css'),
+  ];
+
+  // Only include CSS if the client build produced one
+  const cssPath = path.join(distDir, 'index.css');
+  if (nativeFs.existsSync(cssPath)) {
+    assets.push({
+      src: cssPath,
       dest: 'assets/css/ai.css',
       type: 'css',
       location: 'head'
-    }
-  ];
+    });
+  }
+
+  return assets;
 }
 
 /** Post Build Hook */
