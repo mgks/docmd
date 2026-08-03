@@ -16,7 +16,7 @@
     "src"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=20.0.0"
   },
   "devDependencies": {
     "@types/node": "^24.13.3"

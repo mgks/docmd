@@ -27,7 +27,7 @@
     "i18n"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "markdown-it": "^14.3.0",

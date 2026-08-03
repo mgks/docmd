@@ -28,10 +28,10 @@
     "README.md"
   ],
   "engines": {
-    "node": ">=22.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
-    "docmd-assistant": "workspace:*"
+    "docmd-assistant": "^0.1.2"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",
