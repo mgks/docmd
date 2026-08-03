@@ -47,12 +47,12 @@ declare module 'docmd-assistant' {
     setHistory(history: ChatMessage[]): this;
     clearHistory(): this;
     addMessage(message: ChatMessage): this;
-    on(event: string, listener: Function): this;
-    off(event: string, listener: Function): this;
+    on(event: string, listener: (...args: any[]) => any): this;
+    off(event: string, listener: (...args: any[]) => any): this;
     emit(type: string, data: any): void;
     sendMessage(content: string, overrideOptions?: Partial<AssistantOptions>): Promise<ChatResponse>;
     executeTool(name: string, args: any): Promise<any>;
   }
 
-  export function createStandardTools(customSearch?: Function): any[];
+  export function createStandardTools(customSearch?: (...args: any[]) => any): any[];
 }

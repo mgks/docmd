@@ -4,6 +4,7 @@ packages:
   - 'packages/plugins/*'
   - 'packages/templates/*'
   - 'packages/engines/*'
+  - '../docmd-assistant'
 
 public-hoist-pattern:
   - '@types/*'

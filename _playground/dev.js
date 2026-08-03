@@ -49,12 +49,19 @@ if (!existsSync(nodeModules)) {
   // docmd doesn't lock trying to load a missing native module. Pair with
   // --foreground-scripts to surface postinstall output (engine-rust's
   // postinstall downloads the .node binary from a CDN).
-  const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--include=optional', '--foreground-scripts'], {
+  let r = spawnSync('pnpm', ['install'], {
     cwd: __dirname,
     stdio: 'inherit',
     env,
   });
-  if (r.status !== 0) fail(`npm install failed (exit ${r.status})`);
+  if (r.status !== 0) {
+    r = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps', '--include=optional', '--foreground-scripts'], {
+      cwd: __dirname,
+      stdio: 'inherit',
+      env,
+    });
+  }
+  if (r.status !== 0) fail(`install failed (exit ${r.status})`);
 }
 
 const binName = command === 'live' ? 'docmd-live' : 'docmd';

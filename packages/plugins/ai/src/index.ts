@@ -314,16 +314,16 @@ export const actions = {
 
 /** Script and container generator for page injection */
 export function generateScripts(config: any, _options?: any): { headScriptsHtml: string; bodyScriptsHtml: string } {
-  const pluginOptions: AIPluginOptions = (config.plugins && config.plugins.ai) || config.ai || {};
+  const pluginOptions: AIPluginOptions = config._aiConfig || (config.plugins && config.plugins.ai) || config.ai || {};
   if (pluginOptions.enabled === false || pluginOptions.assistant === false || pluginOptions.chat === false) {
     return { headScriptsHtml: '', bodyScriptsHtml: '' };
   }
 
   const targetProjectId = pluginOptions.projectId || pluginOptions.siteId || pluginOptions.cloud?.projectId || pluginOptions.cloud?.siteId;
+  const endpoint = pluginOptions.endpoint || (targetProjectId ? 'https://api.docmd.io/v1/ai/chat' : '');
 
-  // Security: Exclude apiKey or credentials from client-side script payload!
   const clientConfig: Record<string, any> = {
-    endpoint: pluginOptions.endpoint || (targetProjectId ? 'https://api.docmd.io/v1/ai/chat' : ''),
+    endpoint,
     projectId: targetProjectId,
     cloud: { siteId: targetProjectId, projectId: targetProjectId, ...(pluginOptions.cloud || {}) },
     captcha: pluginOptions.captcha !== false,
