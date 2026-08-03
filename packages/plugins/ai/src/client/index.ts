@@ -6,12 +6,12 @@
 import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export class DocmdAIAssistantUI {
-  private engine: DocmdAssistantEngine;
+  private engine: any;
   private container: HTMLElement | null = null;
   private isOpened = false;
 
   constructor() {
-    const cfg = (window as any).__DOCMD_AI_CONFIG__ || {};
+    const cfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__ || {};
     const projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId;
 
     this.engine = new DocmdAssistantEngine({
