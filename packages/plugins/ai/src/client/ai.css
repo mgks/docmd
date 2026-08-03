@@ -442,3 +442,22 @@ body.dark #docmd-ai-plugin-root {
   opacity: 0.92;
   transform: translateY(-1px);
 }
+
+.docmd-ai-footer-branding {
+  text-align: center;
+  padding-top: 6px;
+  margin-top: 2px;
+}
+.docmd-ai-footer-link {
+  font-size: 11px;
+  color: var(--ai-text-muted);
+  text-decoration: none;
+  opacity: 0.75;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+.docmd-ai-footer-link:hover {
+  opacity: 1;
+  color: var(--ai-primary);
+  text-decoration: underline;
+}
+

@@ -11,5 +11,5 @@
   "ai.errorNoKey": "Kein API-Schlüssel konfiguriert. Bitte legen Sie Ihren API-Schlüssel fest.",
   "ai.errorGeneric": "Bei der Antwortgenerierung ist ein Fehler aufgetreten.",
   "ai.citations": "Quellen:",
-  "ai.poweredBy": "Unterstützt von aiplug"
+  "ai.poweredBy": "Unterstützt von docmd assistant"
 }

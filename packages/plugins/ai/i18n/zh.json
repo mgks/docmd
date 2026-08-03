@@ -11,5 +11,5 @@
   "ai.errorNoKey": "未配置 API 密钥。请设置您的 AI 服务提供商 API 密钥。",
   "ai.errorGeneric": "获取响应时发生错误。",
   "ai.citations": "参考来源：",
-  "ai.poweredBy": "由 aiplug 提供支持"
+  "ai.poweredBy": "由 docmd assistant 提供支持"
 }

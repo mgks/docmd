@@ -11,5 +11,5 @@
   "ai.errorNoKey": "No API key configured for AI provider. Please set your provider API key.",
   "ai.errorGeneric": "An error occurred while fetching response.",
   "ai.citations": "Sources:",
-  "ai.poweredBy": "Powered by aiplug"
+  "ai.poweredBy": "Powered by docmd assistant"
 }

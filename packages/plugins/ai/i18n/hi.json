@@ -11,5 +11,5 @@
   "ai.errorNoKey": "कोई API कुंजी कॉन्फ़िगर नहीं की गई है।",
   "ai.errorGeneric": "उत्तर प्राप्त करते समय एक त्रुटि हुई।",
   "ai.citations": "स्रोत:",
-  "ai.poweredBy": "aiplug द्वारा संचालित"
+  "ai.poweredBy": "docmd assistant द्वारा संचालित"
 }
