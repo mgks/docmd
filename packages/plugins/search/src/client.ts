@@ -425,6 +425,21 @@ declare const MiniSearch: any;
         });
 
         window.closeDocmdSearch = closeSearch;
+        (window as any).docmdSearch = {
+            search: async (query: string) => {
+                if (!isIndexLoaded) await loadIndex();
+                if (miniSearch) {
+                    return miniSearch.search(query).map((r: any) => ({
+                        title: r.title,
+                        id: r.id,
+                        version: r.version,
+                        snippet: getSnippet(r.text, query),
+                        text: r.text
+                    }));
+                }
+                return [];
+            }
+        };
     }
 
     if (document.readyState === 'loading') {
