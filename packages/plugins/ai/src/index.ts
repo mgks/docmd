@@ -87,9 +87,9 @@ export async function onConfigResolved(config: any): Promise<void> {
     endpoint = 'https://api.docmd.io/v1/ai/chat';
   }
 
-  // Default provider/model logic: in cloud mode (targetProjectId present),
-  // do not force 'openai' default unless explicitly configured by the user.
-  const provider = pluginOptions.provider || process.env.AI_PROVIDER || (targetProjectId ? undefined : 'openai');
+  // Provider/model resolution: if not specified in config or env, leave undefined
+  // so docmd-assistant engine handles provider defaults dynamically.
+  const provider = pluginOptions.provider || process.env.AI_PROVIDER;
   let defaultModel: string | undefined = undefined;
   if (provider === 'anthropic') defaultModel = 'claude-3-5-haiku-20241022';
   else if (provider === 'gemini') defaultModel = 'gemini-1.5-flash';
@@ -110,7 +110,7 @@ export async function onConfigResolved(config: any): Promise<void> {
     siteId: targetProjectId,
     cloud: { siteId: targetProjectId, projectId: targetProjectId, ...(pluginOptions.cloud || {}) },
     provider,
-    model: pluginOptions.model || process.env.AI_MODEL || defaultModel,
+    model,
     apiKey: pluginOptions.apiKey || process.env.AI_API_KEY || (provider ? process.env[`${provider.toUpperCase()}_API_KEY`] : undefined) || process.env.OPENAI_API_KEY,
     systemPrompt: pluginOptions.systemPrompt || DEFAULT_SYSTEM_PROMPT,
     greeting: pluginOptions.greeting,
@@ -331,7 +331,7 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
   const targetProjectId = pluginOptions.projectId || pluginOptions.siteId || pluginOptions.cloud?.projectId || pluginOptions.cloud?.siteId;
 
   // Security: Exclude apiKey or credentials from client-side script payload!
-  const clientConfig = {
+  const clientConfig: Record<string, any> = {
     endpoint: pluginOptions.endpoint || (targetProjectId ? 'https://api.docmd.io/v1/ai/chat' : ''),
     projectId: targetProjectId,
     cloud: { siteId: targetProjectId, projectId: targetProjectId, ...(pluginOptions.cloud || {}) },
@@ -339,10 +339,10 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     position: pluginOptions.position || 'bottom-center',
     greeting: pluginOptions.greeting,
     placeholder: pluginOptions.placeholder,
-    suggestions: pluginOptions.suggestions,
-    provider: pluginOptions.provider || (targetProjectId ? undefined : 'openai'),
-    model: pluginOptions.model || (targetProjectId ? undefined : 'gpt-4o-mini')
+    suggestions: pluginOptions.suggestions
   };
+  if (pluginOptions.provider) clientConfig.provider = pluginOptions.provider;
+  if (pluginOptions.model) clientConfig.model = pluginOptions.model;
 
   return {
     headScriptsHtml: '',
