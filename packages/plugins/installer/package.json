@@ -13,7 +13,7 @@
     "registry"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@docmd/api": "workspace:*"

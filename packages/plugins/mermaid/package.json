@@ -24,13 +24,13 @@
     "dist"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",
     "@types/node": "^24.13.3",
     "esbuild": "^0.28.1",
-    "tsx": "^4.23.1"
+    "tsx": "^4.23.5"
   },
   "keywords": [
     "docmd",

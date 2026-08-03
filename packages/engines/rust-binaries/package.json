@@ -9,7 +9,7 @@
     "bin"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "docmd",

@@ -37,12 +37,12 @@
     "docmd-search": "^0.1.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.8.0",
-    "globals": "^17.8.0",
+    "globals": "^17.9.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.0.0"
   },
   "packageManager": "pnpm@10.33.2",
   "pnpm": {
