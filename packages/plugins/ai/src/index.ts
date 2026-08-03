@@ -87,18 +87,9 @@ export async function onConfigResolved(config: any): Promise<void> {
     endpoint = 'https://api.docmd.io/v1/ai/chat';
   }
 
-  // Provider/model resolution: if not specified in config or env, leave undefined
-  // so docmd-assistant engine handles provider defaults dynamically.
+  // Pass provider and model through directly if configured; docmd-assistant / aiplug handles defaults
   const provider = pluginOptions.provider || process.env.AI_PROVIDER;
-  let defaultModel: string | undefined = undefined;
-  if (provider === 'anthropic') defaultModel = 'claude-3-5-haiku-20241022';
-  else if (provider === 'gemini') defaultModel = 'gemini-1.5-flash';
-  else if (provider === 'deepseek') defaultModel = 'deepseek-chat';
-  else if (provider === 'groq') defaultModel = 'llama-3.3-70b-versatile';
-  else if (provider === 'ollama') defaultModel = 'llama3';
-  else if (provider === 'openai') defaultModel = 'gpt-4o-mini';
-
-  const model = pluginOptions.model || process.env.AI_MODEL || defaultModel;
+  const model = pluginOptions.model || process.env.AI_MODEL;
 
   _resolvedOptions = {
     enabled: isAssistantEnabled,
