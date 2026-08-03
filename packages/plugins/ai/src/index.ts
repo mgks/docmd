@@ -77,15 +77,6 @@ const rateLimitStore = new Map<string, number[]>();
 export async function onConfigResolved(config: any): Promise<void> {
   const pluginOptions: AIPluginOptions = (config.plugins && config.plugins.ai) || config.ai || {};
   
-  // Default values
-  const provider = pluginOptions.provider || process.env.AI_PROVIDER || 'openai';
-  let defaultModel = 'gpt-4o-mini';
-  if (provider === 'anthropic') defaultModel = 'claude-3-5-haiku-20241022';
-  else if (provider === 'gemini') defaultModel = 'gemini-1.5-flash';
-  else if (provider === 'deepseek') defaultModel = 'deepseek-chat';
-  else if (provider === 'groq') defaultModel = 'llama-3.3-70b-versatile';
-  else if (provider === 'ollama') defaultModel = 'llama3';
-
   // Support both `assistant` and legacy `chat` config flags
   const isAssistantEnabled = pluginOptions.assistant !== false && pluginOptions.chat !== false && pluginOptions.enabled !== false;
   const targetProjectId = pluginOptions.projectId || pluginOptions.siteId || pluginOptions.cloud?.projectId || pluginOptions.cloud?.siteId;
@@ -95,6 +86,19 @@ export async function onConfigResolved(config: any): Promise<void> {
   if (!endpoint && targetProjectId) {
     endpoint = 'https://api.docmd.io/v1/ai/chat';
   }
+
+  // Default provider/model logic: in cloud mode (targetProjectId present),
+  // do not force 'openai' default unless explicitly configured by the user.
+  const provider = pluginOptions.provider || process.env.AI_PROVIDER || (targetProjectId ? undefined : 'openai');
+  let defaultModel: string | undefined = undefined;
+  if (provider === 'anthropic') defaultModel = 'claude-3-5-haiku-20241022';
+  else if (provider === 'gemini') defaultModel = 'gemini-1.5-flash';
+  else if (provider === 'deepseek') defaultModel = 'deepseek-chat';
+  else if (provider === 'groq') defaultModel = 'llama-3.3-70b-versatile';
+  else if (provider === 'ollama') defaultModel = 'llama3';
+  else if (provider === 'openai') defaultModel = 'gpt-4o-mini';
+
+  const model = pluginOptions.model || process.env.AI_MODEL || defaultModel;
 
   _resolvedOptions = {
     enabled: isAssistantEnabled,
@@ -107,7 +111,7 @@ export async function onConfigResolved(config: any): Promise<void> {
     cloud: { siteId: targetProjectId, projectId: targetProjectId, ...(pluginOptions.cloud || {}) },
     provider,
     model: pluginOptions.model || process.env.AI_MODEL || defaultModel,
-    apiKey: pluginOptions.apiKey || process.env.AI_API_KEY || process.env[`${provider.toUpperCase()}_API_KEY`] || process.env.OPENAI_API_KEY,
+    apiKey: pluginOptions.apiKey || process.env.AI_API_KEY || (provider ? process.env[`${provider.toUpperCase()}_API_KEY`] : undefined) || process.env.OPENAI_API_KEY,
     systemPrompt: pluginOptions.systemPrompt || DEFAULT_SYSTEM_PROMPT,
     greeting: pluginOptions.greeting,
     placeholder: pluginOptions.placeholder,
@@ -336,8 +340,8 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     greeting: pluginOptions.greeting,
     placeholder: pluginOptions.placeholder,
     suggestions: pluginOptions.suggestions,
-    provider: pluginOptions.provider || 'openai',
-    model: pluginOptions.model || 'gpt-4o-mini'
+    provider: pluginOptions.provider || (targetProjectId ? undefined : 'openai'),
+    model: pluginOptions.model || (targetProjectId ? undefined : 'gpt-4o-mini')
   };
 
   return {
