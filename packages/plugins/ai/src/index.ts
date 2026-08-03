@@ -323,6 +323,12 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
   const targetProjectId = pluginOptions.projectId || pluginOptions.siteId || pluginOptions.cloud?.projectId || pluginOptions.cloud?.siteId;
   const endpoint = pluginOptions.endpoint || (targetProjectId ? 'https://api.docmd.io/v1/ai/chat' : '');
 
+  const workspaceProjects = (config._workspace?.projects || []).map((p: any) => ({
+    name: p.name || p.title || p.prefix,
+    prefix: p.prefix || '/',
+    src: p.src || ''
+  }));
+
   const clientConfig: Record<string, any> = {
     endpoint,
     projectId: targetProjectId,
@@ -331,7 +337,12 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     position: pluginOptions.position || 'bottom-center',
     greeting: pluginOptions.greeting,
     placeholder: pluginOptions.placeholder,
-    suggestions: pluginOptions.suggestions
+    suggestions: pluginOptions.suggestions,
+    siteTitle: config.title || 'Documentation',
+    siteBase: config.base || '/',
+    siteUrl: config.url || '',
+    isWorkspace: workspaceProjects.length > 0,
+    workspaceProjects
   };
   if (pluginOptions.provider) clientConfig.provider = pluginOptions.provider;
   if (pluginOptions.model) clientConfig.model = pluginOptions.model;

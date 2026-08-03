@@ -18,36 +18,22 @@ export class DocmdAIAssistantUI {
     this.projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId || 'default';
     this.isUnconfigured = (!cfg.projectId || cfg.projectId === 'default') && !cfg.apiKey && !cfg.baseURL;
 
+    const initialSystemPrompt = this.buildSystemPrompt();
+
     this.engine = new DocmdAssistantEngine({
       projectId: this.projectId,
       endpoint: cfg.endpoint || (this.projectId ? 'https://api.docmd.io/v1/ai/chat' : undefined),
       provider: cfg.provider,
       model: cfg.model,
-      systemPrompt: cfg.systemPrompt,
+      systemPrompt: initialSystemPrompt,
       reasoning: cfg.reasoning ?? false
     });
 
-    const detectContext = () => {
-      const locale = (window as any).__DOCMD_LOCALE__ || document.documentElement.lang || 'en';
-      const versionMatch = location.pathname.match(/\/v(\d+)\//);
-      const version = (window as any).__DOCMD_VERSION__ || (versionMatch ? `v${versionMatch[1]}` : '');
-      return { locale, version };
-    };
-
     this.engine.registerTool({
       name: 'search_documentation',
-      description: 'Search documentation content via docmd-search index with active locale and version filters',
-      execute: async ({ query, version, locale }: { query: string; version?: string; locale?: string }) => {
-        if ((window as any).docmdSearch && typeof (window as any).docmdSearch.search === 'function') {
-          const ctx = detectContext();
-          const targetVersion = version || ctx.version;
-          const targetLocale = locale || ctx.locale;
-          return await (window as any).docmdSearch.search(query, {
-            version: targetVersion,
-            locale: targetLocale
-          });
-        }
-        return [];
+      description: 'Search documentation pages across all projects in this workspace using keyword full-text matching and semantic vector search.',
+      execute: async ({ query, project }: { query: string; project?: string }) => {
+        return await this.searchAllWorkspaceIndexes(query, project);
       }
     });
 
@@ -237,16 +223,159 @@ export class DocmdAIAssistantUI {
     barWrap?.classList.remove('hidden');
   }
 
-  private async fetchLocalSearchContext(query: string): Promise<string> {
+  private buildSystemPrompt(): string {
+    const cfg = (window as any).__docmd_ai_config || {};
+    const currentUrl = typeof location !== 'undefined' ? location.href : '';
+    const siteTitle = cfg.siteTitle || (typeof document !== 'undefined' ? document.title : 'Documentation');
+    const isWorkspace = !!(cfg.isWorkspace && Array.isArray(cfg.workspaceProjects) && cfg.workspaceProjects.length > 0);
+    const getSiteBaseUrl = (): string => {
+      const cfg = (window as any).__docmd_ai_config || {};
+      let base = cfg.siteBase || '/';
+      if (typeof location !== 'undefined') {
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isLocal && base !== '/' && !location.pathname.startsWith(base)) {
+          base = '/';
+        }
+        return new URL(base.startsWith('/') ? base : '/' + base, location.origin).href;
+      }
+      return base;
+    };
+    const siteBaseUrl = getSiteBaseUrl();
+
+    let workspaceContext = '';
+    if (isWorkspace) {
+      const projectsList = cfg.workspaceProjects.map((p: any, idx: number) => {
+        const pName = p.name || p.prefix;
+        const pPrefix = p.prefix || '/';
+        const pAbsUrl = typeof location !== 'undefined' ? new URL(pPrefix.replace(/^\//, ''), siteBaseUrl).href : pPrefix;
+        return `  ${idx + 1}. Project "${pName}" (Prefix: "${pPrefix}", URL: ${pAbsUrl})`;
+      }).join('\n');
+
+      workspaceContext = `
+WORKSPACE ARCHITECTURE & PROJECT CONTEXT:
+- Site Title: "${siteTitle}"
+- Site Base URL: ${siteBaseUrl}
+- Current Active Page URL: ${currentUrl}
+- Multi-Project Workspace Setup: Active (${cfg.workspaceProjects.length} Projects)
+- Available Workspace Projects:
+${projectsList}
+
+CRITICAL RULES FOR MULTI-PROJECT SEARCH & HYPERLINKS:
+1. WORKSPACE AWARENESS: You have full awareness of all workspace projects listed above. Use the \`search_documentation\` tool to query documentation across any or all workspace projects.
+2. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project base URLs. Every page hyperlink MUST be an absolute URL stemming from the Site Base URL (e.g. "${siteBaseUrl}rust/" or "${siteBaseUrl}#section"). NEVER invent, hallucinate, or construct relative subpaths like "/mermaid/default-ui-showcase".
+3. KEYWORD vs SEMANTIC SEARCH: The documentation search tool queries both Keyword (MiniSearch) and Semantic Vector search indexes across all projects. Rely on search results for ground truth.`;
+    } else {
+      workspaceContext = `
+SITE & PAGE CONTEXT:
+- Site Title: "${siteTitle}"
+- Site Base URL: ${siteBaseUrl}
+- Current Page URL: ${currentUrl}
+
+CRITICAL HYPERLINK RULES:
+Ground all page hyperlinks strictly in real search results. All absolute URLs must stem from "${siteBaseUrl}". Never invent relative subpaths.`;
+    }
+
+    const basePrompt = cfg.systemPrompt || 'You are docmd assistant — an expert, precise documentation assistant strictly dedicated to answering technical questions about this documentation site.';
+    return `${basePrompt}\n\n${workspaceContext}`;
+  }
+
+  private async searchAllWorkspaceIndexes(query: string, projectFilter?: string): Promise<any[]> {
+    const hits: Array<{ project: string; title: string; url: string; snippet: string; searchType: 'keyword' | 'semantic' }> = [];
+    const cfg = (window as any).__docmd_ai_config || {};
+    const getSiteBaseUrl = (): string => {
+      const cfg = (window as any).__docmd_ai_config || {};
+      let base = cfg.siteBase || '/';
+      if (typeof location !== 'undefined') {
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isLocal && base !== '/' && !location.pathname.startsWith(base)) {
+          base = '/';
+        }
+        return new URL(base.startsWith('/') ? base : '/' + base, location.origin).href;
+      }
+      return base;
+    };
+    const siteBaseUrl = getSiteBaseUrl();
+
+    // 1. Local Active Search Index (via window.docmdSearch)
     try {
       if ((window as any).docmdSearch && typeof (window as any).docmdSearch.search === 'function') {
-        const searchHits = await (window as any).docmdSearch.search(query);
-        if (Array.isArray(searchHits) && searchHits.length > 0) {
-          const topHits = searchHits.slice(0, 3).map((hit: any) => {
-            return `- ${hit.title || hit.id}: ${hit.snippet || hit.text || ''}`;
-          }).join('\n');
-          return `\n\n[Documentation Search Context]:\n${topHits}`;
+        const localHits = await (window as any).docmdSearch.search(query);
+        if (Array.isArray(localHits)) {
+          for (const item of localHits.slice(0, 5)) {
+            const rawId = item.id || item.url || '';
+            const cleanId = rawId.startsWith('/') ? rawId.slice(1) : rawId;
+            const fullUrl = rawId.startsWith('http') ? rawId : new URL(cleanId, siteBaseUrl).href;
+            hits.push({
+              project: 'Current Project',
+              title: item.title || cleanId,
+              url: fullUrl,
+              snippet: item.snippet || item.text || '',
+              searchType: 'keyword'
+            });
+          }
         }
+      }
+    } catch { /* ignore */ }
+
+    // 2. Fetch sibling workspace project search indexes
+    if (cfg.isWorkspace && Array.isArray(cfg.workspaceProjects)) {
+      for (const p of cfg.workspaceProjects) {
+        if (projectFilter && p.prefix !== projectFilter && p.name !== projectFilter) continue;
+        
+        try {
+          const pPrefix = p.prefix || '/';
+          const pBaseUrl = new URL(pPrefix.replace(/^\//, ''), siteBaseUrl).href;
+          const searchIndexPath = `${pBaseUrl}_docmd-search/search-index.json`;
+          
+          const res = await fetch(searchIndexPath);
+          if (res.ok) {
+            const indexData = await res.json();
+            const docs = indexData.storedFields ? Object.values(indexData.storedFields) : (Array.isArray(indexData) ? indexData : []);
+            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+
+            const scored = docs.map((doc: any) => {
+              const titleStr = String(doc.title || doc.id || '').toLowerCase();
+              const textStr = String(doc.text || '').toLowerCase();
+              let score = 0;
+              for (const term of terms) {
+                if (titleStr.includes(term)) score += 5;
+                if (textStr.includes(term)) score += 1;
+              }
+              return { doc, score };
+            }).filter((h: any) => h.score > 0).sort((a: any, b: any) => b.score - a.score);
+
+            for (const hit of scored.slice(0, 3)) {
+              const doc = hit.doc;
+              const rawId = doc.id || '';
+              const cleanId = rawId.startsWith('/') ? rawId.slice(1) : rawId;
+              const fullUrl = rawId.startsWith('http') ? rawId : new URL(cleanId, pBaseUrl).href;
+              
+              if (!hits.some(existing => existing.url === fullUrl)) {
+                hits.push({
+                  project: p.name || p.prefix,
+                  title: doc.title || rawId,
+                  url: fullUrl,
+                  snippet: (doc.text || '').slice(0, 150) + '...',
+                  searchType: 'keyword'
+                });
+              }
+            }
+          }
+        } catch { /* ignore fetch errors for sibling indexes */ }
+      }
+    }
+
+    return hits;
+  }
+
+  private async fetchLocalSearchContext(query: string): Promise<string> {
+    try {
+      const hits = await this.searchAllWorkspaceIndexes(query);
+      if (Array.isArray(hits) && hits.length > 0) {
+        const formattedHits = hits.slice(0, 5).map((hit: any) => {
+          return `- [${hit.project}] ${hit.title} (${hit.searchType}): ${hit.url}\n  Snippet: ${hit.snippet}`;
+        }).join('\n');
+        return `\n\n[Documentation Search Context (Multi-Project Workspace)]:\n${formattedHits}`;
       }
     } catch { /* silent */ }
     return '';
@@ -357,6 +486,41 @@ export class DocmdAIAssistantUI {
     if (!raw) return '';
     let text = this.escapeHtml(raw);
 
+    const cfg = (window as any).__docmd_ai_config || {};
+    const getSiteBaseUrl = (): string => {
+      const cfg = (window as any).__docmd_ai_config || {};
+      let base = cfg.siteBase || '/';
+      if (typeof location !== 'undefined') {
+        const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        if (isLocal && base !== '/' && !location.pathname.startsWith(base)) {
+          base = '/';
+        }
+        return new URL(base.startsWith('/') ? base : '/' + base, location.origin).href;
+      }
+      return base;
+    };
+    const siteBaseUrl = getSiteBaseUrl();
+
+    const resolveCanonicalUrl = (href: string): string => {
+      if (!href) return '#';
+      let targetUrl = href.trim();
+      const subpathBase = (cfg.siteBase || '').replace(/^\/|\/$/g, '');
+      const isLocal = typeof location !== 'undefined' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+
+      if (isLocal && subpathBase && !location.pathname.startsWith('/' + subpathBase)) {
+        targetUrl = targetUrl.replace(new RegExp(`/${subpathBase}(/|$)`, 'g'), '/');
+      }
+
+      if (/^(?:https?:|mailto:|tel:)/i.test(targetUrl)) return targetUrl;
+      if (targetUrl.startsWith('#')) return `${siteBaseUrl}${targetUrl}`;
+      try {
+        const cleanHref = targetUrl.startsWith('/') ? targetUrl.slice(1) : targetUrl;
+        return new URL(cleanHref, siteBaseUrl).href;
+      } catch {
+        return targetUrl;
+      }
+    };
+
     // Code blocks with syntax highlighting
     const codeBlocks: string[] = [];
     text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
@@ -398,18 +562,54 @@ export class DocmdAIAssistantUI {
       return `<blockquote>${content}</blockquote>`;
     });
 
+    // Markdown Tables (| Header 1 | Header 2 |\n| --- | --- |\n| Cell 1 | Cell 2 |)
+    text = text.replace(/(?:^\s*\|.*\|\s*(?:\r?\n|$))+/gm, (match) => {
+      const lines = match.trim().split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lines.length < 2) return match;
+
+      let html = '<div class="docmd-ai-table-wrap"><table>';
+      let inBody = false;
+
+      lines.forEach((line, idx) => {
+        if (/^\|(?:\s*:?-+:?\s*\|)+$/.test(line)) return;
+        const cells = line.split('|').slice(1, -1).map(c => c.trim());
+        if (cells.length === 0) return;
+
+        if (idx === 0) {
+          html += '<thead><tr>';
+          cells.forEach(c => { html += `<th>${c}</th>`; });
+          html += '</tr></thead>';
+        } else {
+          if (!inBody) {
+            html += '<tbody>';
+            inBody = true;
+          }
+          html += '<tr>';
+          cells.forEach(c => { html += `<td>${c}</td>`; });
+          html += '</tr>';
+        }
+      });
+
+      if (inBody) html += '</tbody>';
+      html += '</table></div>';
+      return html;
+    });
+
     // Inline formatting
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
     text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
-    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, label, link) => {
+      const finalUrl = resolveCanonicalUrl(link.trim());
+      return `<a href="${finalUrl}" target="_blank" rel="noopener">${label}</a>`;
+    });
 
     // Split into blocks by double linebreaks for clean paragraph flow
     const blocks = text.split(/\n{2,}/);
-    const html = blocks.map(block => {
+    let html = blocks.map(block => {
       const trimmed = block.trim();
       if (!trimmed) return '';
-      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote)/i.test(trimmed)) {
+      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table)/i.test(trimmed)) {
         return trimmed.replace(/\n/g, ' ');
       }
       return `<p>${trimmed.replace(/\n/g, '<br/>')}</p>`;
@@ -420,6 +620,15 @@ export class DocmdAIAssistantUI {
     codeBlocks.forEach((cb, i) => {
       finalHtml = finalHtml.replace(`__CODE_BLOCK_${i}__`, cb);
     });
+
+    // Sanitize local dev server subpath URLs (e.g. convert /beta-test/rust to /rust on localhost)
+    const isLocal = typeof location !== 'undefined' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1');
+    const subpathBase = (cfg.siteBase || '').replace(/^\/|\/$/g, '');
+    if (isLocal && subpathBase && !location.pathname.startsWith('/' + subpathBase)) {
+      finalHtml = finalHtml.replace(new RegExp(`(https?://[^/\\s]+)?/${subpathBase}(/|\\b)`, 'g'), (_m, origin) => {
+        return (origin || '') + '/';
+      });
+    }
 
     return finalHtml;
   }

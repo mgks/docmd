@@ -465,3 +465,33 @@ body.dark #docmd-ai-plugin-root {
   text-decoration: underline;
 }
 
+/* Markdown Tables in Assistant Chat */
+.docmd-ai-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid var(--ai-border);
+}
+.docmd-ai-chat-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: left;
+}
+.docmd-ai-chat-bubble th,
+.docmd-ai-chat-bubble td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ai-border);
+}
+.docmd-ai-chat-bubble th {
+  background: var(--ai-input-bg);
+  font-weight: 600;
+  color: var(--ai-text);
+}
+.docmd-ai-chat-bubble tr:last-child td {
+  border-bottom: none;
+}
+.docmd-ai-chat-bubble tr:hover td {
+  background: rgba(125, 125, 125, 0.05);
+}
