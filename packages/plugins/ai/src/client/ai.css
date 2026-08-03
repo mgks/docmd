@@ -52,13 +52,16 @@ body.dark #docmd-ai-plugin-root {
   z-index: 9998;
   transition: all 0.25s ease;
 }
+
 #docmd-ai-plugin-root.pos-bottom-center .docmd-ai-bar-wrap {
   left: 50%;
   transform: translateX(-50%);
 }
+
 #docmd-ai-plugin-root.pos-bottom-right .docmd-ai-bar-wrap {
   right: 24px;
 }
+
 #docmd-ai-plugin-root.pos-bottom-left .docmd-ai-bar-wrap {
   left: 24px;
 }
@@ -82,6 +85,7 @@ body.dark #docmd-ai-plugin-root {
   box-shadow: var(--ai-shadow);
   transition: border-color 0.2s, width 0.25s ease;
 }
+
 .docmd-ai-prompt-bar:hover,
 .docmd-ai-prompt-bar:focus-within {
   width: 420px;
@@ -104,6 +108,7 @@ body.dark #docmd-ai-plugin-root {
   font-size: 13.5px;
   font-weight: 500;
 }
+
 .docmd-ai-bar-input::placeholder {
   color: var(--ai-text-muted);
 }
@@ -134,6 +139,7 @@ body.dark #docmd-ai-plugin-root {
   flex-shrink: 0;
   transition: opacity 0.2s;
 }
+
 .docmd-ai-submit-btn:hover {
   opacity: 0.9;
 }
@@ -158,6 +164,7 @@ body.dark #docmd-ai-plugin-root {
   transform: translateX(calc(100% + 24px));
   transition: transform 0.3s ease;
 }
+
 .docmd-ai-drawer.open {
   transform: translateX(0);
 }
@@ -170,22 +177,26 @@ body.dark #docmd-ai-plugin-root {
   align-items: center;
   justify-content: space-between;
 }
+
 .docmd-ai-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .docmd-ai-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 9999px;
   background: #10b981;
 }
+
 .docmd-ai-title-text {
   font-weight: 600;
   font-size: 14px;
   color: var(--ai-text);
 }
+
 .docmd-ai-badge-tag {
   background: rgba(6, 182, 212, 0.12);
   color: var(--ai-primary);
@@ -201,6 +212,7 @@ body.dark #docmd-ai-plugin-root {
   align-items: center;
   gap: 4px;
 }
+
 .docmd-ai-icon-action {
   background: transparent;
   border: none;
@@ -213,6 +225,7 @@ body.dark #docmd-ai-plugin-root {
   justify-content: center;
   transition: color 0.2s, background 0.2s;
 }
+
 .docmd-ai-icon-action:hover {
   color: var(--ai-text);
   background: rgba(125, 125, 125, 0.12);
@@ -234,6 +247,7 @@ body.dark #docmd-ai-plugin-root {
   gap: 8px;
   margin-top: 10px;
 }
+
 .docmd-ai-pill-btn {
   background: var(--ai-input-bg);
   border: 1px solid var(--ai-border);
@@ -245,6 +259,7 @@ body.dark #docmd-ai-plugin-root {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 .docmd-ai-pill-btn:hover {
   border-color: var(--ai-primary);
   color: var(--ai-primary);
@@ -258,12 +273,14 @@ body.dark #docmd-ai-plugin-root {
   line-height: 1.5;
   word-break: break-word;
 }
+
 .docmd-ai-chat-bubble.user {
   align-self: flex-end;
   background: var(--ai-bubble-user);
   color: #ffffff;
   border-bottom-right-radius: 4px;
 }
+
 .docmd-ai-chat-bubble.assistant {
   align-self: flex-start;
   background: var(--ai-bubble-assistant);
@@ -277,9 +294,11 @@ body.dark #docmd-ai-plugin-root {
   margin: 6px 0;
   line-height: 1.5;
 }
+
 .docmd-ai-chat-bubble p:first-child {
   margin-top: 0;
 }
+
 .docmd-ai-chat-bubble p:last-child {
   margin-bottom: 0;
 }
@@ -292,12 +311,15 @@ body.dark #docmd-ai-plugin-root {
   color: var(--ai-text);
   line-height: 1.35;
 }
+
 .docmd-ai-chat-bubble h3 {
   font-size: 15px;
 }
+
 .docmd-ai-chat-bubble h4 {
   font-size: 14px;
 }
+
 .docmd-ai-chat-bubble h5 {
   font-size: 13px;
 }
@@ -307,6 +329,7 @@ body.dark #docmd-ai-plugin-root {
   margin: 6px 0;
   padding-left: 20px;
 }
+
 .docmd-ai-chat-bubble li {
   margin: 3px 0;
   padding: 0;
@@ -321,6 +344,7 @@ body.dark #docmd-ai-plugin-root {
   font-style: italic;
   border-radius: 0 6px 6px 0;
 }
+
 .docmd-ai-chat-bubble pre {
   background: #1e293b !important;
   color: #f8fafc !important;
@@ -330,6 +354,7 @@ body.dark #docmd-ai-plugin-root {
   margin: 8px 0;
   overflow-x: auto;
 }
+
 .docmd-ai-chat-bubble code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12.5px;
@@ -337,11 +362,19 @@ body.dark #docmd-ai-plugin-root {
   padding: 2px 5px;
   border-radius: 4px;
 }
+
 .docmd-ai-chat-bubble pre code {
   background: transparent !important;
   padding: 0;
   color: #f8fafc !important;
 }
+
+.docmd-ai-chat-bubble hr {
+  border: none;
+  border-top: 1px solid var(--ai-border);
+  margin: 12px 0;
+}
+
 .docmd-ai-chat-bubble a {
   color: var(--ai-primary);
   text-decoration: underline;
@@ -352,10 +385,12 @@ body.dark #docmd-ai-plugin-root {
   background: var(--ai-bg);
   border-top: 1px solid var(--ai-border);
 }
+
 .docmd-ai-drawer-form {
   display: flex;
   gap: 8px;
 }
+
 .docmd-ai-drawer-input {
   flex: 1;
   background: var(--ai-input-bg);
@@ -367,9 +402,11 @@ body.dark #docmd-ai-plugin-root {
   outline: none;
   transition: border-color 0.2s;
 }
+
 .docmd-ai-drawer-input:focus {
   border-color: var(--ai-primary);
 }
+
 .docmd-ai-drawer-send-btn {
   background: var(--ai-primary);
   border: none;
@@ -381,6 +418,7 @@ body.dark #docmd-ai-plugin-root {
   cursor: pointer;
   transition: opacity 0.2s;
 }
+
 .docmd-ai-drawer-send-btn:hover {
   opacity: 0.9;
 }
@@ -398,6 +436,7 @@ body.dark #docmd-ai-plugin-root {
   font-size: 13px;
   line-height: 1.5;
 }
+
 .docmd-ai-unconfigured-title {
   display: flex;
   align-items: center;
@@ -406,10 +445,12 @@ body.dark #docmd-ai-plugin-root {
   font-size: 14px;
   color: var(--ai-text);
 }
+
 .docmd-ai-unconfigured-title svg {
   color: var(--ai-primary);
   flex-shrink: 0;
 }
+
 .docmd-ai-unconfigured-list {
   margin: 4px 0 8px 0 !important;
   padding-left: 0 !important;
@@ -418,15 +459,18 @@ body.dark #docmd-ai-plugin-root {
   flex-direction: column;
   gap: 6px;
 }
+
 .docmd-ai-unconfigured-list li {
   margin: 0 !important;
   font-size: 12.5px;
   color: var(--ai-text-muted);
 }
+
 .docmd-ai-unconfigured-list li p {
   margin: 0 !important;
   display: inline;
 }
+
 .docmd-ai-unconfigured-btn {
   display: inline-flex;
   align-items: center;
@@ -442,6 +486,7 @@ body.dark #docmd-ai-plugin-root {
   transition: opacity 0.2s, transform 0.15s ease;
   margin-top: 4px;
 }
+
 .docmd-ai-unconfigured-btn:hover {
   opacity: 0.92;
   transform: translateY(-1px);
@@ -452,6 +497,7 @@ body.dark #docmd-ai-plugin-root {
   padding-top: 6px;
   margin-top: 2px;
 }
+
 .docmd-ai-footer-link {
   font-size: 11px;
   color: var(--ai-text-muted);
@@ -459,6 +505,7 @@ body.dark #docmd-ai-plugin-root {
   opacity: 0.75;
   transition: opacity 0.2s ease, color 0.2s ease;
 }
+
 .docmd-ai-footer-link:hover {
   opacity: 1;
   color: var(--ai-primary);
@@ -473,25 +520,30 @@ body.dark #docmd-ai-plugin-root {
   border-radius: 8px;
   border: 1px solid var(--ai-border);
 }
+
 .docmd-ai-chat-bubble table {
   width: 100%;
   border-collapse: collapse;
   font-size: 12.5px;
   text-align: left;
 }
+
 .docmd-ai-chat-bubble th,
 .docmd-ai-chat-bubble td {
   padding: 8px 12px;
   border-bottom: 1px solid var(--ai-border);
 }
+
 .docmd-ai-chat-bubble th {
   background: var(--ai-input-bg);
   font-weight: 600;
   color: var(--ai-text);
 }
+
 .docmd-ai-chat-bubble tr:last-child td {
   border-bottom: none;
 }
+
 .docmd-ai-chat-bubble tr:hover td {
   background: rgba(125, 125, 125, 0.05);
 }

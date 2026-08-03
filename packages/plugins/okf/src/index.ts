@@ -95,10 +95,7 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
   if (!config.url) {
     const msg = `OKF: config.url is missing — generated \`source:\` fields will be relative paths only`;
     warnings.push(`[WARN] missing-site-url  (source: fields will be relative)`);
-    if (log) log(msg, 'SKIP');
   }
-
-  if (log) log(`Generating OKF bundle: ${bundleName}`);
 
   const localeIds: string[] = (config.i18n?.locales || []).map((l: any) => l.id);
   const versionIds: string[] = (config.versions?.all || []).map((v: any) => v.id);
@@ -274,12 +271,5 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
     await fs.writeFile(path.join(graphDir, 'index.html'), graphHtml(bundleName, concepts.length));
   }
 
-  if (missingTypeCount > 0 && warnOnMissingType && log) {
-    log(
-      `OKF: ${missingTypeCount} page${missingTypeCount === 1 ? '' : 's'} missing explicit type (using fallback '${defaultType}') — add \`type:\` to frontmatter or set \`warnOnMissingType: false\` to silence`,
-      'SKIP'
-    );
-  }
-
-  if (log) log(`OKF bundle written to /${outputRel}/ (${concepts.length} concepts, ${warnings.length} warnings)`);
+  if (log) log(`OKF bundle generated at /${outputRel}/ (${concepts.length} concepts)`);
 }

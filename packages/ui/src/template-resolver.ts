@@ -158,8 +158,18 @@ export function resolveTemplate(ctx: TemplateResolutionContext): ResolvedTemplat
     // 1. Look for a registered template plugin that ships this slot.
     const pluginMatch = findPluginTemplate(type, ref.name, pathKey);
     if (pluginMatch) {
-      if (fs.existsSync(pluginMatch.templatePath)) {
-        return { ...pluginMatch, source, type };
+      let resolvedPath = pluginMatch.templatePath;
+      if (!fs.existsSync(resolvedPath)) {
+        const altDist = resolvedPath.replace('/templates/', '/dist/templates/');
+        const altRoot = resolvedPath.replace('/dist/templates/', '/templates/');
+        if (fs.existsSync(altDist)) {
+          resolvedPath = altDist;
+        } else if (fs.existsSync(altRoot)) {
+          resolvedPath = altRoot;
+        }
+      }
+      if (fs.existsSync(resolvedPath)) {
+        return { ...pluginMatch, templatePath: resolvedPath, source, type };
       }
       warnMissingOnce(pluginMatch.templatePath, ref.name, type);
       // File declared but missing on disk — fall through to default.

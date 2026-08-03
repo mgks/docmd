@@ -48,11 +48,15 @@ export class DocmdAIAssistantUI {
     const cfg = (window as any).__docmd_ai_config || {};
     const rawSuggestions = cfg.suggestions;
 
-    let items: Array<{ label: string; prompt: string }> = [
-      { label: 'How do I get started?', prompt: 'How do I get started with docmd?' },
-      { label: 'Key Features', prompt: 'What are the main features of docmd?' },
-      { label: 'AI Plugin Setup', prompt: 'How do I configure the AI assistant plugin?' }
+    const genericOptions = [
+      { label: 'How do I get started?', prompt: 'How do I get started with this project?' },
+      { label: 'Key Features', prompt: 'What are the main features documented here?' },
+      { label: 'Installation & Setup', prompt: 'How do I install and set up this project?' },
+      { label: 'Configuration Options', prompt: 'What configuration options are available?' },
+      { label: 'Quick Example', prompt: 'Can you show me a quick usage example from the docs?' }
     ];
+
+    let items: Array<{ label: string; prompt: string }> = [];
 
     if (Array.isArray(rawSuggestions) && rawSuggestions.length > 0) {
       items = rawSuggestions.map((item: any) => {
@@ -64,6 +68,9 @@ export class DocmdAIAssistantUI {
           prompt: item.prompt || item.label || item.title || item
         };
       });
+    } else {
+      const shuffled = [...genericOptions].sort(() => Math.random() - 0.5);
+      items = shuffled.slice(0, 2);
     }
 
     const buttons = items
@@ -275,7 +282,16 @@ CRITICAL HYPERLINK RULES:
 Ground all page hyperlinks strictly in real search results. All absolute URLs must stem from "${siteBaseUrl}". Never invent relative subpaths.`;
     }
 
-    const basePrompt = cfg.systemPrompt || 'You are docmd assistant — an expert, precise documentation assistant strictly dedicated to answering technical questions about this documentation site.';
+    const defaultBasePrompt = `You are docmd assistant — an expert, precise documentation assistant strictly dedicated to answering technical questions about this documentation site.
+
+CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
+1. IDENTITY & NAME: Your name is "docmd assistant". If asked who you are or what your name is, introduce yourself strictly as "docmd assistant", an expert AI guide for this documentation site. Never identify yourself simply as "docmd" or "I am docmd".
+2. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. If a user asks off-topic, general knowledge, or unrelated questions, politely refuse and explain that you are strictly trained to assist with this documentation.
+3. AGGRESSIVE SEARCH & READING: For EVERY technical question, query search/retrieval tools first to locate relevant page sections before rendering your final response.
+4. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for any referenced pages or sections so users can open and read them directly.
+5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with headers, code blocks, and lists where appropriate. Do not engage in casual off-topic banter.`;
+
+    const basePrompt = cfg.systemPrompt || defaultBasePrompt;
     return `${basePrompt}\n\n${workspaceContext}`;
   }
 
@@ -595,6 +611,9 @@ Ground all page hyperlinks strictly in real search results. All absolute URLs mu
       return html;
     });
 
+    // Horizontal Rules (---, ***, ___)
+    text = text.replace(/^\s*(?:-{3,}|\*{3,}|_{3,})\s*$/gm, '<hr />');
+
     // Inline formatting
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
     text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
@@ -609,7 +628,7 @@ Ground all page hyperlinks strictly in real search results. All absolute URLs mu
     const html = blocks.map(block => {
       const trimmed = block.trim();
       if (!trimmed) return '';
-      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table)/i.test(trimmed)) {
+      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table|hr)/i.test(trimmed)) {
         return trimmed.replace(/\n/g, ' ');
       }
       return `<p>${trimmed.replace(/\n/g, '<br/>')}</p>`;

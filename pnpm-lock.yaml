@@ -259,8 +259,8 @@ importers:
   packages/plugins/ai:
     dependencies:
       docmd-assistant:
-        specifier: ^0.1.6
-        version: 0.1.6
+        specifier: ^0.1.7
+        version: 0.1.7
     devDependencies:
       '@docmd/api':
         specifier: workspace:*
@@ -1155,8 +1155,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  docmd-assistant@0.1.6:
-    resolution: {integrity: sha512-Y/+s1279g2KUTE9uXsErXCzl7pFarWDor7SJC3GBv+4B8QSMNWwyB+0RfhVfhpwUwD9vyNOGlKX52NvzzgIYTA==}
+  docmd-assistant@0.1.7:
+    resolution: {integrity: sha512-6q++IBr1WX+R/Fqztiv711dmQz5NYxMQwkuJyr5LFWzFdWvJQe1pL09Y5grLHiTWfxPWIWBinVUSdhZcCFPrMw==}
     engines: {node: '>=20.0.0'}
 
   docmd-search@0.1.2:
@@ -2214,7 +2214,7 @@ snapshots:
   detect-libc@2.1.2:
     optional: true
 
-  docmd-assistant@0.1.6:
+  docmd-assistant@0.1.7:
     dependencies:
       aiplug: 0.1.2
 

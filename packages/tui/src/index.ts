@@ -112,17 +112,14 @@ function flag(status: string): string {
     case 'FAIL': return chalk.red  ('[ FAIL ]');
     case 'SKIP': return chalk.yellow('[ SKIP ]');
     case 'WAIT': return chalk.blue ('[ WAIT ]');
-    default:     return chalk.blue (`[ ${status} ]`);
+    default:     return chalk.blue (`[ ${status.padEnd(4)} ]`);
   }
 }
 
 /**
- * High-Signal Terminal Design System (TUI)
+ * Modern Minimalist Terminal UI (TUI)
  * Standalone package with zero internal dependencies.
- *
- * Step format  →  │  [ DONE ] Label text flows freely here
- * Progress     →  │           ━━━━━━━━━━━━━━━━━━━━  (42%)
- * Breathing    →  │
+ * Clean, borderless, pipe-free layout using fixed-width text flags.
  */
 export const TUI = {
   // Semantic colors
@@ -136,59 +133,48 @@ export const TUI = {
 
   banner: (logo: string = LOGO, version: string = PKG_VERSION) => {
     commitState();
-    // N-13 + N-16: respect both the NO_COLOR convention (de-facto
-    // standard for CLIs) and the explicit `DOCMD_NO_BANNER` env
-    // (lets users silence the ASCII art while keeping the version line
-    // if they prefer). The DOCMD_NO_BANNER check is a docmd-specific
-    // escape hatch since NO_COLOR is a colour convention, not a
-    // banner convention.
     if (process.env.NO_COLOR || process.env.DOCMD_NO_BANNER) return;
     console.log(`\n${chalk.blue(logo)}`);
-    console.log(`${chalk.dim(` v${version}`)}\n`);
+    console.log(`${chalk.dim(`  v${version}`)}\n`);
   },
 
   section: (label: string, color = chalk.cyan) => {
     commitState();
-    // Auto-close any previously open section so callers don't need to
-    // manually track when to call footer()
-    if (_sectionOpen) {
-      console.log(`${_sectionColor('└──────────────────────────────────────────────────────────')}`);
-    }
     _sectionColor = color;
     _sectionOpen  = true;
-    console.log(`\n${color.bold(`┌─ ${label}`)}`);
+    let formattedLabel = label;
+    if (label.includes(':')) {
+      const idx = label.indexOf(':');
+      const prefix = label.slice(0, idx).toUpperCase();
+      const rest = label.slice(idx);
+      formattedLabel = prefix + rest;
+    } else {
+      formattedLabel = label.toUpperCase();
+    }
+    console.log(`\n${color.bold(formattedLabel)}\n`);
   },
 
   divider: (label: string, color = chalk.blue) => {
     commitState();
-    console.log(`${color.bold(`├─ ${label}`)}`);
+    console.log(`${color.bold(label.toUpperCase())}`);
   },
 
   /**
-   * Print a status step line.
-   *
-   * WAIT  → prints the line + a blank breathing `│`, tracks state.
-   *         If a WAIT is already active, overwrites in-place (label update).
-   * DONE/FAIL/SKIP → erases the WAIT block and replaces with final status line.
-   *
-   * `statusFirst` accepted but ignored — left-side flags are always the default.
+   * Print a status step line with fixed-width text flag.
    */
-  step: (label: string, status: 'DONE'|'WAIT'|'SKIP'|'FAIL'|string = 'WAIT', barColor = chalk.cyan, _statusFirst?: boolean) => {
+  step: (label: string, status: 'DONE'|'WAIT'|'SKIP'|'FAIL'|string = 'WAIT', _barColor = chalk.cyan, _statusFirst?: boolean) => {
     const f    = flag(status);
-    const line = `${barColor('│')}  ${f} ${chalk.dim(label)}`;
+    const line = `${f} ${chalk.dim(label)}`;
 
     if (status === 'WAIT') {
       if (isTTY() && _waitLine !== null) {
-        // Overwrite existing wait line in-place (e.g. count update)
         eraseLines(_progressLines + 1);
       } else {
         clearProgressArea();
       }
       console.log(line);
-      console.log(`${barColor('│')}`);
       _waitLine      = label;
-      _waitBarColor  = barColor;
-      _progressLines = 1;
+      _progressLines = 0;
 
     } else {
       if (isTTY() && _waitLine !== null) {
@@ -200,33 +186,24 @@ export const TUI = {
     }
   },
 
-  item: (label: string, value: string, labelColor = chalk.dim, barColor = chalk.cyan) => {
+  item: (label: string, value: string, labelColor = chalk.dim, _barColor = chalk.cyan) => {
     commitState();
-    console.log(`${barColor('│')}  ${labelColor(label.padEnd(15))} ${value}`);
+    const formattedLabel = label ? label.padEnd(15) : ''.padEnd(15);
+    console.log(`${labelColor(formattedLabel)} ${value}`);
   },
 
   /**
-   * Render a per-plugin tree inside an open section.
-   *
-   *   │ [ DONE ] [seo] Generated robots.txt
-   *   │          ├─ [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-   *
-   * Single-entry plugins collapse to one parent line; warnings and follow-up
-   * events become indented children. Parent is the first DONE/FAIL entry
-   * (the main action); when every entry was SKIP, the first entry is used.
-   *
-   * Pass an empty `entries` array and the helper is a no-op.
+   * Render plugin status entries inside an open section.
    */
   pluginTree: (
     pluginName: string,
     entries: Array<{ msg: string; status: 'DONE'|'SKIP'|'FAIL'|'WAIT' }>,
-    color = chalk.cyan,
+    _color = chalk.cyan,
   ) => {
     commitState();
     if (!entries || entries.length === 0) return;
 
-    const bar  = color('│');
-    const key  = chalk.bold(`[${pluginName}]`).padEnd(8);
+    const key = chalk.bold(`[${pluginName}]`).padEnd(8);
 
     const parentIdx = (() => {
       const idx = entries.findIndex(e => e.status === 'DONE' || e.status === 'FAIL');
@@ -234,66 +211,50 @@ export const TUI = {
     })();
 
     const parent = entries[parentIdx];
-    console.log(`${bar}  ${flag(parent.status)} ${key} ${chalk.dim(parent.msg)}`);
+    console.log(`${flag(parent.status)} ${key} ${chalk.dim(parent.msg)}`);
 
     if (entries.length === 1) return;
 
-    // Build the children list in original order, skipping the parent.
-    const childIndices: number[] = [];
     for (let i = 0; i < entries.length; i++) {
-      if (i !== parentIdx) childIndices.push(i);
+      if (i === parentIdx) continue;
+      const e = entries[i];
+      console.log(`${flag(e.status)} ${key} ${chalk.dim(e.msg)}`);
     }
-    childIndices.forEach((idx, i) => {
-      const isLast = i === childIndices.length - 1;
-      const branch = isLast ? '└─' : '├─';
-      const e      = entries[idx];
-      console.log(`${bar}             ${chalk.dim(branch)} ${flag(e.status)} ${chalk.dim(e.msg)}`);
-    });
   },
 
-  footer: (color = chalk.cyan) => {
+  footer: (_color = chalk.cyan) => {
     commitState();
-    console.log(`${color('└──────────────────────────────────────────────────────────')}`);
     _sectionOpen = false;
   },
 
   info: (msg: string) => {
     commitState();
-    console.log(`\n${chalk.blue.bold('⬢')} ${msg}`);
+    console.log(`\n${chalk.blue('[ INFO ]')} ${msg}`);
   },
 
   success: (msg: string) => {
     commitState();
-    console.log(`\n${chalk.green.bold('⬢')} ${msg}`);
+    console.log(`\n${chalk.green.bold('[ DONE ]')} ${chalk.bold(msg)}`);
   },
 
   warn: (msg: string) => {
     commitState();
-    console.log(`${chalk.yellow.bold('⬢')} ${chalk.yellow(msg)}`);
+    console.log(`${chalk.yellow.bold('[ WARN ]')} ${chalk.yellow(msg)}`);
   },
 
   error: (msg: string, detail?: string) => {
     commitState();
-    console.error(`\n${chalk.red.bold('┌─ Failure')}`);
-    console.error(`${chalk.red('│')}  ${msg}`);
+    console.error(`\n${chalk.red.bold('[ FAIL ]')} ${chalk.red(msg)}`);
     if (detail) {
-      detail.split('\n').forEach(l => console.error(`${chalk.red('│')}  ${chalk.dim(l)}`));
+      detail.split('\n').forEach(l => console.error(`         ${chalk.dim(l)}`));
     }
-    console.error(`${chalk.red('└──────────────────────────────────────────────────────────')}`);
   },
 
   // ── Progress Bar ───────────────────────────────────────────
 
-  /**
-   * Render an in-place progress bar on its own line below the active WAIT step.
-   *
-   *   │  [ WAIT ] Processing pages
-   *   │           ━━━━━━━━━━━━━━━━━━━━  (42%)
-   *   │
-   */
-  progress: (label: string, current: number, total: number, barColor = chalk.cyan) => {
+  progress: (label: string, current: number, total: number, _barColor = chalk.cyan) => {
     const bar  = renderBar(current, total);
-    const line = `${barColor('│')}           ${chalk.cyan(bar)}`;
+    const line = `${chalk.blue('[ WAIT ]')} ${chalk.cyan(bar)} ${chalk.dim(label)}`;
 
     if (!isTTY()) {
       const pct = total > 0 ? Math.round((current / total) * 100) : 0;
@@ -303,59 +264,40 @@ export const TUI = {
       return;
     }
 
-    // Erase the progress area below the wait line (bar + blank)
     if (_progressLines > 0) eraseLines(_progressLines);
-
     process.stdout.write(`${line}\n`);
-    process.stdout.write(`${barColor('│')}\n`);
-    _progressLines = 2;
+    _progressLines = 1;
   },
 
   // ── Spinner ────────────────────────────────────────────────
 
-  /**
-   * Start an animated spinner in left-flag style.
-   *
-   *   │  [ ⠋ ] Loading config
-   *   │
-   *
-   * Returns a handle with .done() / .fail() / .update().
-   */
-  spinner: (label: string, barColor = chalk.cyan) => {
-    let frameIndex  = 0;
+  spinner: (label: string, _barColor = chalk.cyan) => {
+    let frameIndex   = 0;
     let currentLabel = label;
-    let stopped     = false;
+    let stopped      = false;
 
-    // Print initial WAIT line + breathing room
-    const waitLine = `${barColor('│')}  ${chalk.blue('[ WAIT ]')} ${chalk.dim(currentLabel)}`;
+    const waitLine = `${chalk.blue('[ WAIT ]')} ${chalk.dim(currentLabel)}`;
     console.log(waitLine);
-    console.log(`${barColor('│')}`);
     _waitLine      = currentLabel;
-    _waitBarColor  = barColor;
-    _progressLines = 1;
+    _progressLines = 0;
 
     const render = () => {
       if (stopped || !isTTY()) return;
       const frame = chalk.cyan(SPINNER_FRAMES[frameIndex++ % SPINNER_FRAMES.length]);
-      // Go up past blank + wait line, rewrite wait line with spinner frame
-      process.stdout.write('\x1b[2A\r\x1b[2K');
-      process.stdout.write(`${barColor('│')}  ${chalk.blue('[')} ${frame} ${chalk.blue(']')} ${chalk.dim(currentLabel)}\n`);
-      process.stdout.write(`${barColor('│')}\n`);
+      process.stdout.write('\x1b[1A\r\x1b[2K');
+      process.stdout.write(`${chalk.blue(`[ ${frame} ]`)} ${chalk.dim(currentLabel)}\n`);
     };
 
     const interval = isTTY() ? setInterval(render, 80) : null;
     if (interval) interval.unref();
-    if (!isTTY()) {
-      // Non-TTY: static line already printed above
-    }
 
     const finish = (status: 'DONE' | 'FAIL', finalLabel?: string) => {
       stopped = true;
       if (interval) clearInterval(interval);
       const fl = finalLabel || currentLabel;
-      if (isTTY()) eraseLines(_progressLines + 1);
-      const f    = status === 'DONE' ? chalk.green('[ DONE ]') : chalk.red('[ FAIL ]');
-      console.log(`${barColor('│')}  ${f} ${chalk.dim(fl)}`);
+      if (isTTY()) eraseLines(1);
+      const f  = status === 'DONE' ? chalk.green('[ DONE ]') : chalk.red('[ FAIL ]');
+      console.log(`${f} ${chalk.dim(fl)}`);
       _waitLine      = null;
       _progressLines = 0;
     };
@@ -369,14 +311,14 @@ export const TUI = {
 
   // ── Counter ────────────────────────────────────────────────
 
-  counter: (label: string, count: number, barColor = chalk.cyan) => {
-    const line = `${barColor('│')}  ${chalk.dim(label)} ${chalk.bold(String(count))}`;
+  counter: (label: string, count: number, _barColor = chalk.cyan) => {
+    const line = `${chalk.dim(label)} ${chalk.bold(String(count))}`;
     if (isTTY()) process.stdout.write(`\r\x1b[K${line}`);
   },
 
-  commitLine: (label: string, barColor = chalk.cyan) => {
+  commitLine: (label: string, _barColor = chalk.cyan) => {
     commitState();
-    console.log(`${barColor('│')}  ${chalk.dim(label)}`);
+    console.log(`${chalk.dim(label)}`);
   },
 
   // ── Timer ──────────────────────────────────────────────────
@@ -388,11 +330,8 @@ export const TUI = {
     return () => formatDuration(Date.now() - start);
   },
 
-  // ── Centralised Project Summary ────────────────────────────
+  // ── Centralised Project Details ────────────────────────────
 
-  /**
-   * Print standardised project details within a TUI section.
-   */
   projectDetails: (opts: {
     source?:   string;
     output?:   string;
@@ -411,9 +350,6 @@ export const TUI = {
     if (opts.threads)  TUI.item('Threads',  `${opts.threads}`,                                    chalk.dim, bc);
   },
 
-  /**
-   * Extract standardised project details from a resolved config object.
-   */
   extractProjectDetails: (config: any, outputDir: string, cwd: string) => {
     const details: {
       source: string;
