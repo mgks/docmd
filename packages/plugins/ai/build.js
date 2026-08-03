@@ -6,7 +6,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function build() {
   await esbuild.build({
-    entryPoints: [path.resolve(__dirname, 'src/client/index.ts')],
+    entryPoints: [
+      path.resolve(__dirname, 'src/client/index.ts'),
+      path.resolve(__dirname, 'src/client/ai.css')
+    ],
     bundle: true,
     platform: 'browser',
     target: 'es2022',
@@ -15,7 +18,6 @@ async function build() {
     external: ['aiplug'],
     minify: false,
     sourcemap: 'inline',
-    loader: { '.css': 'css' },
     tsconfigRaw: JSON.stringify({
       compilerOptions: {
         experimentalDecorators: true,
@@ -23,7 +25,7 @@ async function build() {
       },
     }),
   });
-  console.log('AI plugin client built to dist/client/');
+  console.log('AI plugin client JS & CSS built to dist/client/');
 }
 
 build().catch((err) => {

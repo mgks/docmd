@@ -1,7 +1,7 @@
 /**
  * Client-side entry for @docmd/plugin-ai
- * docmd AI Assistant — Floating bottom prompt bar & floating sidebar.
- * Features automatic light/dark theme adaptability, local RAG documentation grounding, and Ctrl+I/Cmd+I shortcut.
+ * docmd AI Assistant — Floating bottom prompt bar & floating sidebar drawer.
+ * Features clean modern styling, adaptive light/dark theme, documentation RAG grounding, and Cmd+I shortcut.
  */
 
 import { DocmdAssistantEngine } from 'docmd-assistant';
@@ -16,20 +16,18 @@ export class DocmdAIAssistantUI {
     const cfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__ || {};
     this.projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId || 'default';
 
-    // Load persisted history from sessionStorage if available
     const savedHistory = this.loadSavedHistory();
 
     this.engine = new DocmdAssistantEngine({
       projectId: this.projectId,
-      endpoint: cfg.endpoint || 'https://api.docmd.io/v1/ai/chat',
+      endpoint: cfg.endpoint || (this.projectId ? 'https://api.docmd.io/v1/ai/chat' : undefined),
       provider: cfg.provider,
       model: cfg.model,
       systemPrompt: cfg.systemPrompt,
       history: savedHistory,
-      thinking: cfg.thinking === true
+      reasoning: cfg.reasoning ?? false
     });
 
-    // Detect active site version and locale dynamically for search filters
     const detectContext = () => {
       const locale = (window as any).__DOCMD_LOCALE__ || document.documentElement.lang || 'en';
       const versionMatch = location.pathname.match(/\/v(\d+)\//);
@@ -37,7 +35,6 @@ export class DocmdAIAssistantUI {
       return { locale, version };
     };
 
-    // Register docmd search Tool if docmd-search is active on window
     this.engine.registerTool({
       name: 'search_documentation',
       description: 'Search documentation content via docmd-search index with active locale and version filters',
@@ -87,366 +84,16 @@ export class DocmdAIAssistantUI {
     this.container.id = 'docmd-ai-plugin-root';
     this.container.className = `pos-${pos}`;
     this.container.innerHTML = `
-      <style>
-        #docmd-ai-plugin-root {
-          font-family: var(--docmd-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
-          /* Adaptive Theme Tokens: Dynamic fallbacks matching light & dark modes */
-          --ai-bg: var(--docmd-bg-card, var(--docmd-bg, #0f172a));
-          --ai-header-bg: var(--docmd-bg-header, var(--docmd-bg-secondary, #1e293b));
-          --ai-border: var(--docmd-border, rgba(255, 255, 255, 0.14));
-          --ai-text: var(--docmd-text, #f8fafc);
-          --ai-text-muted: var(--docmd-text-muted, #94a3b8);
-          --ai-primary: var(--docmd-primary, #06b6d4);
-          --ai-bubble-user: var(--docmd-primary, #06b6d4);
-          --ai-bubble-assistant: var(--docmd-bg-bubble, var(--docmd-bg-secondary, #1e293b));
-          --ai-input-bg: var(--docmd-bg-input, var(--docmd-bg-secondary, #1e293b));
-          --ai-shadow: 0 20px 45px -6px rgba(0, 0, 0, 0.4), 0 0 25px rgba(6, 182, 212, 0.15);
-        }
-
-        /* Light Theme Overrides */
-        html[data-theme="light"] #docmd-ai-plugin-root,
-        body.light #docmd-ai-plugin-root {
-          --ai-bg: var(--docmd-bg-card, #ffffff);
-          --ai-header-bg: var(--docmd-bg-header, #f1f5f9);
-          --ai-border: var(--docmd-border, rgba(0, 0, 0, 0.12));
-          --ai-text: var(--docmd-text, #0f172a);
-          --ai-text-muted: var(--docmd-text-muted, #64748b);
-          --ai-bubble-assistant: var(--docmd-bg-bubble, #f1f5f9);
-          --ai-input-bg: var(--docmd-bg-input, #f8fafc);
-          --ai-shadow: 0 20px 45px -6px rgba(0, 0, 0, 0.15), 0 0 25px rgba(6, 182, 212, 0.15);
-        }
-
-        /* Dark Theme Explicit Overrides */
-        html[data-theme="dark"] #docmd-ai-plugin-root,
-        body.dark #docmd-ai-plugin-root {
-          --ai-bg: var(--docmd-bg-card, #0f172a);
-          --ai-header-bg: var(--docmd-bg-header, #1e293b);
-          --ai-border: var(--docmd-border, rgba(255, 255, 255, 0.14));
-          --ai-text: var(--docmd-text, #f8fafc);
-          --ai-text-muted: var(--docmd-text-muted, #94a3b8);
-          --ai-bubble-assistant: var(--docmd-bg-bubble, #1e293b);
-          --ai-input-bg: var(--docmd-bg-input, #1e293b);
-        }
-
-        /* --- Floating Bottom Prompt Bar --- */
-        .docmd-ai-bar-wrap {
-          position: fixed;
-          bottom: 24px;
-          z-index: 9998;
-          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        #docmd-ai-plugin-root.pos-bottom-center .docmd-ai-bar-wrap {
-          left: 50%;
-          transform: translateX(-50%);
-        }
-        #docmd-ai-plugin-root.pos-bottom-right .docmd-ai-bar-wrap {
-          right: 24px;
-        }
-        #docmd-ai-plugin-root.pos-bottom-left .docmd-ai-bar-wrap {
-          left: 24px;
-        }
-
-        .docmd-ai-bar-wrap.hidden {
-          opacity: 0;
-          pointer-events: none;
-          transform: scale(0.92) translateY(16px);
-        }
-
-        .docmd-ai-prompt-bar {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          width: 360px;
-          max-width: calc(100vw - 32px);
-          padding: 8px 10px 8px 16px;
-          background: var(--ai-bg);
-          border: 1px solid var(--ai-border);
-          border-radius: 9999px;
-          box-shadow: var(--ai-shadow);
-          backdrop-filter: blur(16px);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .docmd-ai-prompt-bar:hover,
-        .docmd-ai-prompt-bar:focus-within {
-          width: 440px;
-          border-color: var(--ai-primary);
-          box-shadow: 0 20px 45px -6px rgba(0, 0, 0, 0.25), 0 0 25px rgba(6, 182, 212, 0.3);
-        }
-
-        .docmd-ai-sparkle-icon {
-          color: var(--ai-primary);
-          flex-shrink: 0;
-          display: flex;
-          align-items: center;
-        }
-
-        .docmd-ai-bar-input {
-          flex: 1;
-          background: transparent;
-          border: none;
-          outline: none;
-          color: var(--ai-text);
-          font-size: 13.5px;
-          font-weight: 500;
-        }
-        .docmd-ai-bar-input::placeholder {
-          color: var(--ai-text-muted);
-        }
-
-        .docmd-ai-shortcut-badge {
-          background: rgba(125, 125, 125, 0.15);
-          border: 1px solid var(--ai-border);
-          color: var(--ai-text-muted);
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 8px;
-          border-radius: 6px;
-          letter-spacing: 0.02em;
-          flex-shrink: 0;
-        }
-
-        .docmd-ai-submit-btn {
-          background: var(--ai-primary);
-          border: none;
-          color: #ffffff;
-          width: 32px;
-          height: 32px;
-          border-radius: 9999px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          flex-shrink: 0;
-          transition: transform 0.2s, background 0.2s;
-        }
-        .docmd-ai-submit-btn:hover {
-          transform: scale(1.08);
-          opacity: 0.9;
-        }
-
-        /* --- Floating Non-blocking Sidebar Drawer --- */
-        .docmd-ai-drawer {
-          position: fixed;
-          top: 16px;
-          right: 16px;
-          bottom: 16px;
-          width: 440px;
-          max-width: calc(100vw - 32px);
-          height: calc(100vh - 32px);
-          background: var(--ai-bg);
-          border: 1px solid var(--ai-border);
-          border-radius: 20px;
-          box-shadow: var(--ai-shadow);
-          backdrop-filter: blur(20px);
-          z-index: 10000;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-          transform: translateX(calc(100% + 24px));
-          transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .docmd-ai-drawer.open {
-          transform: translateX(0);
-        }
-
-        .docmd-ai-drawer-header {
-          padding: 16px 20px;
-          background: var(--ai-header-bg);
-          border-bottom: 1px solid var(--ai-border);
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .docmd-ai-header-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-        .docmd-ai-status-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 9999px;
-          background: #10b981;
-          box-shadow: 0 0 10px #10b981;
-        }
-        .docmd-ai-title-text {
-          font-weight: 700;
-          font-size: 14.5px;
-          letter-spacing: -0.01em;
-          color: var(--ai-text);
-        }
-        .docmd-ai-badge-tag {
-          background: rgba(6, 182, 212, 0.15);
-          color: var(--ai-primary);
-          font-size: 11px;
-          font-weight: 600;
-          padding: 2px 8px;
-          border-radius: 9999px;
-          border: 1px solid rgba(6, 182, 212, 0.3);
-        }
-
-        .docmd-ai-header-right {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-        .docmd-ai-icon-action {
-          background: transparent;
-          border: none;
-          color: var(--ai-text-muted);
-          cursor: pointer;
-          padding: 6px;
-          border-radius: 8px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: color 0.2s, background 0.2s;
-        }
-        .docmd-ai-icon-action:hover {
-          color: var(--ai-text);
-          background: rgba(125, 125, 125, 0.15);
-        }
-
-        .docmd-ai-messages-list {
-          flex: 1;
-          padding: 20px;
-          overflow-y: auto;
-          display: flex;
-          flex-direction: column;
-          gap: 16px;
-          scroll-behavior: smooth;
-        }
-
-        .docmd-ai-suggestions-row {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          margin-top: 12px;
-        }
-        .docmd-ai-pill-btn {
-          background: var(--ai-input-bg);
-          border: 1px solid var(--ai-border);
-          color: var(--ai-text-muted);
-          font-size: 12px;
-          font-weight: 500;
-          padding: 6px 14px;
-          border-radius: 9999px;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-        .docmd-ai-pill-btn:hover {
-          background: rgba(6, 182, 212, 0.18);
-          border-color: rgba(6, 182, 212, 0.4);
-          color: var(--ai-primary);
-        }
-
-        .docmd-ai-chat-bubble {
-          max-width: 92%;
-          padding: 12px 16px;
-          border-radius: 16px;
-          font-size: 13.5px;
-          line-height: 1.6;
-          word-break: break-word;
-        }
-        .docmd-ai-chat-bubble.user {
-          align-self: flex-end;
-          background: var(--ai-bubble-user);
-          color: #ffffff;
-          border-bottom-right-radius: 4px;
-          box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
-        }
-        .docmd-ai-chat-bubble.assistant {
-          align-self: flex-start;
-          background: var(--ai-bubble-assistant);
-          color: var(--ai-text);
-          border: 1px solid var(--ai-border);
-          border-bottom-left-radius: 4px;
-        }
-
-        /* --- Code block & Markdown styling --- */
-        .docmd-ai-chat-bubble pre {
-          background: #1e293b !important;
-          color: #f8fafc !important;
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 8px;
-          padding: 12px;
-          margin: 10px 0;
-          overflow-x: auto;
-          position: relative;
-        }
-        .docmd-ai-chat-bubble code {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-          font-size: 12.5px;
-          background: rgba(125, 125, 125, 0.15);
-          padding: 2px 6px;
-          border-radius: 4px;
-        }
-        .docmd-ai-chat-bubble pre code {
-          background: transparent !important;
-          padding: 0;
-          color: #f8fafc !important;
-        }
-        .docmd-ai-chat-bubble ul, .docmd-ai-chat-bubble ol {
-          margin: 8px 0;
-          padding-left: 20px;
-        }
-        .docmd-ai-chat-bubble li {
-          margin-bottom: 4px;
-        }
-        .docmd-ai-chat-bubble a {
-          color: var(--ai-primary);
-          text-decoration: underline;
-        }
-
-        .docmd-ai-drawer-footer {
-          padding: 16px;
-          background: var(--ai-bg);
-          border-top: 1px solid var(--ai-border);
-        }
-        .docmd-ai-drawer-form {
-          display: flex;
-          gap: 10px;
-        }
-        .docmd-ai-drawer-input {
-          flex: 1;
-          background: var(--ai-input-bg);
-          border: 1px solid var(--ai-border);
-          border-radius: 12px;
-          padding: 10px 14px;
-          color: var(--ai-text);
-          font-size: 13.5px;
-          outline: none;
-          transition: border-color 0.2s;
-        }
-        .docmd-ai-drawer-input:focus {
-          border-color: var(--ai-primary);
-        }
-        .docmd-ai-drawer-send-btn {
-          background: var(--ai-primary);
-          border: none;
-          color: #ffffff;
-          padding: 10px 18px;
-          border-radius: 12px;
-          font-weight: 600;
-          font-size: 13.5px;
-          cursor: pointer;
-          transition: opacity 0.2s;
-        }
-        .docmd-ai-drawer-send-btn:hover {
-          opacity: 0.9;
-        }
-      </style>
-
       <!-- Floating Bottom Prompt Bar -->
       <div class="docmd-ai-bar-wrap" id="docmd-ai-bar-wrap">
         <form class="docmd-ai-prompt-bar" id="docmd-ai-bar-form">
           <span class="docmd-ai-sparkle-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
           </span>
           <input type="text" class="docmd-ai-bar-input" id="docmd-ai-bar-input" placeholder="${placeholder}" autocomplete="off" />
           <span class="docmd-ai-shortcut-badge">⌘I</span>
           <button type="submit" class="docmd-ai-submit-btn" title="Ask AI Assistant">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           </button>
         </form>
       </div>
@@ -541,7 +188,6 @@ export class DocmdAIAssistantUI {
       this.submitQuery(query);
     });
 
-    // Keyboard shortcut (Cmd+I / Ctrl+I) toggle (Distinct from Cmd+K search!)
     document.addEventListener('keydown', (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'i') {
         e.preventDefault();
@@ -556,7 +202,6 @@ export class DocmdAIAssistantUI {
       }
     });
 
-    // Suggestion pills click delegation
     const msgsContainer = document.getElementById('docmd-ai-messages');
     msgsContainer?.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
@@ -603,7 +248,7 @@ export class DocmdAIAssistantUI {
 
   private async submitQuery(text: string): Promise<void> {
     this.appendMsg('user', text, true);
-    const typing = this.appendMsg('assistant', 'Searching & thinking...', false);
+    const typing = this.appendMsg('assistant', 'Working...', false);
 
     try {
       const docContext = await this.fetchLocalSearchContext(text);
@@ -659,34 +304,73 @@ export class DocmdAIAssistantUI {
 
   private formatMarkdown(raw: string): string {
     if (!raw) return '';
-    let parsed = this.escapeHtml(raw);
+    let text = this.escapeHtml(raw);
 
-    // Code blocks with syntax highlighting container
-    parsed = parsed.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
+    // Code blocks with syntax highlighting
+    const codeBlocks: string[] = [];
+    text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
       const languageStr = lang ? `<span class="code-lang">${lang}</span>` : '';
-      return `<pre>${languageStr}<code>${code.trim()}</code></pre>`;
+      const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<pre>${languageStr}<code>${code.trim()}</code></pre>`);
+      return placeholder;
     });
 
-    // Inline code
-    parsed = parsed.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Headings (# h1, ## h2, ### h3, #### h4)
+    text = text.replace(/^#### (.*$)/gim, '<h5>$1</h5>');
+    text = text.replace(/^### (.*$)/gim, '<h4>$1</h4>');
+    text = text.replace(/^## (.*$)/gim, '<h3>$1</h3>');
+    text = text.replace(/^# (.*$)/gim, '<h3>$1</h3>');
 
-    // Bold & Italic
-    parsed = parsed.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-    parsed = parsed.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    // Unordered lists
+    text = text.replace(/(?:^\s*[-*]\s+.*(?:\r?\n|$))+/gm, (match) => {
+      const items = match
+        .trim()
+        .split('\n')
+        .map(line => `<li>${line.replace(/^\s*[-*]\s+/, '')}</li>`)
+        .join('');
+      return `<ul>${items}</ul>`;
+    });
 
-    // Headings
-    parsed = parsed.replace(/^### (.*$)/gim, '<h4 style="margin:8px 0 4px 0;font-size:14px;">$1</h4>');
-    parsed = parsed.replace(/^## (.*$)/gim, '<h3 style="margin:10px 0 4px 0;font-size:15px;">$1</h3>');
+    // Ordered lists
+    text = text.replace(/(?:^\s*\d+\.\s+.*(?:\r?\n|$))+/gm, (match) => {
+      const items = match
+        .trim()
+        .split('\n')
+        .map(line => `<li>${line.replace(/^\s*\d+\.\s+/, '')}</li>`)
+        .join('');
+      return `<ol>${items}</ol>`;
+    });
 
-    // Lists
-    parsed = parsed.replace(/^\s*[-*]\s+(.*$)/gim, '<li>$1</li>');
-    parsed = parsed.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
+    // Blockquotes
+    text = text.replace(/(?:^\s*&gt;\s+.*(?:\r?\n|$))+/gm, (match) => {
+      const content = match.replace(/^\s*&gt;\s+/gm, '').trim();
+      return `<blockquote>${content}</blockquote>`;
+    });
 
-    // Line breaks
-    parsed = parsed.replace(/\n\n/g, '<br/><br/>');
-    parsed = parsed.replace(/\n/g, '<br/>');
+    // Inline formatting
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
 
-    return parsed;
+    // Split into blocks by double linebreaks for clean paragraph flow
+    const blocks = text.split(/\n{2,}/);
+    const html = blocks.map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote)/i.test(trimmed)) {
+        return trimmed.replace(/\n/g, ' ');
+      }
+      return `<p>${trimmed.replace(/\n/g, '<br/>')}</p>`;
+    }).join('');
+
+    // Restore code blocks
+    let finalHtml = html;
+    codeBlocks.forEach((cb, i) => {
+      finalHtml = finalHtml.replace(`__CODE_BLOCK_${i}__`, cb);
+    });
+
+    return finalHtml;
   }
 }
 

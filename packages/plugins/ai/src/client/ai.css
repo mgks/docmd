@@ -1,0 +1,385 @@
+/**
+ * docmd AI Assistant Plugin Client Stylesheet
+ * Modern, clean floating prompt bar & floating sidebar drawer styling.
+ * Adaptive theme CSS variables support light & dark modes seamlessly.
+ */
+
+#docmd-ai-plugin-root {
+  font-family: var(--docmd-font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  /* Modern Theme Tokens — Flat, zero heavy glow/shadow slop */
+  --ai-bg: var(--docmd-bg-card, var(--docmd-bg, #0f172a));
+  --ai-header-bg: var(--docmd-bg-header, var(--docmd-bg-secondary, #1e293b));
+  --ai-border: var(--docmd-border, rgba(255, 255, 255, 0.12));
+  --ai-text: var(--docmd-text, #f8fafc);
+  --ai-text-muted: var(--docmd-text-muted, #94a3b8);
+  --ai-primary: var(--docmd-primary, #06b6d4);
+  --ai-bubble-user: var(--docmd-primary, #06b6d4);
+  --ai-bubble-assistant: var(--docmd-bg-bubble, var(--docmd-bg-secondary, #1e293b));
+  --ai-input-bg: var(--docmd-bg-input, var(--docmd-bg-secondary, #1e293b));
+  --ai-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Light Theme Overrides */
+html[data-theme="light"] #docmd-ai-plugin-root,
+body.light #docmd-ai-plugin-root {
+  --ai-bg: var(--docmd-bg-card, #ffffff);
+  --ai-header-bg: var(--docmd-bg-header, #f8fafc);
+  --ai-border: var(--docmd-border, rgba(0, 0, 0, 0.1));
+  --ai-text: var(--docmd-text, #0f172a);
+  --ai-text-muted: var(--docmd-text-muted, #64748b);
+  --ai-bubble-assistant: var(--docmd-bg-bubble, #f1f5f9);
+  --ai-input-bg: var(--docmd-bg-input, #f8fafc);
+  --ai-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* Dark Theme Overrides */
+html[data-theme="dark"] #docmd-ai-plugin-root,
+body.dark #docmd-ai-plugin-root {
+  --ai-bg: var(--docmd-bg-card, #0f172a);
+  --ai-header-bg: var(--docmd-bg-header, #1e293b);
+  --ai-border: var(--docmd-border, rgba(255, 255, 255, 0.12));
+  --ai-text: var(--docmd-text, #f8fafc);
+  --ai-text-muted: var(--docmd-text-muted, #94a3b8);
+  --ai-bubble-assistant: var(--docmd-bg-bubble, #1e293b);
+  --ai-input-bg: var(--docmd-bg-input, #1e293b);
+}
+
+/* --- Floating Bottom Prompt Bar --- */
+.docmd-ai-bar-wrap {
+  position: fixed;
+  bottom: 24px;
+  z-index: 9998;
+  transition: all 0.25s ease;
+}
+#docmd-ai-plugin-root.pos-bottom-center .docmd-ai-bar-wrap {
+  left: 50%;
+  transform: translateX(-50%);
+}
+#docmd-ai-plugin-root.pos-bottom-right .docmd-ai-bar-wrap {
+  right: 24px;
+}
+#docmd-ai-plugin-root.pos-bottom-left .docmd-ai-bar-wrap {
+  left: 24px;
+}
+
+.docmd-ai-bar-wrap.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.95) translateY(12px);
+}
+
+.docmd-ai-prompt-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 10px 8px 16px;
+  background: var(--ai-bg);
+  border: 1px solid var(--ai-border);
+  border-radius: 9999px;
+  box-shadow: var(--ai-shadow);
+  transition: border-color 0.2s, width 0.25s ease;
+}
+.docmd-ai-prompt-bar:hover,
+.docmd-ai-prompt-bar:focus-within {
+  width: 420px;
+  border-color: var(--ai-primary);
+}
+
+.docmd-ai-sparkle-icon {
+  color: var(--ai-primary);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.docmd-ai-bar-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--ai-text);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.docmd-ai-bar-input::placeholder {
+  color: var(--ai-text-muted);
+}
+
+.docmd-ai-shortcut-badge {
+  background: rgba(125, 125, 125, 0.12);
+  border: 1px solid var(--ai-border);
+  color: var(--ai-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.docmd-ai-submit-btn {
+  background: var(--ai-primary);
+  border: none;
+  color: #ffffff;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.docmd-ai-submit-btn:hover {
+  opacity: 0.9;
+}
+
+/* --- Floating Non-blocking Sidebar Drawer --- */
+.docmd-ai-drawer {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  height: calc(100vh - 32px);
+  background: var(--ai-bg);
+  border: 1px solid var(--ai-border);
+  border-radius: 16px;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transform: translateX(calc(100% + 24px));
+  transition: transform 0.3s ease;
+}
+.docmd-ai-drawer.open {
+  transform: translateX(0);
+}
+
+.docmd-ai-drawer-header {
+  padding: 14px 18px;
+  background: var(--ai-header-bg);
+  border-bottom: 1px solid var(--ai-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.docmd-ai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.docmd-ai-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: #10b981;
+}
+.docmd-ai-title-text {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ai-text);
+}
+.docmd-ai-badge-tag {
+  background: rgba(6, 182, 212, 0.12);
+  color: var(--ai-primary);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid rgba(6, 182, 212, 0.25);
+}
+
+.docmd-ai-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.docmd-ai-icon-action {
+  background: transparent;
+  border: none;
+  color: var(--ai-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, background 0.2s;
+}
+.docmd-ai-icon-action:hover {
+  color: var(--ai-text);
+  background: rgba(125, 125, 125, 0.12);
+}
+
+.docmd-ai-messages-list {
+  flex: 1;
+  padding: 18px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+.docmd-ai-suggestions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.docmd-ai-pill-btn {
+  background: var(--ai-input-bg);
+  border: 1px solid var(--ai-border);
+  color: var(--ai-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.docmd-ai-pill-btn:hover {
+  border-color: var(--ai-primary);
+  color: var(--ai-primary);
+}
+
+.docmd-ai-chat-bubble {
+  max-width: 92%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+.docmd-ai-chat-bubble.user {
+  align-self: flex-end;
+  background: var(--ai-bubble-user);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+.docmd-ai-chat-bubble.assistant {
+  align-self: flex-start;
+  background: var(--ai-bubble-assistant);
+  color: var(--ai-text);
+  border: 1px solid var(--ai-border);
+  border-bottom-left-radius: 4px;
+}
+
+/* --- Clean List & Markdown formatting --- */
+.docmd-ai-chat-bubble p {
+  margin: 6px 0;
+  line-height: 1.5;
+}
+.docmd-ai-chat-bubble p:first-child {
+  margin-top: 0;
+}
+.docmd-ai-chat-bubble p:last-child {
+  margin-bottom: 0;
+}
+
+.docmd-ai-chat-bubble h3,
+.docmd-ai-chat-bubble h4,
+.docmd-ai-chat-bubble h5 {
+  margin: 12px 0 4px 0;
+  font-weight: 600;
+  color: var(--ai-text);
+  line-height: 1.35;
+}
+.docmd-ai-chat-bubble h3 {
+  font-size: 15px;
+}
+.docmd-ai-chat-bubble h4 {
+  font-size: 14px;
+}
+.docmd-ai-chat-bubble h5 {
+  font-size: 13px;
+}
+
+.docmd-ai-chat-bubble ul,
+.docmd-ai-chat-bubble ol {
+  margin: 6px 0;
+  padding-left: 20px;
+}
+.docmd-ai-chat-bubble li {
+  margin: 3px 0;
+  padding: 0;
+  line-height: 1.45;
+}
+
+.docmd-ai-chat-bubble blockquote {
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-left: 3px solid var(--ai-primary);
+  background: rgba(125, 125, 125, 0.08);
+  font-style: italic;
+  border-radius: 0 6px 6px 0;
+}
+.docmd-ai-chat-bubble pre {
+  background: #1e293b !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 8px 0;
+  overflow-x: auto;
+}
+.docmd-ai-chat-bubble code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  background: rgba(125, 125, 125, 0.12);
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.docmd-ai-chat-bubble pre code {
+  background: transparent !important;
+  padding: 0;
+  color: #f8fafc !important;
+}
+.docmd-ai-chat-bubble a {
+  color: var(--ai-primary);
+  text-decoration: underline;
+}
+
+.docmd-ai-drawer-footer {
+  padding: 14px;
+  background: var(--ai-bg);
+  border-top: 1px solid var(--ai-border);
+}
+.docmd-ai-drawer-form {
+  display: flex;
+  gap: 8px;
+}
+.docmd-ai-drawer-input {
+  flex: 1;
+  background: var(--ai-input-bg);
+  border: 1px solid var(--ai-border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  color: var(--ai-text);
+  font-size: 13.5px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.docmd-ai-drawer-input:focus {
+  border-color: var(--ai-primary);
+}
+.docmd-ai-drawer-send-btn {
+  background: var(--ai-primary);
+  border: none;
+  color: #ffffff;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.docmd-ai-drawer-send-btn:hover {
+  opacity: 0.9;
+}

@@ -51,6 +51,7 @@ export interface AIPluginOptions {
   placeholder?: string;
   suggestions?: string[];
   position?: 'bottom-center' | 'bottom-right' | 'bottom-left';
+  reasoning?: boolean | 'none' | 'low' | 'medium' | 'high';
   contextLimit?: number;
   rateLimit?: {
     maxRequests?: number;
@@ -342,29 +343,25 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
 }
 
 /** External assets to inject into HTML pages */
-export function getAssets(config?: any): Asset[] {
-  const pluginOptions: AIPluginOptions = (config && config.plugins && config.plugins.ai) || (config && config.ai) || {};
-  if (pluginOptions.enabled === false || pluginOptions.assistant === false || pluginOptions.chat === false) {
-    return [];
-  }
-
+export function getAssets(_config?: any): Asset[] {
   const distDir = path.resolve(__dirname, '..', 'dist', 'client');
-  const assets: Asset[] = [
-    {
-      src: path.join(distDir, 'index.js'),
-      dest: 'assets/js/ai.js',
+  const jsPath = path.join(distDir, 'index.js');
+  const cssPath = path.join(distDir, 'ai.css');
+
+  const assets: Asset[] = [];
+  if (nativeFs.existsSync(jsPath)) {
+    assets.push({
+      src: jsPath,
+      dest: 'assets/js/docmd-ai.js',
       type: 'js',
       location: 'body',
       attributes: { type: 'module' }
-    },
-  ];
-
-  // Only include CSS if the client build produced one
-  const cssPath = path.join(distDir, 'index.css');
+    });
+  }
   if (nativeFs.existsSync(cssPath)) {
     assets.push({
       src: cssPath,
-      dest: 'assets/css/ai.css',
+      dest: 'assets/css/docmd-ai.css',
       type: 'css',
       location: 'head'
     });
