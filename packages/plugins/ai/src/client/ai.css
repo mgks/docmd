@@ -423,6 +423,10 @@ body.dark #docmd-ai-plugin-root {
   font-size: 12.5px;
   color: var(--ai-text-muted);
 }
+.docmd-ai-unconfigured-list li p {
+  margin: 0 !important;
+  display: inline;
+}
 .docmd-ai-unconfigured-btn {
   display: inline-flex;
   align-items: center;

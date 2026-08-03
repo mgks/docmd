@@ -244,10 +244,46 @@ async function buildZeroConfig(cwd: string, isDev = false, quiet = false, option
     autoConfig.i18n = i18n;
   }
 
-  // Merge with global defaults
-  const merged = { ...(options._globalDefaults || {}), ...autoConfig };
+  // Merge with global defaults — deep merge nested objects like plugins, layout, theme
+  // so workspace-level keys cascade to child projects without being wiped.
+  const merged = mergeWorkspaceDefaults(options._globalDefaults || {}, autoConfig);
 
   return normalizeConfig(merged);
+}
+
+/**
+ * Deep merge workspace global defaults with a child project config.
+ *
+ * For known nested object keys (`plugins`, `layout`, `theme`) the merge is
+ * one level deeper: workspace keys act as defaults, child keys override
+ * individual sub-keys while inheriting the rest.
+ *
+ * Example:
+ *   workspace: { plugins: { ai: { projectId: 'x' }, seo: {} } }
+ *   child:     { plugins: { math: true, seo: { desc: '...' } } }
+ *   result:    { plugins: { ai: { projectId: 'x' }, math: true, seo: { desc: '...' } } }
+ */
+function mergeWorkspaceDefaults(
+  defaults: Record<string, any>,
+  child: Record<string, any>
+): Record<string, any> {
+  const deepMergeKeys = ['plugins', 'layout', 'theme'];
+  const merged: Record<string, any> = { ...defaults, ...child };
+
+  for (const key of deepMergeKeys) {
+    const parentVal = defaults[key];
+    const childVal = child[key];
+
+    if (
+      parentVal && typeof parentVal === 'object' && !Array.isArray(parentVal) &&
+      childVal && typeof childVal === 'object' && !Array.isArray(childVal)
+    ) {
+      // Child keys win over parent keys, parent fills in gaps
+      merged[key] = { ...parentVal, ...childVal };
+    }
+  }
+
+  return merged;
 }
 
 export async function loadConfig(configPath: string, options: any = {}) {
@@ -398,8 +434,10 @@ export async function loadConfig(configPath: string, options: any = {}) {
       validateConfig(rawConfig);
       const hasExplicitNav = 'navigation' in rawConfig;
 
-      // Merge with global defaults: root project config overrides global defaults
-      const mergedConfig = { ...(options._globalDefaults || {}), ...rawConfig };
+      // Merge with global defaults: deep merge nested objects like plugins, layout, theme
+      // so workspace-level keys (e.g. plugins.ai) cascade to child projects without
+      // being wiped by a shallow spread when the child declares its own plugins key.
+      const mergedConfig = mergeWorkspaceDefaults(options._globalDefaults || {}, rawConfig);
 
       const normalized = normalizeConfig(mergedConfig, { isDev: options.isDev });
 

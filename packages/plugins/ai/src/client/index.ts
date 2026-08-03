@@ -18,15 +18,12 @@ export class DocmdAIAssistantUI {
     this.projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId || 'default';
     this.isUnconfigured = (!cfg.projectId || cfg.projectId === 'default') && !cfg.apiKey && !cfg.baseURL;
 
-    const savedHistory = this.loadSavedHistory();
-
     this.engine = new DocmdAssistantEngine({
       projectId: this.projectId,
       endpoint: cfg.endpoint || (this.projectId ? 'https://api.docmd.io/v1/ai/chat' : undefined),
       provider: cfg.provider,
       model: cfg.model,
       systemPrompt: cfg.systemPrompt,
-      history: savedHistory,
       reasoning: cfg.reasoning ?? false
     });
 
@@ -59,20 +56,7 @@ export class DocmdAIAssistantUI {
     }
   }
 
-  private loadSavedHistory(): any[] {
-    try {
-      const raw = sessionStorage.getItem(`docmd_ai_history_${this.projectId}`);
-      if (raw) return JSON.parse(raw);
-    } catch { /* ignore */ }
-    return [];
-  }
 
-  private saveHistory(): void {
-    try {
-      const history = this.engine.getHistory();
-      sessionStorage.setItem(`docmd_ai_history_${this.projectId}`, JSON.stringify(history));
-    } catch { /* ignore */ }
-  }
 
   private renderSuggestionsHtml(): string {
     const cfg = (window as any).__docmd_ai_config || {};
@@ -140,7 +124,7 @@ export class DocmdAIAssistantUI {
           <div class="docmd-ai-header-left">
             <span class="docmd-ai-status-dot"></span>
             <span class="docmd-ai-title-text">${chatTitle}</span>
-            <span class="docmd-ai-badge-tag">docmd</span>
+            <!--<span class="docmd-ai-badge-tag">docmd</span>-->
           </div>
           <div class="docmd-ai-header-right">
             <button class="docmd-ai-icon-action" id="docmd-ai-clear-btn" title="${clearTitle}">
@@ -174,25 +158,10 @@ export class DocmdAIAssistantUI {
     `;
 
     document.body.appendChild(this.container);
-    this.restoreRenderedHistory();
     this.bindEvents();
   }
 
-  private restoreRenderedHistory(): void {
-    const saved = this.engine.getHistory();
-    if (!saved || saved.length === 0) return;
 
-    const msgs = document.getElementById('docmd-ai-messages');
-    if (!msgs) return;
-
-    for (const msg of saved) {
-      const sender = (msg.sender || msg.role) === 'user' ? 'user' : 'assistant';
-      const text = msg.content || msg.text || '';
-      if (text) {
-        this.appendMsg(sender, text, false);
-      }
-    }
-  }
 
   private bindEvents(): void {
     const barWrap = document.getElementById('docmd-ai-bar-wrap');
@@ -284,13 +253,13 @@ export class DocmdAIAssistantUI {
   }
 
   private renderUnconfiguredNotice(data?: any): void {
-    const title = data?.title || 'Configure AI Assistant in docmd Cloud';
-    const message = data?.message || 'Your AI Assistant is ready! To enable live AI responses for your visitors, please configure your site in docmd Cloud.';
+    const title = data?.title || 'Connect Your AI Assistant';
+    const message = data?.message || 'Add your free AI relay or BYOK API key on docmd Cloud to enable the assistant for your visitors.';
     const configUrl = data?.configUrl || 'https://cloud.docmd.io';
     const features = Array.isArray(data?.features) ? data.features : [
-      '✨ 100% Free Feature — Zero subscription costs for AI documentation chat.',
-      '🔑 Bring Your Own Key (BYOK) — Use your existing API keys for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
-      '📊 Analytics & Query Tracking — Complete access to user query analytics and metrics.'
+      '**Free AI relay** — bring your own API key for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
+      '**Query analytics** — see what your visitors are asking in real time.',
+      '**Setup takes under a minute** — just add your `projectId` to `docmd.config.json`.'
     ];
 
     const featureItemsHtml = features
@@ -303,7 +272,7 @@ export class DocmdAIAssistantUI {
     div.innerHTML = `
       <div class="docmd-ai-unconfigured-card">
         <div class="docmd-ai-unconfigured-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
           ${this.escapeHtml(title)}
         </div>
         <p>${this.escapeHtml(message)}</p>
@@ -311,7 +280,7 @@ export class DocmdAIAssistantUI {
           ${featureItemsHtml}
         </ul>
         <a href="${this.escapeHtml(configUrl)}" target="_blank" rel="noopener" class="docmd-ai-unconfigured-btn">
-          Configure Assistant on docmd Cloud →
+          Connect on docmd Cloud →
         </a>
       </div>
     `;
@@ -319,7 +288,6 @@ export class DocmdAIAssistantUI {
       msgs.appendChild(div);
       msgs.scrollTop = msgs.scrollHeight;
     }
-    this.saveHistory();
   }
 
   private async submitQuery(text: string): Promise<void> {
@@ -339,23 +307,27 @@ export class DocmdAIAssistantUI {
       }
 
       typing.innerHTML = this.formatMarkdown(res.message || 'No response generated.');
-      this.saveHistory();
     } catch (err: any) {
       typing.remove();
       this.renderUnconfiguredNotice({
-        message: `Request could not complete: ${err.message || 'Unconfigured site'}`
+        title: 'Domain Not Authorized',
+        message: err.message || 'Origin is not authorized for the selected docmd Cloud project.',
+        features: [
+          '**Free AI relay** — bring your own API key for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
+          '**Query analytics** — see what your visitors are asking in real time.',
+          '**Setup takes under a minute** — just add your `projectId` to `docmd.config.json`.'
+        ]
       });
     }
   }
 
   private clearChat(): void {
     this.engine.clearHistory();
-    sessionStorage.removeItem(`docmd_ai_history_${this.projectId}`);
     const msgs = document.getElementById('docmd-ai-messages');
     if (msgs) {
       msgs.innerHTML = `
         <div class="docmd-ai-chat-bubble assistant">
-          Conversation history cleared. How else can I help you?
+          Conversation cleared. How else can I help you?
           ${this.renderSuggestionsHtml()}
         </div>
       `;
@@ -370,9 +342,6 @@ export class DocmdAIAssistantUI {
     if (msgs) {
       msgs.appendChild(div);
       msgs.scrollTop = msgs.scrollHeight;
-    }
-    if (save) {
-      this.saveHistory();
     }
     return div;
   }
