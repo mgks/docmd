@@ -1,0 +1,15 @@
+{
+  "ai.chatTitle": "AI 助手",
+  "ai.inputPlaceholder": "询问关于此文档的问题...",
+  "ai.send": "发送",
+  "ai.thinking": "思考中...",
+  "ai.greeting": "你好！我是您的 AI 文档助手。请随时询问有关本文档的任何问题。",
+  "ai.clearChat": "清除对话记录",
+  "ai.close": "关闭",
+  "ai.copy": "复制",
+  "ai.copied": "已复制！",
+  "ai.errorNoKey": "未配置 API 密钥。请设置您的 AI 服务提供商 API 密钥。",
+  "ai.errorGeneric": "获取响应时发生错误。",
+  "ai.citations": "参考来源：",
+  "ai.poweredBy": "由 aiplug 提供支持"
+}

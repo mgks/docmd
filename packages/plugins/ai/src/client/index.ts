@@ -11,10 +11,12 @@ export class DocmdAIAssistantUI {
   private container: HTMLElement | null = null;
   private isDrawerOpened = false;
   private projectId: string;
+  private isUnconfigured: boolean;
 
   constructor() {
     const cfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__ || {};
     this.projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId || 'default';
+    this.isUnconfigured = (!cfg.projectId || cfg.projectId === 'default') && !cfg.apiKey && !cfg.baseURL;
 
     const savedHistory = this.loadSavedHistory();
 
@@ -72,13 +74,47 @@ export class DocmdAIAssistantUI {
     } catch { /* ignore */ }
   }
 
+  private renderSuggestionsHtml(): string {
+    const cfg = (window as any).__docmd_ai_config || {};
+    const rawSuggestions = cfg.suggestions;
+
+    let items: Array<{ label: string; prompt: string }> = [
+      { label: 'How do I get started?', prompt: 'How do I get started with docmd?' },
+      { label: 'Key Features', prompt: 'What are the main features of docmd?' },
+      { label: 'AI Plugin Setup', prompt: 'How do I configure the AI assistant plugin?' }
+    ];
+
+    if (Array.isArray(rawSuggestions) && rawSuggestions.length > 0) {
+      items = rawSuggestions.map((item: any) => {
+        if (typeof item === 'string') {
+          return { label: item, prompt: item };
+        }
+        return {
+          label: item.label || item.prompt || item.title || 'Question',
+          prompt: item.prompt || item.label || item.title || item
+        };
+      });
+    }
+
+    const buttons = items
+      .map(item => `<button class="docmd-ai-pill-btn" data-prompt="${this.escapeHtml(item.prompt)}">${this.escapeHtml(item.label)}</button>`)
+      .join('');
+
+    return `<div class="docmd-ai-suggestions-row">${buttons}</div>`;
+  }
+
   private mount(): void {
     if (document.getElementById('docmd-ai-plugin-root')) return;
 
     const cfg = (window as any).__docmd_ai_config || {};
+    const i18n = (window as any).__DOCMD_AI_I18N__ || {};
+
     const pos = cfg.position || 'bottom-center';
-    const placeholder = cfg.placeholder || 'Ask AI Assistant...';
-    const greeting = cfg.greeting || 'Hello! Ask me anything about this documentation.';
+    const placeholder = cfg.placeholder || i18n['ai.inputPlaceholder'] || 'Ask AI Assistant...';
+    const greeting = cfg.greeting || i18n['ai.greeting'] || 'Hello! Ask me anything about this documentation.';
+    const chatTitle = i18n['ai.chatTitle'] || 'AI Assistant';
+    const clearTitle = i18n['ai.clearChat'] || 'Clear History';
+    const closeTitle = i18n['ai.close'] || 'Close AI Assistant';
 
     this.container = document.createElement('div');
     this.container.id = 'docmd-ai-plugin-root';
@@ -103,14 +139,14 @@ export class DocmdAIAssistantUI {
         <div class="docmd-ai-drawer-header">
           <div class="docmd-ai-header-left">
             <span class="docmd-ai-status-dot"></span>
-            <span class="docmd-ai-title-text">AI Assistant</span>
+            <span class="docmd-ai-title-text">${chatTitle}</span>
             <span class="docmd-ai-badge-tag">docmd</span>
           </div>
           <div class="docmd-ai-header-right">
-            <button class="docmd-ai-icon-action" id="docmd-ai-clear-btn" title="Clear History">
+            <button class="docmd-ai-icon-action" id="docmd-ai-clear-btn" title="${clearTitle}">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             </button>
-            <button class="docmd-ai-icon-action" id="docmd-ai-close-btn" title="Close AI Assistant">
+            <button class="docmd-ai-icon-action" id="docmd-ai-close-btn" title="${closeTitle}">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
@@ -119,11 +155,7 @@ export class DocmdAIAssistantUI {
         <div class="docmd-ai-messages-list" id="docmd-ai-messages">
           <div class="docmd-ai-chat-bubble assistant">
             ${greeting}
-            <div class="docmd-ai-suggestions-row">
-              <button class="docmd-ai-pill-btn" data-prompt="How do I get started with docmd?">How do I get started?</button>
-              <button class="docmd-ai-pill-btn" data-prompt="What are the main features of docmd?">Key Features</button>
-              <button class="docmd-ai-pill-btn" data-prompt="How do I configure the AI assistant plugin?">AI Plugin Setup</button>
-            </div>
+            ${this.renderSuggestionsHtml()}
           </div>
         </div>
 
@@ -250,6 +282,36 @@ export class DocmdAIAssistantUI {
 
   private async submitQuery(text: string): Promise<void> {
     this.appendMsg('user', text, true);
+
+    if (this.isUnconfigured) {
+      const msgs = document.getElementById('docmd-ai-messages');
+      const div = document.createElement('div');
+      div.className = 'docmd-ai-chat-bubble assistant';
+      div.innerHTML = `
+        <div class="docmd-ai-unconfigured-card">
+          <div class="docmd-ai-unconfigured-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Configure AI Assistant in docmd Cloud
+          </div>
+          <p>Your AI Assistant is ready! To enable live AI responses for your visitors, please configure your site in <strong>docmd Cloud</strong>.</p>
+          <ul class="docmd-ai-unconfigured-list">
+            <li>✨ <strong>100% Free Feature</strong> — Zero subscription costs for AI documentation chat.</li>
+            <li>🔑 <strong>Bring Your Own Key (BYOK)</strong> — Use your existing API keys for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.</li>
+            <li>📊 <strong>Analytics & Query Tracking</strong> — Complete access to user query analytics and metrics.</li>
+          </ul>
+          <a href="https://cloud.docmd.io" target="_blank" rel="noopener" class="docmd-ai-unconfigured-btn">
+            Configure Assistant on docmd Cloud →
+          </a>
+        </div>
+      `;
+      if (msgs) {
+        msgs.appendChild(div);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+      this.saveHistory();
+      return;
+    }
+
     const typing = this.appendMsg('assistant', 'Working...', false);
 
     try {
@@ -272,11 +334,7 @@ export class DocmdAIAssistantUI {
       msgs.innerHTML = `
         <div class="docmd-ai-chat-bubble assistant">
           Conversation history cleared. How else can I help you?
-          <div class="docmd-ai-suggestions-row">
-            <button class="docmd-ai-pill-btn" data-prompt="How do I get started with docmd?">How do I get started?</button>
-            <button class="docmd-ai-pill-btn" data-prompt="What are the main features of docmd?">Key Features</button>
-            <button class="docmd-ai-pill-btn" data-prompt="How do I configure the AI assistant plugin?">AI Plugin Setup</button>
-          </div>
+          ${this.renderSuggestionsHtml()}
         </div>
       `;
     }

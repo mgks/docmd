@@ -75,6 +75,10 @@ const defaultConfigContent = `{
     { "title": "GitHub", "path": "https://github.com/docmd-io/docmd", "icon": "github", "external": true }
   ],
   "plugins": {
+    "ai": {
+      "assistant": true,
+      "projectId": ""
+    },
     "git": {
       "commitHistory": true,
       "maxCommits": 5
@@ -160,6 +164,7 @@ print('Hello World')
 
 docmd ships with these plugins enabled by default — no install needed:
 
+- **AI Assistant** — interactive documentation chat (100% free with BYOK or docmd Cloud)
 - **Search** — full-text + semantic search (optional)
 - **Sitemap** + **SEO** meta tags
 - **LLMs context** — \`llms.txt\` and \`llms.json\` for AI agents
