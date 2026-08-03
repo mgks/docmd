@@ -280,38 +280,47 @@ export class DocmdAIAssistantUI {
     return '';
   }
 
+  private renderUnconfiguredNotice(data?: any): void {
+    const title = data?.title || 'Configure AI Assistant in docmd Cloud';
+    const message = data?.message || 'Your AI Assistant is ready! To enable live AI responses for your visitors, please configure your site in docmd Cloud.';
+    const configUrl = data?.configUrl || 'https://cloud.docmd.io';
+    const features = Array.isArray(data?.features) ? data.features : [
+      '✨ 100% Free Feature — Zero subscription costs for AI documentation chat.',
+      '🔑 Bring Your Own Key (BYOK) — Use your existing API keys for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
+      '📊 Analytics & Query Tracking — Complete access to user query analytics and metrics.'
+    ];
+
+    const featureItemsHtml = features
+      .map((f: string) => `<li>${this.formatMarkdown(f)}</li>`)
+      .join('');
+
+    const msgs = document.getElementById('docmd-ai-messages');
+    const div = document.createElement('div');
+    div.className = 'docmd-ai-chat-bubble assistant';
+    div.innerHTML = `
+      <div class="docmd-ai-unconfigured-card">
+        <div class="docmd-ai-unconfigured-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          ${this.escapeHtml(title)}
+        </div>
+        <p>${this.escapeHtml(message)}</p>
+        <ul class="docmd-ai-unconfigured-list">
+          ${featureItemsHtml}
+        </ul>
+        <a href="${this.escapeHtml(configUrl)}" target="_blank" rel="noopener" class="docmd-ai-unconfigured-btn">
+          Configure Assistant on docmd Cloud →
+        </a>
+      </div>
+    `;
+    if (msgs) {
+      msgs.appendChild(div);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    this.saveHistory();
+  }
+
   private async submitQuery(text: string): Promise<void> {
     this.appendMsg('user', text, true);
-
-    if (this.isUnconfigured) {
-      const msgs = document.getElementById('docmd-ai-messages');
-      const div = document.createElement('div');
-      div.className = 'docmd-ai-chat-bubble assistant';
-      div.innerHTML = `
-        <div class="docmd-ai-unconfigured-card">
-          <div class="docmd-ai-unconfigured-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Configure AI Assistant in docmd Cloud
-          </div>
-          <p>Your AI Assistant is ready! To enable live AI responses for your visitors, please configure your site in <strong>docmd Cloud</strong>.</p>
-          <ul class="docmd-ai-unconfigured-list">
-            <li>✨ <strong>100% Free Feature</strong> — Zero subscription costs for AI documentation chat.</li>
-            <li>🔑 <strong>Bring Your Own Key (BYOK)</strong> — Use your existing API keys for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.</li>
-            <li>📊 <strong>Analytics & Query Tracking</strong> — Complete access to user query analytics and metrics.</li>
-          </ul>
-          <a href="https://cloud.docmd.io" target="_blank" rel="noopener" class="docmd-ai-unconfigured-btn">
-            Configure Assistant on docmd Cloud →
-          </a>
-        </div>
-      `;
-      if (msgs) {
-        msgs.appendChild(div);
-        msgs.scrollTop = msgs.scrollHeight;
-      }
-      this.saveHistory();
-      return;
-    }
-
     const typing = this.appendMsg('assistant', 'Working...', false);
 
     try {
@@ -319,10 +328,20 @@ export class DocmdAIAssistantUI {
       const queryWithContext = docContext ? `${text}${docContext}` : text;
 
       const res = await this.engine.sendMessage(queryWithContext);
+
+      if (res && res.unconfigured) {
+        typing.remove();
+        this.renderUnconfiguredNotice(res.unconfiguredData || res);
+        return;
+      }
+
       typing.innerHTML = this.formatMarkdown(res.message || 'No response generated.');
       this.saveHistory();
     } catch (err: any) {
-      typing.textContent = `Error: ${err.message || 'Request failed'}`;
+      typing.remove();
+      this.renderUnconfiguredNotice({
+        message: `Request could not complete: ${err.message || 'Unconfigured site'}`
+      });
     }
   }
 
