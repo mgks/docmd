@@ -73,7 +73,6 @@ function formatDuration(ms: number): string {
  * ────────────────────────────────────────────────────────────── */
 
 let _waitLine:     string | null = null;
-let _waitBarColor: typeof chalk.cyan   = chalk.cyan;
 let _progressLines = 0;
 
 // Section auto-close tracking

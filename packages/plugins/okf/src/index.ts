@@ -95,6 +95,7 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
   if (!config.url) {
     const msg = `OKF: config.url is missing — generated \`source:\` fields will be relative paths only`;
     warnings.push(`[WARN] missing-site-url  (source: fields will be relative)`);
+    if (log) log(msg, 'SKIP');
   }
 
   const localeIds: string[] = (config.i18n?.locales || []).map((l: any) => l.id);

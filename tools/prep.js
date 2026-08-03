@@ -124,25 +124,22 @@ const C = {
 // ── TUI primitives ────────────────────────────────────────────────────
 // section() and footer() pair up to produce exactly one blank line
 // between groups: footer ends with \n, section starts without \n.
-function section(label, color) {
-    console.log(`${color}${C.bold}┌─ ${label}${C.reset}`);
+function section(label, color = C.cyan) {
+    console.log(`\n${color}${C.bold}${label.toUpperCase()}${C.reset}\n`);
 }
 
-function footer(color) {
-    console.log(`${color}└${'─'.repeat(50)}${C.reset}`);
+function footer() {
+    console.log('');
 }
 
 function startStep(label) {
-    // Print the [WAIT] sign and return a handle to update on completion.
-    const bar = `${C.cyan}│${C.reset}`;
     const text = `${C.dim}${label}${C.reset}`;
-    process.stdout.write(`${bar}  ${text.padEnd(52)}${C.dim}[ WAIT ]${C.reset}\n`);
-    return { label, startMs: Date.now(), bar, text };
+    const tag = `${C.blue}[ WAIT ]${C.reset}`;
+    process.stdout.write(`${tag} ${text}\n`);
+    return { label, startMs: Date.now(), text };
 }
 
 function finishStep(s, status, summary) {
-    // Rewrite the same line with [DONE] / [ WARN ] / [ FAIL ] + elapsed time.
-    // Default status is 'done' — the common case.
     const effectiveStatus = status || 'done';
     const ms = Date.now() - s.startMs;
     const t = ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
@@ -152,10 +149,9 @@ function finishStep(s, status, summary) {
             ? `${C.yellow}[ WARN ]${C.reset}`
             : `${C.red}[ FAIL ]${C.reset}`;
     const sumTxt = summary ? `  ${C.dim}${summary}${C.reset}` : '';
-    // Move cursor up 1 line, clear it, rewrite.
     process.stdout.write('\x1b[1A\x1b[2K');
     process.stdout.write(
-        `${s.bar}  ${s.text.padEnd(52)}${tag} ${C.dim}${t}${C.reset}${sumTxt}\n`
+        `${tag} ${s.text.padEnd(52)} ${C.dim}${t}${C.reset}${sumTxt}\n`
     );
 }
 

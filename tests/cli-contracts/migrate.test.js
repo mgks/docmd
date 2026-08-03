@@ -64,7 +64,7 @@ export const test = runTestFile({
       }
 
       assert(code === 0, 'N-3: mkdocs dry-run exits 0');
-      assert(/Dry run: MkDocs migration/.test(output), 'N-3: dry-run header mentions MkDocs');
+      assert(/dry run: mkdocs migration/i.test(output), 'N-3: dry-run header mentions MkDocs');
       assert(/Would move/.test(output), 'N-3: dry-run lists files that would be moved');
       assert(/Would write/.test(output), 'N-3: dry-run mentions docmd.config.js');
       assert(/No changes made/.test(output), 'N-3: dry-run prints "No changes made"');
@@ -105,7 +105,7 @@ export const test = runTestFile({
       }
 
       assert(code === 0, 'N-3: upgrade dry-run exits 0');
-      assert(/Dry run: config upgrade/.test(output), 'N-3: dry-run header mentions config upgrade');
+      assert(/dry run: config upgrade/i.test(output), 'N-3: dry-run header mentions config upgrade');
       assert(/"title":\s*"Legacy Site"/.test(output), 'N-3: dry-run shows upgraded title');
       assert(/"url":/.test(output), 'N-3: dry-run shows upgraded url');
 
