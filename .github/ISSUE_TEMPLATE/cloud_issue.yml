@@ -1,0 +1,53 @@
+name: docmd Cloud Issue Report
+description: Report an issue, bug, or request for docmd Cloud platform (cloud.docmd.io)
+title: "[Cloud]: "
+labels: ["cloud", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue for docmd Cloud Platform (cloud.docmd.io).
+  - type: input
+    id: project-id
+    attributes:
+      label: Project ID (Optional)
+      description: What is your project ID (e.g. docmd_abc123)?
+      placeholder: docmd_xxx
+    validations:
+      required: false
+  - type: dropdown
+    id: category
+    attributes:
+      label: Cloud Category
+      options:
+        - AI Assistant Relay / BYOK
+        - Authentication & Login (GitHub / Google)
+        - Project Settings & Domain Config
+        - Dashboard & Usage Stats
+        - Platform Feature Request / Feedback
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Issue Description
+      description: A clear and concise description of the issue or feedback.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue on cloud.docmd.io.
+      placeholder: |
+        1. Log in to cloud.docmd.io
+        2. Select project...
+        3. Perform action...
+        4. Observe behavior...
+    validations:
+      required: false
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
