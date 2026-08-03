@@ -1,16 +1,16 @@
-# `@docmd/plugin-ai`
+# @docmd/plugin-ai
 
-> Interactive AI Chat assistant plugin for docmd, powered by `aiplug` multi-provider connection.
+Interactive AI Chat assistant plugin for docmd, powered by `aiplug` multi-provider connection.
 
 `@docmd/plugin-ai` connects your docmd documentation site with an interactive "Chat with Docs" assistant. Powered by `aiplug`, it supports 110+ AI providers (OpenAI, Anthropic, Gemini, DeepSeek, Groq, Ollama, local models).
 
 ## Features
 
-- 💬 **Interactive Chat Widget**: Sleek floating glassmorphism AI chat drawer matching docmd aesthetics.
-- ⚡ **Multi-Provider Connection**: Powered by `aiplug` (`mgks/aiplug`), switch providers seamlessly.
-- 📚 **Docs Context Retrieval**: Automatically retrieves relevant markdown sections to answer user questions with source citations.
-- 💡 **Suggestion Pills**: Actionable question starters for quick engagement.
-- 🎨 **Dark / Light Mode**: Automatically adapts to active site theme tokens.
+- **Interactive Chat Widget**: Sleek floating glassmorphism AI chat drawer matching docmd aesthetics.
+- **Multi-Provider Connection**: Powered by `aiplug` (`mgks/aiplug`), switch providers seamlessly.
+- **Docs Context Retrieval**: Automatically retrieves relevant markdown sections to answer user questions with source citations.
+- **Suggestion Pills**: Actionable question starters for quick engagement.
+- **Dark / Light Mode**: Automatically adapts to active site theme tokens.
 
 ## Configuration
 
@@ -42,6 +42,12 @@ Set your provider's API key in your environment or `.env`:
 - `DEEPSEEK_API_KEY` (for DeepSeek)
 - `GROQ_API_KEY` (for Groq)
 
+Part of the **[docmd](https://github.com/docmd-io/docmd)** documentation engine.
+
+## Documentation
+
+See **[docs.docmd.io](https://docs.docmd.io)** for full usage and API reference.
+
 ## License
 
-MIT © docmd.io
+MIT
