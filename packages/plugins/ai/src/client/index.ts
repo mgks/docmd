@@ -92,8 +92,8 @@ export class DocmdAIAssistantUI {
           </span>
           <input type="text" class="docmd-ai-bar-input" id="docmd-ai-bar-input" placeholder="${placeholder}" autocomplete="off" />
           <span class="docmd-ai-shortcut-badge">⌘I</span>
-          <button type="submit" class="docmd-ai-submit-btn" title="Ask AI Assistant">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+          <button type="submit" class="docmd-ai-submit-btn" title="Send (Enter)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
           </button>
         </form>
       </div>
@@ -130,8 +130,8 @@ export class DocmdAIAssistantUI {
         <div class="docmd-ai-drawer-footer">
           <form class="docmd-ai-drawer-form" id="docmd-ai-drawer-form">
             <input type="text" class="docmd-ai-drawer-input" id="docmd-ai-drawer-input" placeholder="${placeholder}" autocomplete="off" />
-            <button type="submit" class="docmd-ai-drawer-send-btn" title="Ask AI">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>
+            <button type="submit" class="docmd-ai-drawer-send-btn" title="Send (Enter)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"/><path d="M20 4v7a4 4 0 0 1-4 4H4"/></svg>
             </button>
           </form>
         </div>
