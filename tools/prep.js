@@ -331,7 +331,7 @@ function runTestStep(label, cmd, statLabel = label) {
             const linesUp = numProgressLines + 1;
             process.stdout.write(`\x1b[${linesUp}A\r`);
             process.stdout.write('\x1b[2K');
-            process.stdout.write(`${s.bar}  ${s.text.padEnd(52)}${tag} ${C.dim}${t}${C.reset}${sumTxt}\n`);
+            process.stdout.write(`${tag} ${s.text.padEnd(52)} ${C.dim}${t}${C.reset}${sumTxt}\n`);
             if (numProgressLines > 0) {
                 process.stdout.write(`\x1b[${numProgressLines}B`);
             }
@@ -352,9 +352,7 @@ function printSummary() {
     const elapsedTxt = elapsedMs < 1000 ? `${elapsedMs}ms` : `${(elapsedMs / 1000).toFixed(1)}s`;
 
     if (issues.length === 0) {
-        // Green Summary — every stat in one tidy list. Pad the label
-        // column to the longest label so values align regardless of
-        // how many sections contributed.
+        // Green Summary — every stat in one tidy list.
         section('Summary', C.green);
         const pad = Math.max(...stats.map(s => s.label.length)) + 2;
         for (const s of stats) {
@@ -362,10 +360,10 @@ function printSummary() {
                 ? `${C.yellow}[ WARN ]${C.reset}`
                 : `${C.green}[ DONE ]${C.reset}`;
             const label = `${s.label}`.padEnd(pad);
-            console.log(`${C.green}│${C.reset}  ${tag} ${C.bold}${label}${C.reset}${s.value}`);
+            console.log(`${tag} ${C.bold}${label}${C.reset}${s.value}`);
         }
         footer(C.green);
-        console.log(`\n${C.green}${C.bold}✓ Maintenance Pipeline passed in ${elapsedTxt}.${C.reset}`);
+        console.log(`\n${C.green}${C.bold}✓ Maintenance Pipeline passed in ${elapsedTxt}.${C.reset}\n`);
         return;
     }
 
@@ -376,9 +374,6 @@ function printSummary() {
     const head     = `Issues — ${errors} error${errors === 1 ? '' : 's'}, ${warnings} warning${warnings === 1 ? '' : 's'}`;
     section(head, color);
 
-    // Group by section so two issues from the same source don't repeat
-    // the section header; the operator reads the section once and then
-    // scans the bullets.
     const bySection = new Map();
     for (const i of issues) {
         if (!bySection.has(i.section)) bySection.set(i.section, []);
@@ -388,22 +383,22 @@ function printSummary() {
         const tag = items.some(i => i.severity === 'error')
             ? `${C.red}[ FAIL ]${C.reset}`
             : `${C.yellow}[ WARN ]${C.reset}`;
-        console.log(`${color}│${C.reset}  ${tag} ${C.bold}${name}${C.reset}`);
+        console.log(`${tag} ${C.bold}${name}${C.reset}`);
         for (const item of items) {
-            console.log(`${color}│${C.reset}    ${item.message}`);
+            console.log(`  ${item.message}`);
             const detailCap = 8;
             for (const detail of item.details.slice(0, detailCap)) {
-                console.log(`${color}│${C.reset}      ${C.dim}${detail}${C.reset}`);
+                console.log(`    ${C.dim}${detail}${C.reset}`);
             }
             if (item.details.length > detailCap) {
-                console.log(`${color}│${C.reset}      ${C.dim}… ${item.details.length - detailCap} more (re-run with --verbose for full output)${C.reset}`);
+                console.log(`    ${C.dim}… ${item.details.length - detailCap} more (re-run with --verbose for full output)${C.reset}`);
             }
         }
+        console.log('');
     }
-    footer(color);
 
     if (errors > 0) {
-        console.log(`\n${C.red}${C.bold}✗ Maintenance Pipeline failed in ${elapsedTxt}.${C.reset}`);
+        console.log(`${C.red}${C.bold}✗ Maintenance Pipeline failed in ${elapsedTxt}.${C.reset}`);
         console.log(`${C.bold}Failed sections:${C.reset}`);
         const failSections = Array.from(bySection.entries())
             .filter(([_, items]) => items.some(item => item.severity === 'error'))
@@ -411,8 +406,9 @@ function printSummary() {
         for (const sec of failSections) {
             console.log(`  - ${sec}`);
         }
+        console.log('');
     } else {
-        console.log(`\n${C.yellow}${C.bold}⚠ Maintenance Pipeline passed with warnings in ${elapsedTxt}.${C.reset}`);
+        console.log(`${C.yellow}${C.bold}⚠ Maintenance Pipeline passed with warnings in ${elapsedTxt}.${C.reset}\n`);
     }
 }
 
