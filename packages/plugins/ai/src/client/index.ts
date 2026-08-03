@@ -606,7 +606,7 @@ Ground all page hyperlinks strictly in real search results. All absolute URLs mu
 
     // Split into blocks by double linebreaks for clean paragraph flow
     const blocks = text.split(/\n{2,}/);
-    let html = blocks.map(block => {
+    const html = blocks.map(block => {
       const trimmed = block.trim();
       if (!trimmed) return '';
       if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table)/i.test(trimmed)) {
