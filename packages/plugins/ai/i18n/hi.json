@@ -1,0 +1,15 @@
+{
+  "ai.chatTitle": "AI सहायक",
+  "ai.inputPlaceholder": "इस दस्तावेज़ के बारे में एक प्रश्न पूछें...",
+  "ai.send": "भेजें",
+  "ai.thinking": "सोच रहा है...",
+  "ai.greeting": "नमस्ते! मैं आपका AI दस्तावेज़ सहायक हूँ। इस दस्तावेज़ के बारे में कुछ भी पूछें।",
+  "ai.clearChat": "इतिहास साफ़ करें",
+  "ai.close": "बंद करें",
+  "ai.copy": "कॉपी करें",
+  "ai.copied": "कॉपी किया गया!",
+  "ai.errorNoKey": "कोई API कुंजी कॉन्फ़िगर नहीं की गई है।",
+  "ai.errorGeneric": "उत्तर प्राप्त करते समय एक त्रुटि हुई।",
+  "ai.citations": "स्रोत:",
+  "ai.poweredBy": "docmd assistant द्वारा संचालित"
+}

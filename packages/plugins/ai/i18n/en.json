@@ -1,0 +1,15 @@
+{
+  "ai.chatTitle": "Ask AI Assistant",
+  "ai.inputPlaceholder": "Ask a question about these docs...",
+  "ai.send": "Send",
+  "ai.thinking": "Thinking...",
+  "ai.greeting": "Hello! I am your AI documentation assistant. Ask me anything about this documentation.",
+  "ai.clearChat": "Clear Conversation",
+  "ai.close": "Close",
+  "ai.copy": "Copy",
+  "ai.copied": "Copied!",
+  "ai.errorNoKey": "No API key configured for AI provider. Please set your provider API key.",
+  "ai.errorGeneric": "An error occurred while fetching response.",
+  "ai.citations": "Sources:",
+  "ai.poweredBy": "Powered by docmd assistant"
+}

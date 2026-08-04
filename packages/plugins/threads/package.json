@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-threads",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "type": "module",
   "description": "Inline discussion threads for docmd.",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "i18n"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20.0.0"
   },
   "docmd": {
     "key": "threads",
@@ -41,13 +41,13 @@
     "@docmd/parser": "workspace:*"
   },
   "dependencies": {
-    "@shoelace-style/shoelace": "^2.20.1",
     "@docmd/utils": "workspace:*",
+    "@shoelace-style/shoelace": "^2.20.1",
     "lit": "^3.3.3"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^24.13.3",
     "esbuild": "^0.28.1"
   },

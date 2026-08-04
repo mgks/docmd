@@ -201,11 +201,11 @@ const headingIdPlugin = (md, options: any = {}) => {
 
 // Main Factory Function to Create a Markdown Processor
 function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
-  // HTML policy from config (Phase 0.D, default 'escape').
-  // 'allow'  -> markdown-it html: true (raw HTML passes through, UNSAFE)
+  // HTML policy from config (default 'allow').
+  // 'allow'  -> markdown-it html: true (raw HTML passes through — industry standard)
   // 'escape' -> markdown-it html: false (HTML escaped and shown as text)
   // 'strip'  -> html: false + disable html_block/html_inline rules (HTML removed)
-  const htmlPolicy = (config && config.security && config.security.html) || 'escape';
+  const htmlPolicy = (config && config.security && config.security.html) || 'allow';
   const mdOptions: any = {
     html: htmlPolicy === 'allow',
     linkify: true,

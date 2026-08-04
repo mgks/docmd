@@ -258,7 +258,7 @@ function runExternalWithProgress({ command, args }) {
     // can claim that visual slot without leaving a stale frame behind.
     const tick = setInterval(() => {
       const bar = renderProgressBar(Date.now() - startMs);
-      process.stdout.write(`\r\x1b[2K${CYAN('│')}  ${DIM(bar)}`);
+      process.stdout.write(`\r\x1b[2K${DIM(bar)}`);
       progressLineActive = true;
     }, PROGRESS_INTERVAL_MS);
 
@@ -312,7 +312,8 @@ console.log('');
 (async function main() {
 for (const { id, name, module } of testFiles) {
   const sectionStart = Date.now();
-  console.log(CYAN(`┌─ ${name}`));
+  console.log(CYAN(BOLD(name.toUpperCase())));
+  console.log('');
 
   if (module.external) {
     const result = await runExternalWithProgress(module);
@@ -343,14 +344,12 @@ for (const { id, name, module } of testFiles) {
       totalPassed += passed;
       totalFailed += failed;
       const elapsed = Date.now() - sectionStart;
-      console.log(CYAN('│'));
-      console.log(`${CYAN('│')}  ${GREEN(BOLD('[ PASS ]'))}  ${passed} passed, ${failed} failed  ${DIM('(' + elapsed + 'ms)')}`);
+      console.log(`${GREEN(BOLD('[ PASS ]'))}  ${passed} passed, ${failed} failed  ${DIM('(' + elapsed + 'ms)')}`);
     } else {
       totalFailed += 1;
       allFailures.push({ name, output: out.slice(-2000) });
       const elapsed = Date.now() - sectionStart;
-      console.log(CYAN('│'));
-      console.log(`${CYAN('│')}  ${RED(BOLD('[ FAIL ]'))}  exit code ${result.status}  ${DIM('(' + elapsed + 'ms)')}`);
+      console.log(`${RED(BOLD('[ FAIL ]'))}  exit code ${result.status}  ${DIM('(' + elapsed + 'ms)')}`);
     }
   } else {
     // In-process runner. The test module's `test.run()` callback prints
@@ -365,41 +364,37 @@ for (const { id, name, module } of testFiles) {
       totalFailed += failed;
       for (const f of failures) allFailures.push({ name, output: f });
       const elapsed = Date.now() - sectionStart;
-      console.log(CYAN('│'));
       if (failed === 0) {
-        console.log(`${CYAN('│')}  ${GREEN(BOLD('[ PASS ]'))}  ${passed} passed, 0 failed  ${DIM('(' + elapsed + 'ms)')}`);
+        console.log(`${GREEN(BOLD('[ PASS ]'))}  ${passed} passed, 0 failed  ${DIM('(' + elapsed + 'ms)')}`);
       } else {
-        console.log(`${CYAN('│')}  ${RED(BOLD('[ FAIL ]'))}  ${passed} passed, ${failed} failed  ${DIM('(' + elapsed + 'ms)')}`);
+        console.log(`${RED(BOLD('[ FAIL ]'))}  ${passed} passed, ${failed} failed  ${DIM('(' + elapsed + 'ms)')}`);
       }
     } catch (e) {
       totalFailed += 1;
       allFailures.push({ name, output: e.message + '\n' + e.stack });
       const elapsed = Date.now() - sectionStart;
-      console.log(CYAN('│'));
-      console.log(`${CYAN('│')}  ${RED(BOLD('[ FAIL ]'))}  threw: ${e.message}  ${DIM('(' + elapsed + 'ms)')}`);
+      console.log(`${RED(BOLD('[ FAIL ]'))}  threw: ${e.message}  ${DIM('(' + elapsed + 'ms)')}`);
     }
   }
-  console.log(CYAN('└' + '─'.repeat(50)));
   console.log('');
 }
 
 const totalMs = Date.now() - startTime;
+console.log(CYAN(BOLD('TEST SUMMARY')));
 console.log('');
-console.log(CYAN('┌' + '─'.repeat(55)));
-console.log(CYAN('│') + '  ' + CYAN(BOLD(`Test summary: ${totalPassed} passed, ${totalFailed} failed across ${testFiles.length} files`)));
-console.log(CYAN('│') + '  ' + DIM(`Total time: ${totalMs}ms`));
+console.log(CYAN(BOLD(`${totalPassed} passed, ${totalFailed} failed across ${testFiles.length} files`)));
+console.log(DIM(`Total time: ${totalMs}ms`));
 if (allFailures.length > 0) {
-  console.log(CYAN('│'));
-  console.log(CYAN('│') + '  ' + RED('Failures:'));
+  console.log('');
+  console.log(RED('Failures:'));
   for (const f of allFailures) {
-    console.log(CYAN('│') + '  ' + RED(`  - ${f.name}`));
+    console.log(RED(`  - ${f.name}`));
     if (f.output) {
       const snippet = f.output.split('\n').slice(0, 8).join('\n');
-      console.log(CYAN('│') + '  ' + DIM(snippet));
+      console.log(DIM(snippet));
     }
   }
 }
-console.log(CYAN('└' + '─'.repeat(55)));
 console.log('');
 
 process.exit(totalFailed > 0 ? 1 : 0);

@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-pwa",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "description": "Progressive Web App (PWA) plugin for docmd.",
   "type": "module",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
     "dist"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20.0.0"
   },
   "peerDependencies": {
     "@docmd/api": "workspace:*"

@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-git",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "description": "Git integration plugin for docmd.",
   "type": "module",
   "main": "dist/index.js",
@@ -33,7 +33,7 @@
     "i18n"
   ],
   "engines": {
-    "node": ">=18"
+    "node": ">=20.0.0"
   },
   "peerDependencies": {
     "@docmd/api": "workspace:*"

@@ -46,7 +46,7 @@ import nativeFs from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import process from 'node:process';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { isMainThread } from 'node:worker_threads';
 import { TUI } from '@docmd/tui';
 
@@ -248,7 +248,7 @@ function buildInstallArgs(packageName: string, pm: 'pnpm' | 'yarn' | 'bun' | 'np
     case 'pnpm': return ['add', packageName];
     case 'yarn': return ['add', packageName];
     case 'bun':  return ['add', packageName];
-    case 'npm':  return ['install', packageName];
+    case 'npm':  return ['install', '--no-save', packageName];
   }
 }
 
@@ -369,108 +369,112 @@ export async function installRuntimeDep(packageName: string): Promise<boolean> {
     const reporter = getBuildStatusReporter();
     reporter.begin(shortName);
 
-    const args = buildInstallArgs(versionedPackage, pm);
-    let stderr = '';
-    let stdout = '';
-    // shell: true only on Windows because npm/yarn/pnpm are .cmd batch
-    // files there. On macOS/Linux, shell: false is more secure and
-    // works because the package managers are real executables. The
-    // package name is already validated by the strict regex above, so
-    // enabling the shell on Windows introduces no injection surface.
-    const useShell = process.platform === 'win32';
-    const child = spawn(pm, args, { cwd, shell: useShell, timeout: 60_000 });
+    const executeInstall = (currentPm: 'pnpm' | 'yarn' | 'bun' | 'npm') => {
+      const args = buildInstallArgs(versionedPackage, currentPm);
+      if (currentPm === 'npm' && !args.includes('--foreground-scripts')) {
+        args.splice(1, 0, '--foreground-scripts');
+      }
+      let stderr = '';
+      let stdout = '';
+      const useShell = process.platform === 'win32';
+      const child = spawn(currentPm, args, { cwd, shell: useShell, timeout: 60_000 });
 
-    child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
-    child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+      child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
 
-    child.on('error', (err) => {
-      reporter.finish(shortName, 'FAIL');
-      const surface = (stderr || err.message || 'unknown error')
-        .toString()
-        .split('\n')
-        .filter(Boolean)
-        .slice(0, 3)
-        .join(' | ');
-      // If the install failed AND there is no package.json in any ancestor,
-      // it's the genuine "docmd run in a bare directory" case. Print the
-      // friendly hint once per run. Otherwise show the package manager's
-      // real error so the user can debug.
-      const hasProject = (() => {
-        let dir = path.resolve(cwd);
-        while (true) {
-          if (nativeFs.existsSync(path.join(dir, 'package.json'))) return true;
-          const parent = path.dirname(dir);
-          if (parent === dir) break;
-          dir = parent;
+      child.on('error', (err: any) => {
+        if (err?.code === 'ENOENT' && currentPm !== 'npm') {
+          return executeInstall('npm');
         }
-        return false;
-      })();
-      if (!hasProject && !_noPackageJsonWarned) {
-        _noPackageJsonWarned = true;
-        TUI.warn(
-          `No package.json found in ${cwd} (or any parent directory). ` +
-          `docmd will run with limited functionality (plugins/templates unavailable). ` +
-          `For the full setup, run:\n` +
-          `  npx @docmd/core init`
-        );
-        resolve(false);
-        return;
-      }
-      const isTemplate = packageName.startsWith('@docmd/template-');
-      const hint = isTemplate
-        ? `Add "${packageName}" to your package.json dependencies, then run your normal install step.`
-        : `Run "docmd add ${shortName}" to install it, or add "${packageName}" to your package.json.`;
-      TUI.warn(
-        `Auto-install of ${packageName} failed: ${surface}\n  > ${hint}`,
-      );
-      _failedInstalls.add(packageName);
-      resolve(false);
-    });
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        reporter.finish(shortName, 'DONE');
-        return resolve(true);
-      }
-      reporter.finish(shortName, 'FAIL');
-      const surface = stderr
-        .toString()
-        .split('\n')
-        .filter(Boolean)
-        .slice(0, 3)
-        .join(' | ');
-      // Same bare-directory detection as the `error` handler above.
-      const hasProject = (() => {
-        let dir = path.resolve(cwd);
-        while (true) {
-          if (nativeFs.existsSync(path.join(dir, 'package.json'))) return true;
-          const parent = path.dirname(dir);
-          if (parent === dir) break;
-          dir = parent;
+        reporter.finish(shortName, 'FAIL');
+        const surface = (stderr || err.message || 'unknown error')
+          .toString()
+          .split('\n')
+          .filter(Boolean)
+          .slice(0, 3)
+          .join(' | ');
+        const hasProject = (() => {
+          let dir = path.resolve(cwd);
+          while (true) {
+            if (nativeFs.existsSync(path.join(dir, 'package.json'))) return true;
+            const parent = path.dirname(dir);
+            if (parent === dir) break;
+            dir = parent;
+          }
+          return false;
+        })();
+        if (!hasProject && !_noPackageJsonWarned) {
+          _noPackageJsonWarned = true;
+          TUI.warn(
+            `No package.json found in ${cwd} (or any parent directory). ` +
+            `docmd will run with limited functionality (plugins/templates unavailable). ` +
+            `For the full setup, run:\n` +
+            `  npx @docmd/core init`
+          );
+          resolve(false);
+          return;
         }
-        return false;
-      })();
-      if (!hasProject && !_noPackageJsonWarned) {
-        _noPackageJsonWarned = true;
+        const isTemplate = packageName.startsWith('@docmd/template-');
+        const hint = isTemplate
+          ? `Add "${packageName}" to your package.json dependencies, then run your normal install step.`
+          : `Run "docmd add ${shortName}" to install it, or add "${packageName}" to your package.json.`;
         TUI.warn(
-          `No package.json found in ${cwd} (or any parent directory). ` +
-          `docmd will run with limited functionality (plugins/templates unavailable). ` +
-          `For the full setup, run:\n` +
-          `  npx @docmd/core init`
+          `Auto-install of ${packageName} failed: ${surface}\n  > ${hint}`,
         );
+        _failedInstalls.add(packageName);
         resolve(false);
-        return;
-      }
-      const isTemplate = packageName.startsWith('@docmd/template-');
-      const hint = isTemplate
-        ? `Add "${packageName}" to your package.json dependencies, then run your normal install step.`
-        : `Run "docmd add ${shortName}" to install it, or add "${packageName}" to your package.json.`;
-      TUI.warn(
-        `Auto-install of ${packageName} failed (exit ${code}): ${surface || 'unknown error'}\n  > ${hint}`,
-      );
-      _failedInstalls.add(packageName);
-      resolve(false);
-    });
+      });
+
+      child.on('close', (code) => {
+        if (code === 0) {
+          ensureNativePostinstalls(cwd);
+          reporter.finish(shortName, 'DONE');
+          return resolve(true);
+        }
+        if (currentPm !== 'npm') {
+          return executeInstall('npm');
+        }
+        reporter.finish(shortName, 'FAIL');
+        const surface = stderr
+          .toString()
+          .split('\n')
+          .filter(Boolean)
+          .slice(0, 3)
+          .join(' | ');
+        const hasProject = (() => {
+          let dir = path.resolve(cwd);
+          while (true) {
+            if (nativeFs.existsSync(path.join(dir, 'package.json'))) return true;
+            const parent = path.dirname(dir);
+            if (parent === dir) break;
+            dir = parent;
+          }
+          return false;
+        })();
+        if (!hasProject && !_noPackageJsonWarned) {
+          _noPackageJsonWarned = true;
+          TUI.warn(
+            `No package.json found in ${cwd} (or any parent directory). ` +
+            `docmd will run with limited functionality (plugins/templates unavailable). ` +
+            `For the full setup, run:\n` +
+            `  npx @docmd/core init`
+          );
+          resolve(false);
+          return;
+        }
+        const isTemplate = packageName.startsWith('@docmd/template-');
+        const hint = isTemplate
+          ? `Add "${packageName}" to your package.json dependencies, then run your normal install step.`
+          : `Run "docmd add ${shortName}" to install it, or add "${packageName}" to your package.json.`;
+        TUI.warn(
+          `Auto-install of ${packageName} failed (exit ${code}): ${surface || 'unknown error'}\n  > ${hint}`,
+        );
+        _failedInstalls.add(packageName);
+        resolve(false);
+      });
+    };
+
+    executeInstall(pm);
   });
 }
 
@@ -493,42 +497,87 @@ export function installPackages(packages: string[], cwd: string = process.cwd())
     }
 
     const pm = detectPackageManager(cwd);
-    const args = buildInstallArgs(packages[0], pm);
-    for (let i = 1; i < packages.length; i++) {
-      args.push(packages[i]);
-    }
-    
-    // Add --foreground-scripts when using npm to make sure postinstalls run
-    if (pm === 'npm') {
-      args.splice(1, 0, '--foreground-scripts');
-    }
 
-    let stderr = '';
-    let stdout = '';
-    const useShell = process.platform === 'win32';
-    const child = spawn(pm, args, { cwd, shell: useShell, timeout: 300_000 });
-
-    child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
-    child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
-
-    child.on('error', (err) => {
-      TUI.warn(`Auto-install command execution failed: ${err.message}`);
-      resolve(false);
-    });
-
-    child.on('close', (code) => {
-      if (code !== 0) {
-        TUI.warn(`Auto-install failed with exit code ${code} for command: ${pm} ${args.join(' ')}`);
-        if (stderr.trim()) {
-          TUI.warn(`Stderr:\n${stderr}`);
-        }
-        if (stdout.trim()) {
-          TUI.warn(`Stdout:\n${stdout}`);
-        }
+    const executeInstall = (currentPm: 'pnpm' | 'yarn' | 'bun' | 'npm') => {
+      const args = buildInstallArgs(packages[0], currentPm);
+      for (let i = 1; i < packages.length; i++) {
+        args.push(packages[i]);
       }
-      resolve(code === 0);
-    });
+
+      // Add --foreground-scripts when using npm to make sure postinstalls run
+      if (currentPm === 'npm') {
+        args.splice(1, 0, '--foreground-scripts');
+      }
+
+      let stderr = '';
+      let stdout = '';
+      const useShell = process.platform === 'win32';
+      const child = spawn(currentPm, args, { cwd, shell: useShell, timeout: 300_000 });
+
+      child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+
+      child.on('error', (err: any) => {
+        if (err?.code === 'ENOENT' && currentPm !== 'npm') {
+          return executeInstall('npm');
+        }
+        TUI.warn(`Auto-install command execution failed: ${err.message}`);
+        resolve(false);
+      });
+      child.on('close', (code) => {
+        if (code === 0) {
+          ensureNativePostinstalls(cwd);
+        } else {
+          if (currentPm !== 'npm') {
+            return executeInstall('npm');
+          }
+          TUI.warn(`Auto-install failed with exit code ${code} for command: ${currentPm} ${args.join(' ')}`);
+          if (stderr.trim()) {
+            TUI.warn(`Stderr:\n${stderr}`);
+          }
+          if (stdout.trim()) {
+            TUI.warn(`Stdout:\n${stdout}`);
+          }
+        }
+        resolve(code === 0);
+      });
+    };
+
+    executeInstall(pm);
   });
+}
+
+function ensureNativePostinstalls(cwd: string): void {
+  const onnxScript = findPackageDir('onnxruntime-node', [cwd, process.cwd()]);
+  if (onnxScript) {
+    const scriptPath = path.join(onnxScript, 'script', 'install.js');
+    const altScriptPath = path.join(onnxScript, 'script', 'install');
+    const target = nativeFs.existsSync(scriptPath) ? scriptPath : (nativeFs.existsSync(altScriptPath) ? altScriptPath : null);
+    if (target) {
+      try {
+        spawnSync(process.execPath, [target], { cwd: onnxScript, stdio: 'ignore' });
+      } catch {
+        // ignore
+      }
+    }
+  }
+}
+
+function findPackageDir(packageName: string, startDirs: string[]): string | null {
+  for (const startDir of startDirs) {
+    if (!startDir) continue;
+    let dir = path.resolve(startDir);
+    while (true) {
+      const candidate = path.join(dir, 'node_modules', packageName, 'package.json');
+      if (nativeFs.existsSync(candidate)) {
+        return path.dirname(candidate);
+      }
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------

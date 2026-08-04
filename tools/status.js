@@ -47,31 +47,31 @@ const TUI = {
     },
     
     section: (label, color = C.cyan) => {
-        console.log(`${color}${C.bold}┌─ ${label}${C.reset}`);
+        console.log(`\n${color}${C.bold}${label.toUpperCase()}${C.reset}\n`);
     },
     
-    item: (label, status = 'DONE', color = C.dim, barColor = '\x1b[36m') => {
+    item: (label, status = 'DONE', color = C.dim) => {
         const indicator = status === 'DONE' ? `\x1b[32m[ DONE ]\x1b[0m` : `\x1b[36m[ ${status} ]\x1b[0m`;
-        console.log(`${barColor}│\x1b[0m  ${color}${label.padEnd(45)}${C.reset} ${indicator}`);
+        console.log(`${indicator} ${color}${label}${C.reset}`);
     },
     
-    footer: (color = C.cyan) => {
-        console.log(`${color}└──────────────────────────────────────────────────────────${C.reset}\n`);
+    footer: () => {
+        console.log('\n');
     },
 
     alert: (msg, color = C.green) => {
-        console.log(`${color}${C.bold}⬢ ${msg}${C.reset}\n`);
+        console.log(`${color}${C.bold}${msg}${C.reset}\n`);
     },
 
     error: (msg, detail) => {
-        console.error(`\n\x1b[31m\x1b[1m┌─ Failure\x1b[0m`);
-        console.error(`\x1b[31m│\x1b[0m  ${msg}`);
+        console.error(`\n\x1b[31m\x1b[1mFAILURE\x1b[0m\n`);
+        console.error(`  ${msg}`);
         if (detail) {
             detail.split('\n').forEach(line => {
-                console.error(`\x1b[31m│\x1b[0m  \x1b[2m${line}\x1b[0m`);
+                console.error(`  \x1b[2m${line}\x1b[0m`);
             });
         }
-        console.error(`\x1b[31m└──────────────────────────────────────────────────────────\x1b[0m\n`);
+        console.error(`\n`);
     }
 };
 

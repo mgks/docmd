@@ -22,6 +22,7 @@
     "@docmd/engine-js": "file:local-tars/docmd-engine-js.tgz",
     "@docmd/engine-rust": "file:local-tars/docmd-engine-rust.tgz",
     "@docmd/engine-rust-binaries": "file:local-tars/docmd-engine-rust-binaries.tgz",
+    "@docmd/plugin-ai": "file:local-tars/docmd-plugin-ai.tgz",
     "@docmd/plugin-analytics": "file:local-tars/docmd-plugin-analytics.tgz",
     "@docmd/plugin-git": "file:local-tars/docmd-plugin-git.tgz",
     "@docmd/plugin-installer": "file:local-tars/docmd-plugin-installer.tgz",

@@ -1,12 +1,12 @@
 {
   "name": "@mgks/docmd",
-  "version": "0.8.17",
+  "version": "0.9.0",
   "description": "Discontinued from 0.8.x, use @docmd/core instead.",
   "bin": {
     "docmd": "bin/docmd.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@docmd/core": "workspace:*"

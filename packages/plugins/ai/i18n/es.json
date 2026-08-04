@@ -1,0 +1,15 @@
+{
+  "ai.chatTitle": "Asistente IA",
+  "ai.inputPlaceholder": "Haz una pregunta sobre esta documentación...",
+  "ai.send": "Enviar",
+  "ai.thinking": "Pensando...",
+  "ai.greeting": "¡Hola! Soy tu asistente de documentación IA. Pregúntame lo que quieras sobre esta documentación.",
+  "ai.clearChat": "Limpiar historial",
+  "ai.close": "Cerrar",
+  "ai.copy": "Copiar",
+  "ai.copied": "¡Copiado!",
+  "ai.errorNoKey": "No hay clave API configurada. Por favor, configura tu clave API.",
+  "ai.errorGeneric": "Ocurrió un error al obtener la respuesta.",
+  "ai.citations": "Fuentes:",
+  "ai.poweredBy": "Desarrollado por docmd assistant"
+}

@@ -1,8 +1,25 @@
 {
   "$meta": {
-    "generatedAt": "2026-07-21T02:22:11.233Z",
+    "generatedAt": "2026-08-03T23:44:00.808Z",
     "generator": "scripts/build-plugin-registry.mjs",
-    "packageCount": 15
+    "packageCount": 16
+  },
+  "ai": {
+    "package": "@docmd/plugin-ai",
+    "description": "Interactive AI chat with documentation plugin for docmd, powered by docmd-assistant with multi-provider runtime.",
+    "configKey": "ai",
+    "defaultConfig": "{}",
+    "kind": "plugin",
+    "displayName": "AI Chat",
+    "tagline": "Interactive AI chat with documentation powered by docmd-assistant.",
+    "capabilities": [
+      "init",
+      "body",
+      "assets",
+      "actions",
+      "translations",
+      "post-build"
+    ]
   },
   "analytics": {
     "package": "@docmd/plugin-analytics",

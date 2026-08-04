@@ -45,7 +45,7 @@ import { GRAPH_CSS, GRAPH_JS, graphHtml } from './graph-assets.js';
 
 export const plugin: PluginDescriptor = {
   name: 'okf',
-  version: '0.8.17',
+  version: '0.9.0',
   capabilities: ['post-build']
 };
 
@@ -97,8 +97,6 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
     warnings.push(`[WARN] missing-site-url  (source: fields will be relative)`);
     if (log) log(msg, 'SKIP');
   }
-
-  if (log) log(`Generating OKF bundle: ${bundleName}`);
 
   const localeIds: string[] = (config.i18n?.locales || []).map((l: any) => l.id);
   const versionIds: string[] = (config.versions?.all || []).map((v: any) => v.id);
@@ -223,7 +221,7 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
   for (const c of concepts) byType[c.type] = (byType[c.type] || 0) + 1;
 
   const manifest = {
-    okf_version: '0.8.17',
+    okf_version: '0.9.0',
     bundle: {
       name: bundleName, title: config.title || bundleName, description: config.description || '',
       url: config.url || '', generated_by: '@docmd/plugin-okf', generated_at: new Date().toISOString(),
@@ -274,12 +272,5 @@ export async function onPostBuild({ config, pages, outputDir, log }: any) {
     await fs.writeFile(path.join(graphDir, 'index.html'), graphHtml(bundleName, concepts.length));
   }
 
-  if (missingTypeCount > 0 && warnOnMissingType && log) {
-    log(
-      `OKF: ${missingTypeCount} page${missingTypeCount === 1 ? '' : 's'} missing explicit type (using fallback '${defaultType}') — add \`type:\` to frontmatter or set \`warnOnMissingType: false\` to silence`,
-      'SKIP'
-    );
-  }
-
-  if (log) log(`OKF bundle written to /${outputRel}/ (${concepts.length} concepts, ${warnings.length} warnings)`);
+  if (log) log(`OKF bundle generated at /${outputRel}/ (${concepts.length} concepts)`);
 }

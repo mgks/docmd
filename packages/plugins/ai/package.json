@@ -1,0 +1,67 @@
+{
+  "name": "@docmd/plugin-ai",
+  "version": "0.9.0",
+  "description": "Interactive AI chat with documentation plugin for docmd, powered by docmd-assistant with multi-provider runtime.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "docmd": {
+    "key": "ai",
+    "kind": "plugin",
+    "displayName": "AI Chat",
+    "tagline": "Interactive AI chat with documentation powered by docmd-assistant.",
+    "capabilities": [
+      "init",
+      "body",
+      "assets",
+      "actions",
+      "translations",
+      "post-build"
+    ]
+  },
+  "scripts": {
+    "build": "tsc && node build.js"
+  },
+  "files": [
+    "dist",
+    "i18n",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "docmd-assistant": "^0.1.7"
+  },
+  "devDependencies": {
+    "@docmd/api": "workspace:*",
+    "@docmd/utils": "workspace:*",
+    "@types/node": "^24.13.3",
+    "esbuild": "^0.28.1",
+    "typescript": "^6.0.3"
+  },
+  "keywords": [
+    "docmd",
+    "plugin",
+    "ai",
+    "chat",
+    "llm",
+    "aiplug",
+    "rag",
+    "assistant",
+    "docs"
+  ],
+  "author": {
+    "name": "Ghazi",
+    "url": "https://mgks.dev"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/docmd-io/docmd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/docmd-io/docmd/issues"
+  },
+  "homepage": "https://docmd.io",
+  "license": "MIT"
+}
