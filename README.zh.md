@@ -27,7 +27,7 @@
 
   <h4>
     <a href="https://docmd.io">官网</a> &nbsp;·&nbsp;
-    <a href="https://docs.docmd.io">文档</a> &nbsp;·&nbsp;
+    <a href="https://docs.docmd.io/zh/">文档</a> &nbsp;·&nbsp;
     <a href="https://live.docmd.io">在线编辑器</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd-skills">Agent Skills</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd/issues">反馈 Bug</a>
@@ -35,7 +35,7 @@
 
   <br/>
 
-  <a href="https://docs.docmd.io">
+  <a href="https://docs.docmd.io/zh/">
     <img width="820" alt="docmd 默认主题 — 浅色与深色模式预览" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
   </a>
 
@@ -60,38 +60,38 @@ npx @docmd/core dev
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
 
- v1.x.x
+ v0.9.0
 
-┌─ Build
-│  Engine          JS
-│  Source          docs/
-│  Output          site/
-│  Versions        2 (06, 05)
-│  Locales         7 (en, hi, zh, es, de, ja, fr)
-└──────────────────────────────────────────────────────────
-┌─ Data Indexing
-│  [ DONE ] Syncing git metadata
-│  [ DONE ] Building semantic search index (multi-version)
-└──────────────────────────────────────────────────────────
-┌─ Publishing
-│  [ DONE ] Generated robots.txt
-│  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-│  [ DONE ] Generated sitemap
-│  [ DONE ] Generating LLMs context files
-└──────────────────────────────────────────────────────────
+BUILD
+  Engine          JS
+  Source          docs/
+  Output          site/
+  Versions        2 (06, 05)
+  Locales         7 (en, hi, zh, es, de, ja, fr)
+
+DATA INDEXING
+  [ DONE ] Syncing git metadata
+  [ DONE ] Building search index & RAG embeddings (multi-version)
+  [ DONE ] Generating AI Assistant RAG context
+
+PUBLISHING
+  [ DONE ] Generated robots.txt
+  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
+  [ DONE ] Generated sitemap
+  [ DONE ] Generating LLMs context files (llms.txt)
+  [ DONE ] Generating OKF bundles
 
 ⬢ Initial build completed in 1.2s.
 
-┌─ Watching
-│  Source          ./docs
-│  Config          ./docmd.config.json
-│  Assets          ./assets
-└──────────────────────────────────────────────────────────
-┌─ Development Server Running
-│  Local Access    http://127.0.0.1:3000
-│  Network Access  http://192.168.1.6:3000
-│  Serving from    ./site
-└──────────────────────────────────────────────────────────
+WATCHING
+  Source          ./docs
+  Config          ./docmd.config.json
+  Assets          ./assets
+
+DEVELOPMENT SERVER RUNNING
+  Local Access    http://127.0.0.1:3000
+  Network Access  http://192.168.1.6:3000
+  Serving from    ./site
 ```
 </details>
 
@@ -129,7 +129,7 @@ docmd build  # 构建用于部署
 或通过 Docker 运行：
 
 ```bash
-docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
+docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ```
 
 > 固定一个版本以获得可复现的构建。
@@ -147,6 +147,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 | **i18n** | **原生** | 原生（复杂） | 插件方式 | 原生 | 原生 |
 | **多项目** | **原生** | 插件 | 插件 | - | - |
 | **搜索** | **内置** | Algolia（云） | 内置 | MiniSearch | 云 |
+| **AI 助手** | **内置 (BYOK)** | - | - | - | 内置 (云) |
 | **AI 上下文 (`llms.txt`)** | **内置** | - | - | - | 内置 |
 | **MCP 服务器** | **内置** | - | - | - | 内置 |
 | **Agent Skills** | **内置** | - | - | - | - |
@@ -164,9 +165,11 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 
 ### AI 原生
 docmd 的设计贴合文档在当今被阅读与使用的方式：
+- **交互式 AI 助手 (`@docmd/plugin-ai`)** — RAG 驱动的交互式文档小部件，零配置云中继与 BYOK（自带 API 密钥支持 OpenAI、Anthropic、Gemini、DeepSeek、Groq、Ollama），具备严格的域名来源安全校验。
 - **MCP 服务器** — `docmd mcp` 通过 stdio 把你的文档暴露给 AI Agent，让它们可以直接搜索、阅读并校验内容。
 - **上下文 (`llms.txt` / `llms-full.txt`)** — 在构建时生成完整的文档上下文，可被任何 LLM 立即消费。
 - **Agent Skills** — 面向 LLM 与 IDE Agent 的模块化指令集合（[docmd-skills](https://github.com/docmd-io/docmd-skills)）。
+- **Open Knowledge Format (OKF)** — 面向 AI 代理的多语言结构化知识包。
 - **复制为 Markdown / 复制上下文** — 浏览器内一键按钮，专门为粘贴到 AI 对话中做了优化。
 
 ### 为规模化而生
@@ -199,6 +202,7 @@ docmd add <name>     # 安装插件或模板
 | 插件 | 状态 | 描述 |
 | :--- | :---: | :--- |
 | `search` | 核心 | 带模糊匹配的离线全文搜索 |
+| `ai` | 核心 | RAG 驱动的交互式 AI 助手，支持 BYOK |
 | `seo` | 核心 | SEO 标签与 Open Graph 元数据 |
 | `sitemap` | 核心 | 生成 `sitemap.xml` |
 | `git` | 核心 | Git 提交历史与最后更新时间 |
@@ -206,7 +210,7 @@ docmd add <name>     # 安装插件或模板
 | `llms` | 核心 | AI 上下文生成（`llms.txt` / `llms-full.txt`） |
 | `mermaid` | 核心 | Mermaid 图表支持 |
 | `openapi` | 核心 | 构建期 OpenAPI 3.x 规范渲染器 |
-| `okf` | Core | 面向 AI 代理的 Open Knowledge Format 包 (按 locale) |
+| `okf` | 核心 | 面向 AI 代理的 Open Knowledge Format 包（按语言） |
 | `pwa` | 可选 | Progressive Web App —— 离线导航 |
 | `threads` | 可选 | 内联讨论串 *(by @svallory)* |
 | `math` | 可选 | KaTeX / LaTeX 数学公式渲染 |
@@ -217,7 +221,7 @@ docmd add <name>     # 安装插件或模板
 docmd add <plugin-name>
 ```
 
-开发你自己的插件：[插件开发指南](https://docs.docmd.io/development/building-plugins/)
+开发你自己的插件：[插件开发指南](https://docs.docmd.io/zh/development/building-plugins/)
 
 ## 配置
 
@@ -234,7 +238,7 @@ docmd add <plugin-name>
 
 TypeScript 与 JavaScript 格式的配置文件支持动态值。
 
-完整参考：[配置概览](https://docs.docmd.io/configuration/overview)
+完整参考：[配置概览](https://docs.docmd.io/zh/configuration/overview)
 
 ## 项目结构
 
@@ -266,7 +270,7 @@ import { build } from '@docmd/core';
 await build('./docmd.config.json', { isDev: false });
 ```
 
-完整参考：[Node API](https://docs.docmd.io/development/node-api-reference/)
+完整参考：[Node API](https://docs.docmd.io/zh/development/node-api-reference/)
 
 ## 社区
 
