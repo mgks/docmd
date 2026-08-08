@@ -812,3 +812,106 @@ test('F6: mismatched fence markers (``` open vs ~~~ close) do not close the fenc
   assert.equal(r.warnings.length, 0);
   assert.equal(r.source, src);
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// 9. Slash and End closing container tags & Issue #187 HTML rendering
+// ─────────────────────────────────────────────────────────────────────
+
+test('slash and end closing tags match corresponding open container by name', () => {
+  const src = [
+    '::: callout info "Callout Title"',
+    'body text',
+    '::: /callout',
+    '',
+    '::: card "Card Title"',
+    'card body',
+    '::: endcard'
+  ].join('\n');
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '::: callout info "Callout Title"',
+    'body text',
+    ':::',
+    '',
+    '::: card "Card Title"',
+    'card body',
+    ':::'
+  ].join('\n'));
+});
+
+test('Issue #187: HTML blocks with blank lines render as HTML without breaking into code/plain text', async () => {
+  const md = freshProcessor();
+  const htmlInput = [
+    '<div class="hero">',
+    '    <h1>Hero Heading</h1>',
+    '',
+    '    <p>Hero paragraph text</p>',
+    '',
+    '    <div class="actions">',
+    '        <a href="#">Button</a>',
+    '    </div>',
+    '</div>'
+  ].join('\n');
+
+  const r = await processContentAsync(htmlInput, md, {}, { filePath: 'no-style.md' });
+  assert.match(r.htmlContent, /<div class="hero">/);
+  assert.match(r.htmlContent, /<h1>Hero Heading<\/h1>/);
+  assert.match(r.htmlContent, /<p>Hero paragraph text<\/p>/);
+  assert.match(r.htmlContent, /<div class="actions">/);
+  assert.match(r.htmlContent, /<\/div>/);
+  // Ensure it did NOT get converted to indented code block or escaped plain text
+  assert.doesNotMatch(r.htmlContent, /<pre><code>&lt;div class="actions"&gt;/);
+});
+
+test('sub-containers ::: tab, ::: step, ::: log render correctly and ignore inline comments', async () => {
+  const md = freshProcessor();
+  const input = [
+    '::: tabs # main navigation tabs',
+    '::: tab "JavaScript" icon:code-2 # first tab',
+    'console.log("Hello JS");',
+    '::: /tab # end first tab',
+    '::: tab "TypeScript" icon:file-code # second tab',
+    'console.log("Hello TS");',
+    '::: /tab',
+    '::: /tabs',
+    '',
+    '::: steps # installation guide',
+    '::: step "Clone Repo" # step 1',
+    'git clone https://github.com/docmd-io/docmd',
+    '::: /step',
+    '::: step "Build Project"',
+    'pnpm build',
+    '::: /step',
+    '::: /steps',
+    '',
+    '::: changelog # release history',
+    '::: log "v1.0.0 (2026-01-01)" # initial release',
+    'Initial launch.',
+    '::: /log',
+    '::: /changelog'
+  ].join('\n');
+
+  const r = await processContentAsync(input, md, {}, { filePath: 'test-containers.md' });
+
+  assert.match(r.htmlContent, /docmd-tabs/);
+  assert.match(r.htmlContent, /JavaScript/);
+  assert.match(r.htmlContent, /TypeScript/);
+  assert.match(r.htmlContent, /steps-list/);
+  assert.match(r.htmlContent, /Clone Repo/);
+  assert.match(r.htmlContent, /Build Project/);
+  assert.match(r.htmlContent, /changelog-timeline/);
+  assert.match(r.htmlContent, /v1\.0\.0/);
+});
+
+test('smart self-closing container stripping logs info warning and removes stray ::: /tag', () => {
+  const src = [
+    '::: tag "v1.0" color:#3b82f6',
+    '::: /tag'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.source, '::: tag "v1.0" color:#3b82f6');
+  assert.equal(r.warnings.length, 1);
+  assert.match(r.warnings[0].message, /Self-closing container <tag> does not require a closing tag/);
+});

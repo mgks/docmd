@@ -12,6 +12,8 @@
  * --------------------------------------------------------------------
  */
 
+import { stripContainerComment } from '../utils/container-helper.js';
+
 function smartDedent(str) {
   const lines = str.split('\n');
   let minIndent = Infinity;
@@ -26,17 +28,19 @@ function smartDedent(str) {
 
 function parseQuotedTitle(info) {
   if (!info) return '';
-  const match = info.match(/"([^"]*)"/);
-  return match ? match[1] : info.trim();
+  const cleaned = stripContainerComment(info);
+  const match = cleaned.match(/"([^"]*)"/);
+  return match ? match[1] : cleaned.trim();
 }
 
 function changelogRule(state, startLine, endLine, silent) {
   const start = state.bMarks[startLine] + state.tShift[startLine];
   const max = state.eMarks[startLine];
   const lineContent = state.src.slice(start, max).trim();
+  const cleanContent = stripContainerComment(lineContent);
 
   // Support both '::: changelog' and ':::changelog' (spaceless)
-  if (lineContent !== '::: changelog' && lineContent !== ':::changelog') return false;
+  if (cleanContent !== '::: changelog' && cleanContent !== ':::changelog') return false;
   if (silent) return true;
 
   let nextLine = startLine;
@@ -82,7 +86,7 @@ function changelogRule(state, startLine, endLine, silent) {
     content += state.src.slice(lineStart, lineEnd) + '\n';
   }
 
-  // Parse "== Date" entries
+  // Parse changelog entry items (supports both ::: log and legacy ==)
   const lines = content.split('\n');
   const entries = [];
   let currentEntry = null;
@@ -91,14 +95,26 @@ function changelogRule(state, startLine, endLine, silent) {
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
     const trimmedLine = rawLine.trim();
-    const markerMatch = trimmedLine.match(/^==\s+(.+)$/);
 
-    if (markerMatch) {
+    if (trimmedLine === ':::' || /^:::\s*(\/log|endlog|\/changelog|endchangelog)\b/i.test(trimmedLine)) {
+      if (currentEntry) {
+        currentEntry.content = smartDedent(currentContentLines.join('\n'));
+        entries.push(currentEntry);
+        currentEntry = null;
+        currentContentLines = [];
+      }
+      continue;
+    }
+
+    const logMatch = trimmedLine.match(/^(?::::\s*log\s+(.*)|==\s+(.*))$/i);
+
+    if (logMatch) {
       if (currentEntry) {
         currentEntry.content = smartDedent(currentContentLines.join('\n'));
         entries.push(currentEntry);
       }
-      currentEntry = { meta: parseQuotedTitle(markerMatch[1]), content: '' };
+      const rawMeta = logMatch[1] !== undefined ? logMatch[1] : logMatch[2];
+      currentEntry = { meta: parseQuotedTitle(rawMeta), content: '' };
       currentContentLines = [];
     } else if (currentEntry) {
       currentContentLines.push(rawLine);

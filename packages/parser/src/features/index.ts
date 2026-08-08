@@ -21,7 +21,6 @@ import buttons from './buttons.js';
 import basics from './basics.js';
 import embed from './embed.js';
 import hero from './hero.js';
-
 import tags from './tags.js';
 
 const FEATURES = [basics, buttons, tags, embed, common, tabs, steps, changelog, hero];

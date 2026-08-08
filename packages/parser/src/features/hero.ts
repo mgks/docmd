@@ -102,7 +102,10 @@ function heroRule(state, startLine, endLine, silent) {
     for (let i = 0; i < lines.length; i++) {
         const rawLine = lines[i];
         const trimmed = rawLine.trim();
-        if (trimmed.startsWith('== slide')) {
+        if (/^:::\s*(\/slide|endslide)\b/i.test(trimmed)) {
+            continue;
+        }
+        if (trimmed.startsWith('== slide') || /^:::\s*slide\b/i.test(trimmed)) {
             if (currentSlide !== null) {
                 slides.push(smartDedent(currentLines.join('\n')));
             }
