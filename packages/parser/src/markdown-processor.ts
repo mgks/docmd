@@ -261,14 +261,14 @@ function getHtmlTagDelta(line: string): number {
 }
 
 function customHtmlBlock(state: any, startLine: number, endLine: number, silent: boolean): boolean {
-  let pos = state.bMarks[startLine] + state.tShift[startLine];
-  let max = state.eMarks[startLine];
+  const pos = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
 
   if (state.sCount[startLine] - state.blkIndent >= 4) return false;
   if (!state.md.options.html) return false;
   if (state.src.charCodeAt(pos) !== 0x3C /* < */) return false;
 
-  let lineText = state.src.slice(pos, max);
+  const lineText = state.src.slice(pos, max);
 
   let seqIdx = -1;
   for (let i = 0; i < HTML_SEQUENCES.length; i++) {
@@ -284,9 +284,9 @@ function customHtmlBlock(state: any, startLine: number, endLine: number, silent:
     const closeReg = HTML_SEQUENCES[seqIdx][1];
     if (!closeReg.test(lineText)) {
       for (; nextLine < endLine; nextLine++) {
-        let p = state.bMarks[nextLine] + state.tShift[nextLine];
-        let m = state.eMarks[nextLine];
-        let lText = state.src.slice(p, m);
+        const p = state.bMarks[nextLine] + state.tShift[nextLine];
+        const m = state.eMarks[nextLine];
+        const lText = state.src.slice(p, m);
         if (closeReg.test(lText)) {
           if (lText.length !== 0) nextLine++;
           break;
@@ -310,9 +310,9 @@ function customHtmlBlock(state: any, startLine: number, endLine: number, silent:
     if (depth <= 0 && state.isEmpty(nextLine)) {
       break;
     }
-    let p = state.bMarks[nextLine] + state.tShift[nextLine];
-    let m = state.eMarks[nextLine];
-    let lText = state.src.slice(p, m);
+    const p = state.bMarks[nextLine] + state.tShift[nextLine];
+    const m = state.eMarks[nextLine];
+    const lText = state.src.slice(p, m);
     depth += getHtmlTagDelta(lText);
     if (depth <= 0 && lText.trim().endsWith('>')) {
       nextLine++;
