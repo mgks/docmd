@@ -54,39 +54,40 @@ npx @docmd/core dev
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
 
- v1.x.x
+ v0.9.0
 
-┌─ Build
-│  Engine          JS
-│  Source          docs/
-│  Output          site/
-│  Versions        2 (06, 05)
-│  Locales         7 (en, hi, zh, es, de, ja, fr)
-└──────────────────────────────────────────────────────────
-┌─ Data Indexing
-│  [ DONE ] Syncing git metadata
-│  [ DONE ] Building semantic search index (multi-version)
-└──────────────────────────────────────────────────────────
-┌─ Publishing
-│  [ DONE ] Generated robots.txt
-│  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-│  [ DONE ] Generated sitemap
-│  [ DONE ] Generating LLMs context files
-└──────────────────────────────────────────────────────────
+BUILD
+  Engine          JS
+  Source          docs/
+  Output          site/
+  Versions        2 (06, 05)
+  Locales         7 (en, hi, zh, es, de, ja, fr)
+
+DATA INDEXING
+  [ DONE ] Syncing git metadata
+  [ DONE ] Building search index & RAG embeddings (multi-version)
+  [ DONE ] Generating AI Assistant RAG context
+
+PUBLISHING
+  [ DONE ] Generated robots.txt
+  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
+  [ DONE ] Generated sitemap
+  [ DONE ] Generating LLMs context files (llms.txt)
+  [ DONE ] Generating OKF bundles
 
 ⬢ Initial build completed in 1.2s.
 
-┌─ Watching
-│  Source          ./docs
-│  Config          ./docmd.config.json
-│  Assets          ./assets
-└──────────────────────────────────────────────────────────
-┌─ Development Server Running
-│  Local Access    http://127.0.0.1:3000
-│  Network Access  http://192.168.1.6:3000
-│  Serving from    ./site
-└──────────────────────────────────────────────────────────
+WATCHING
+  Source          ./docs
+  Config          ./docmd.config.json
+  Assets          ./assets
+
+DEVELOPMENT SERVER RUNNING
+  Local Access    http://127.0.0.1:3000
+  Network Access  http://192.168.1.6:3000
+  Serving from    ./site
 ```
+
 </details>
 
 <p align="center">
@@ -123,7 +124,7 @@ docmd build  # build for deployment
 Or run via Docker:
 
 ```bash
-docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
+docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ```
 
 > Pin a version for reproducible builds.
@@ -141,6 +142,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 | **i18n** | **Native** | Native (complex) | Plugin-based | Native | Native |
 | **Multi-project** | **Native** | Plugin | Plugin | - | - |
 | **Search** | **Built-in** | Algolia (cloud) | Built-in | MiniSearch | Cloud |
+| **AI Agent / Assistant** | **Built-in (BYOK)** | - | - | - | Built-in (Cloud) |
 | **AI context (`llms.txt`)** | **Built-in** | - | - | - | Built-in |
 | **MCP server** | **Built-in** | - | - | - | Built-in |
 | **Agent skills** | **Built-in** | - | - | - | - |
@@ -158,9 +160,11 @@ The default JavaScript payload is ~18 kb. Pages navigate as an instant SPA. The 
 
 ### AI-native
 docmd is built for the way documentation is read and used today:
+- **AI Agent / Assistant (`@docmd/plugin-ai`)** — RAG-powered interactive documentation widget with zero-config cloud relay, Bring Your Own Key (BYOK: OpenAI, Anthropic, Gemini, DeepSeek, Groq, Ollama), and strict domain origin security.
 - **MCP Server** — `docmd mcp` exposes your docs to AI agents over stdio, letting them search, read, and validate content directly.
 - **Context (`llms.txt` / `llms-full.txt`)** — complete documentation context generated at build time, ready for any LLM.
 - **Agent Skills** — modular instruction sets for LLMs and IDE agents ([docmd-skills](https://github.com/docmd-io/docmd-skills)).
+- **Open Knowledge Format (OKF)** — multi-locale structured knowledge bundles for AI agents.
 - **Copy as Markdown / Copy Context** — one-click buttons in the browser, optimised for pasting into AI chat.
 
 ### Built to scale
@@ -193,6 +197,7 @@ Core functionality is powered by a robust plugin system. The essentials are incl
 | Plugin | Status | Description |
 | :--- | :---: | :--- |
 | `search` | Core | Offline full-text search (keyword + optional semantic via `docmd-search`) |
+| `ai` | Core | RAG-powered interactive AI assistant with BYOK provider support |
 | `seo` | Core | SEO tags and Open Graph metadata |
 | `sitemap` | Core | Generates `sitemap.xml` |
 | `git` | Core | Git commit history and last-updated dates |
