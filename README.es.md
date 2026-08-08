@@ -27,7 +27,7 @@
 
   <h4>
     <a href="https://docmd.io">Sitio web</a> &nbsp;·&nbsp;
-    <a href="https://docs.docmd.io">Documentación</a> &nbsp;·&nbsp;
+    <a href="https://docs.docmd.io/es/">Documentación</a> &nbsp;·&nbsp;
     <a href="https://live.docmd.io">Editor en vivo</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd-skills">Agent Skills</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd/issues">Reportar un bug</a>
@@ -35,7 +35,7 @@
 
   <br/>
 
-  <a href="https://docs.docmd.io">
+  <a href="https://docs.docmd.io/es/">
     <img width="820" alt="docmd tema por defecto — vista previa en modo claro y oscuro" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
   </a>
 
@@ -60,38 +60,38 @@ npx @docmd/core dev
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
 
- v1.x.x
+ v0.9.0
 
-┌─ Build
-│  Engine          JS
-│  Source          docs/
-│  Output          site/
-│  Versions        2 (06, 05)
-│  Locales         7 (en, hi, zh, es, de, ja, fr)
-└──────────────────────────────────────────────────────────
-┌─ Data Indexing
-│  [ DONE ] Syncing git metadata
-│  [ DONE ] Building semantic search index (multi-version)
-└──────────────────────────────────────────────────────────
-┌─ Publishing
-│  [ DONE ] Generated robots.txt
-│  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-│  [ DONE ] Generated sitemap
-│  [ DONE ] Generating LLMs context files
-└──────────────────────────────────────────────────────────
+BUILD
+  Engine          JS
+  Source          docs/
+  Output          site/
+  Versions        2 (06, 05)
+  Locales         7 (en, hi, zh, es, de, ja, fr)
+
+DATA INDEXING
+  [ DONE ] Syncing git metadata
+  [ DONE ] Building search index & RAG embeddings (multi-version)
+  [ DONE ] Generating AI Assistant RAG context
+
+PUBLISHING
+  [ DONE ] Generated robots.txt
+  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
+  [ DONE ] Generated sitemap
+  [ DONE ] Generating LLMs context files (llms.txt)
+  [ DONE ] Generating OKF bundles
 
 ⬢ Initial build completed in 1.2s.
 
-┌─ Watching
-│  Source          ./docs
-│  Config          ./docmd.config.json
-│  Assets          ./assets
-└──────────────────────────────────────────────────────────
-┌─ Development Server Running
-│  Local Access    http://127.0.0.1:3000
-│  Network Access  http://192.168.1.6:3000
-│  Serving from    ./site
-└──────────────────────────────────────────────────────────
+WATCHING
+  Source          ./docs
+  Config          ./docmd.config.json
+  Assets          ./assets
+
+DEVELOPMENT SERVER RUNNING
+  Local Access    http://127.0.0.1:3000
+  Network Access  http://192.168.1.6:3000
+  Serving from    ./site
 ```
 </details>
 
@@ -129,7 +129,7 @@ docmd build  # construir para desplegar
 O ejecuta vía Docker:
 
 ```bash
-docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
+docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ```
 
 > Fije una versión para compilaciones reproducibles.
@@ -147,6 +147,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 | **i18n** | **Nativo** | Nativo (complejo) | Basado en plugin | Nativo | Nativo |
 | **Multi-proyecto** | **Nativo** | Plugin | Plugin | - | - |
 | **Búsqueda** | **Integrada** | Algolia (nube) | Integrada | MiniSearch | Nube |
+| **Asistente de IA interactivo** | **Integrado (BYOK)** | - | - | - | Integrado (Nube) |
 | **Contexto IA (`llms.txt`)** | **Integrado** | - | - | - | Integrado |
 | **Servidor MCP** | **Integrado** | - | - | - | Integrado |
 | **Agent Skills** | **Integrado** | - | - | - | - |
@@ -164,9 +165,11 @@ El payload de JavaScript por defecto es ~18 kb. Las páginas navegan como una SP
 
 ### AI-nativo
 docmd está construido para la forma en que la documentación se lee y se usa hoy:
+- **Asistente de IA interactivo (`@docmd/plugin-ai`)** — Widget de documentación interactivo impulsado por RAG con relay en la nube sin configuración, Traiga Su Propia Clave (BYOK: OpenAI, Anthropic, Gemini, DeepSeek, Groq, Ollama) y seguridad estricta de origen de dominio.
 - **Servidor MCP** — `docmd mcp` expone tu documentación a agentes de IA sobre stdio, permitiéndoles buscar, leer y validar contenido directamente.
 - **Contexto (`llms.txt` / `llms-full.txt`)** — contexto completo de documentación generado en tiempo de build, listo para cualquier LLM.
 - **Agent Skills** — conjuntos de instrucciones modulares para LLMs y agentes de IDE ([docmd-skills](https://github.com/docmd-io/docmd-skills)).
+- **Open Knowledge Format (OKF)** — paquetes de conocimiento estructurado multi-idioma para agentes de IA.
 - **Copiar como Markdown / Copiar contexto** — botones de un clic en el navegador, optimizados para pegar en chats de IA.
 
 ### Construido para escalar
@@ -199,7 +202,18 @@ La funcionalidad principal está impulsada por un sistema de plugins robusto. Lo
 | Plugin | Estado | Descripción |
 | :--- | :---: | :--- |
 | `search` | Núcleo | Búsqueda offline de texto completo con coincidencia difusa |
+| `ai` | Núcleo | Asistente de IA interactivo impulsado por RAG con soporte BYOK |
 | `seo` | Núcleo | Etiquetas SEO y metadatos Open Graph |
+| `sitemap` | Núcleo | Genera `sitemap.xml` |
+| `git` | Núcleo | Historial de commits de Git y fechas de última actualización |
+| `analytics` | Núcleo | Integración ligera de analytics |
+| `llms` | Núcleo | Generación de contexto IA (`llms.txt` / `llms-full.txt`) |
+| `okf` | Núcleo | Bundles Open Knowledge Format para agentes IA (por locale) |
+| `mermaid` | Núcleo | Soporte de diagramas Mermaid |
+| `openapi` | Núcleo | Renderizador de especificación OpenAPI 3.x en tiempo de build |
+| `pwa` | Opcional | Progressive Web App — navegación offline |
+| `threads` | Opcional | Hilos de discusión inline *(por @svallory)* |
+| `math` | Opcional | Renderizado matemático KaTeX / LaTeX | | Núcleo | Etiquetas SEO y metadatos Open Graph |
 | `sitemap` | Núcleo | Genera `sitemap.xml` |
 | `git` | Núcleo | Historial de commits de Git y fechas de última actualización |
 | `analytics` | Núcleo | Integración ligera de analytics |
@@ -217,7 +231,7 @@ Instalar plugins opcionales:
 docmd add <plugin-name>
 ```
 
-Crea el tuyo: [Guía de desarrollo de plugins](https://docs.docmd.io/development/building-plugins/)
+Crea el tuyo: [Guía de desarrollo de plugins](https://docs.docmd.io/es/development/building-plugins/)
 
 ## Configuración
 
@@ -234,7 +248,7 @@ No se requiere configuración para comenzar. Añade un `docmd.config.json` (o `.
 
 Se admiten archivos de configuración TypeScript y JavaScript para valores dinámicos.
 
-Referencia completa: [Resumen de configuración](https://docs.docmd.io/configuration/overview)
+Referencia completa: [Resumen de configuración](https://docs.docmd.io/es/configuration/overview)
 
 ## Estructura del proyecto
 
@@ -266,7 +280,7 @@ import { build } from '@docmd/core';
 await build('./docmd.config.json', { isDev: false });
 ```
 
-Referencia completa: [Node API](https://docs.docmd.io/development/node-api-reference/)
+Referencia completa: [Node API](https://docs.docmd.io/es/development/node-api-reference/)
 
 ## Comunidad
 
