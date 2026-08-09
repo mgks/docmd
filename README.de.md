@@ -1,6 +1,6 @@
 <div align="right">
   <sup>
-    <a href="./README.md">EN</a> &nbsp;|&nbsp; <a href="./README.es.md">ES</a> &nbsp;|&nbsp; <b>DE</b> &nbsp;|&nbsp; <a href="./README.ja.md">日本語</a> &nbsp;|&nbsp; <a href="./README.fr.md">FR</a> &nbsp;|&nbsp; <a href="./README.zh.md">中文</a>
+    <a href="./README.md">EN</a> &nbsp;|&nbsp; <b>DE</b> &nbsp;|&nbsp; <a href="./README.zh.md">中文</a> &nbsp;|&nbsp; <a href="./README.es.md">ES</a> &nbsp;|&nbsp; <a href="./README.ja.md">日本語</a> &nbsp;|&nbsp; <a href="./README.fr.md">FR</a> &nbsp;|&nbsp; <a href="./README.ru.md">RU</a>
   </sup>
 </div>
 
@@ -28,6 +28,7 @@
   <h4>
     <a href="https://docmd.io">Website</a> &nbsp;·&nbsp;
     <a href="https://docs.docmd.io/de/">Dokumentation</a> &nbsp;·&nbsp;
+    <a href="https://cloud.docmd.io">AI Cloud Relay</a> &nbsp;·&nbsp;
     <a href="https://live.docmd.io">Live-Editor</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd-skills">Agent Skills</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd/issues">Bug melden</a>
@@ -43,6 +44,26 @@
 
 </div>
 
+> ## ✦ 0.9.x — KI, Automatisierung & Sicherheit
+>
+> In der 0.9.x-Serie erweitert sich docmd von einem KI-bereiten Dokumentationsgenerator
+> zu einer Dokumentationsplattform, die sowohl für **Menschen als auch für KI-Agenten**
+> entwickelt wurde.
+>
+> Die Serie führt den **KI-Assistenten** ein, mit dem Dokumentationen dialogbasiert
+> über Ihren eigenen Anbieter, lokale KI oder den **docmd Cloud Relay** für statische
+> Websites ohne eigenes Backend abgefragt werden können. Zudem wird das KI-Ökosystem
+> von docmd um MCP, generierten LLM-Kontext, Agent Skills und strukturierte Wissensformate erweitert.
+>
+> Neben KI konzentriert sich diese Serie auf **Sicherheit, Datenschutz und Automatisierung**,
+> während die Kernfunktionen für Dokumentation, Suche, Deployment und Entwickler-Workflows
+> kontinuierlich verbessert werden.
+>
+> **Aktuelles Release:** `0.9.1`
+>
+> [Release 0.9.1 ansehen →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
+> [Der 0.9.x Roadmap folgen →](https://github.com/orgs/docmd-io/discussions/10)
+
 ## Schnellstart
 
 Starten Sie docmd in jedem Ordner mit Markdown-Dateien — keine Installation nötig:
@@ -55,7 +76,7 @@ npx @docmd/core dev
   <summary><b>Öffnet unter <code>http://localhost:3000</code></b></summary><br>
 
 ```bash
-    _                 _
+    _                 _ 
   _| |___ ___ _____ _| |
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
@@ -93,11 +114,8 @@ DEVELOPMENT SERVER RUNNING
   Network Access  http://192.168.1.6:3000
   Serving from    ./site
 ```
-</details>
 
-<p align="center">
-  <img alt="docmd Dev-Server Vorschau" width="820" src="https://docmd.io/assets/images/dev-preview.gif">
-</p>
+</details>
 
 Die Navigation wird aus Ihrer Verzeichnisstruktur generiert. Keine Config-Datei, kein Frontmatter nötig, kein Framework zu lernen.
 
@@ -147,7 +165,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 | **i18n** | **Nativ** | Nativ (komplex) | Plugin-basiert | Nativ | Nativ |
 | **Multi-Projekt** | **Nativ** | Plugin | Plugin | - | - |
 | **Suche** | **Eingebaut** | Algolia (Cloud) | Eingebaut | MiniSearch | Cloud |
-| **KI-Assistent** | **Eingebaut (BYOK)** | - | - | - | Eingebaut (Cloud) |
+| **KI-Assistent** | **Eingebaut — BYOK + Cloud Relay** | - | - | - | Eingebaut (Cloud) |
 | **AI-Kontext (`llms.txt`)** | **Eingebaut** | - | - | - | Eingebaut |
 | **MCP-Server** | **Eingebaut** | - | - | - | Eingebaut |
 | **Agent Skills** | **Eingebaut** | - | - | - | - |
@@ -164,19 +182,20 @@ Zeigen Sie docmd auf einen beliebigen Markdown-Ordner und es läuft. Die Navigat
 Der Standard-JavaScript-Payload ist ~18 kb. Seiten navigieren als sofortige SPA. Die Ausgabe ist statisches HTML — SEO-optimiert, mit Sitemap, kanonischen URLs und Open-Graph-Metadaten. Offline-Volltextsuche ist eingebaut, kein Cloud-Dienst nötig.
 
 ### AI-nativ
-docmd ist für die Art gebaut, wie Dokumentation heute gelesen und genutzt wird:
-- **KI-Assistent (`@docmd/plugin-ai`)** — RAG-gestütztes interaktives Dokumentations-Widget mit Zero-Config-Cloud-Relay, Bring Your Own Key (BYOK: OpenAI, Anthropic, Gemini, DeepSeek, Groq, Ollama) und strikter Domain-Origin-Sicherheit.
-- **MCP-Server** — `docmd mcp` stellt Ihre Doku AI-Agenten über stdio zur Verfügung, damit diese direkt suchen, lesen und Inhalte validieren können.
-- **Kontext (`llms.txt` / `llms-full.txt`)** — vollständiger Dokumentations-Kontext, zur Build-Zeit generiert, bereit für jedes LLM.
-- **Agent Skills** — modulare Anleitungs-Sets für LLMs und IDE-Agenten ([docmd-skills](https://github.com/docmd-io/docmd-skills)).
-- **Open Knowledge Format (OKF)** — strukturierte Mehrsprachige Wissenspakete für KI-Agenten.
-- **Als Markdown kopieren / Kontext kopieren** — Ein-Klick-Buttons im Browser, optimiert zum Einfügen in AI-Chats.
+docmd behandelt KI als erstklassige Möglichkeit, Dokumentationen zu konsumieren — ohne die Dokumentation selbst zu ersetzen.
+- **KI-Assistent (`@docmd/plugin-ai`)** — RAG-gestützter Chat, basierend auf Ihrer Dokumentation. Nutzen Sie Ihren eigenen API-Schlüssel oder verbinden Sie einen lokalen KI-Anbieter, mit Unterstützung für über 100 Anbieter via AIPlug.
+- **Cloud Relay** — aktivieren Sie den KI-Assistenten auf statischen Dokumentationen ohne eigenen KI-Backend-Betrieb. [Ausprobieren →](https://cloud.docmd.io)
+- **MCP-Server** — `docmd mcp` stellt Ihre Doku KI-Agenten über stdio zur Verfügung, damit diese direkt suchen, lesen und Inhalte validieren können.
+- **Kontext (`llms.txt` / `llms-full.txt`)** — vollständiger Dokumentations-Kontext, zur Build-Zeit generiert.
+- **Agent Skills** — modulare Anleitungs-Sets für LLMs und IDE-Agenten.
+- **Open Knowledge Format (OKF)** — strukturierte, mehrsprachige Wissenspakete für KI-Systeme.
+- **Als Markdown kopieren / Kontext kopieren** — Ein-Klick-Kontextextraktion direkt im Browser.
 
 ### Auf Skalierung ausgelegt
-- Internationalisierung mit Multi-Locale-Builds
-- Versionierung für mehrere Dokumentations-Releases
+- Internationalisierung mit Multi-Locale-Builds (Suchindex pro Sprachversion, llms, okf, hreflang)
+- Versionierung für mehrere Dokumentations-Releases (mit automatischer Erkennung der aktuellen Version)
 - Workspaces für Monorepos und Multi-Projekt-Setups
-- Plugin-System zur Erweiterung der Kern-Funktionalität
+- Plugin-System zur Erweiterung der Kern-Funktionalität (Rückgabetyp-Validierung pro Hook, async-freundlich)
 - Volle Theming-Unterstützung, eingebaute Templates, eigenes CSS/JS, Light/Dark-Mode
 
 ## CLI
@@ -201,8 +220,8 @@ Die Kern-Funktionalität wird von einem robusten Plugin-System bereitgestellt. D
 
 | Plugin | Status | Beschreibung |
 | :--- | :---: | :--- |
-| `search` | Kern | Offline-Volltextsuche mit Fuzzy-Matching |
-| `ai` | Kern | RAG-gestützter interaktiver KI-Assistent mit BYOK-Unterstützung |
+| `ai` | Kern | RAG-gestützter KI-Assistent mit BYOK, lokalen Anbietern und Cloud Relay |
+| `search` | Kern | Offline-Volltextsuche (Schlüsselwörter + optional semantisch via `docmd-search`) |
 | `seo` | Kern | SEO-Tags und Open-Graph-Metadaten |
 | `sitemap` | Kern | Generiert `sitemap.xml` |
 | `git` | Kern | Git-Commit-Historie und letzte Aktualisierungsdaten |
@@ -211,17 +230,6 @@ Die Kern-Funktionalität wird von einem robusten Plugin-System bereitgestellt. D
 | `okf` | Kern | Open Knowledge Format Bundles für KI-Agenten (pro Locale) |
 | `mermaid` | Kern | Mermaid-Diagramm-Unterstützung |
 | `openapi` | Kern | Build-Time-OpenAPI-3.x-Spec-Renderer |
-| `pwa` | Optional | Progressive Web App — Offline-Navigation |
-| `threads` | Optional | Inline-Diskussions-Threads *(von @svallory)* |
-| `math` | Optional | KaTeX / LaTeX-Mathematik-Rendering |xtsuche mit Fuzzy-Matching |
-| `seo` | Kern | SEO-Tags und Open-Graph-Metadaten |
-| `sitemap` | Kern | Generiert `sitemap.xml` |
-| `git` | Kern | Git-Commit-Historie und letzte Aktualisierungsdaten |
-| `analytics` | Kern | Schlanke Analytics-Integration |
-| `llms` | Kern | AI-Kontext-Generierung (`llms.txt` / `llms-full.txt`) |
-| `mermaid` | Kern | Mermaid-Diagramm-Unterstützung |
-| `openapi` | Kern | Build-Time-OpenAPI-3.x-Spec-Renderer |
-| `okf` | Core | Open Knowledge Format Bundles für KI-Agenten (pro Locale) |
 | `pwa` | Optional | Progressive Web App — Offline-Navigation |
 | `threads` | Optional | Inline-Diskussions-Threads *(von @svallory)* |
 | `math` | Optional | KaTeX / LaTeX-Mathematik-Rendering |
@@ -264,10 +272,6 @@ my-docs/
 ## Live-Editor
 
 Ein browserbasierter Editor zum Schreiben und Vorschauen von Doku — kein lokales Setup erforderlich.
-
-<p>
-  <img alt="docmd Live-Editor Vorschau" width="820" src="https://docs.docmd.io/assets/previews/live-editor-preview.webp">
-</p>
 
 **Probieren Sie es aus auf [live.docmd.io](https://live.docmd.io)**
 

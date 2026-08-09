@@ -214,7 +214,7 @@ function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
   };
 
   // Syntax Highlighting (title extraction is handled separately in the fence renderer)
-  const highlightFn = (str, lang) => {
+  const highlightFn = (str: any, lang: any) => {
     if (lang === 'mermaid') {
       return `<pre class="mermaid">${new MarkdownIt().utils.escapeHtml(str)}</pre>`;
     }
@@ -377,11 +377,11 @@ function customHtmlBlock(state: any, startLine: number, endLine: number, silent:
     return rendered;
   };
 
-  const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+  const defaultLinkOpen = md.renderer.rules.link_open || function (tokens: any, idx: any, options: any, env: any, self: any) {
     return self.renderToken(tokens, idx, options);
   };
 
-  md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  md.renderer.rules.link_open = function (tokens: any, idx: any, options: any, env: any, self: any) {
     const token = tokens[idx];
     const hrefIndex = token.attrIndex('href');
 
@@ -436,10 +436,14 @@ function customHtmlBlock(state: any, startLine: number, endLine: number, silent:
     return defaultLinkOpen(tokens, idx, options, env, self);
   };
 
+  if (typeof pluginsCallback === 'function') {
+    pluginsCallback(md);
+  }
+
   return md;
 }
 
-function stripHtml(html) {
+function stripHtml(html: any) {
   if (!html) return '';
   return html.replace(/<[^>]*>?/gm, '');
 }
@@ -460,11 +464,11 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
-function extractHeadings(html) {
-  const headings = [];
+function extractHeadings(html: any) {
+  const headings: any[] = [];
   // Require non-empty ID match to exclude stripped container headings: "([^"]+)"
   const regex = /<h([1-6])[^>]*?id="([^"]+)"[^>]*?>([\s\S]*?)<\/h\1>/g;
-  let match;
+  let match: any;
   while ((match = regex.exec(html)) !== null) {
     const rawText = match[3].replace(/<\/?[^>]+(>|$)/g, '').trim();
     headings.push({
@@ -476,14 +480,14 @@ function extractHeadings(html) {
   return headings;
 }
 
-function processContent(rawString, mdInstance, config, env = {}) {
-  let frontmatter, markdownContent;
+function processContent(rawString: any, mdInstance: any, config: any, env: any = {}) {
+  let frontmatter: any, markdownContent: any;
 
   try {
     const parsed = matter(rawString);
     frontmatter = parsed.data;
     markdownContent = parsed.content;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Error parsing frontmatter:', e.message);
     return null;
   }
@@ -506,7 +510,7 @@ function processContent(rawString, mdInstance, config, env = {}) {
     searchData = {
       title: frontmatter.title || 'Untitled',
       content: stripHtml(htmlContent).slice(0, 5000),
-      headings: headings.map(h => ({ id: h.id, text: h.text }))
+      headings: headings.map((h: any) => ({ id: h.id, text: h.text }))
     };
   }
 
@@ -514,13 +518,13 @@ function processContent(rawString, mdInstance, config, env = {}) {
 }
 
 async function processContentAsync(rawString: string, mdInstance: any, config: any, env: any = {}, hooks: any = null) {
-  let frontmatter, markdownContent;
+  let frontmatter: any, markdownContent: any;
 
   try {
     const parsed = matter(rawString);
     frontmatter = parsed.data;
     markdownContent = parsed.content;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Error parsing frontmatter:', e.message);
     return null;
   }

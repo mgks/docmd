@@ -70,6 +70,9 @@
     --glow-color: rgba(6, 138, 213, 0.10);
     --glow-color-strong: rgba(6, 138, 213, 0.18);
     --halo-soft: 0 0 0 4px rgba(6, 138, 213, 0.10);
+    --docmd-tooltip-bg: #1e293b;
+    --docmd-tooltip-color: #f8fafc;
+    --docmd-tooltip-border: #334155;
 }
 
 :root[data-theme=dark] {
@@ -94,6 +97,9 @@
     --glow-color: rgba(56, 189, 248, 0.18);
     --glow-color-strong: rgba(56, 189, 248, 0.28);
     --halo-soft: 0 0 0 4px rgba(56, 189, 248, 0.18);
+    --docmd-tooltip-bg: #0f172a;
+    --docmd-tooltip-color: #f8fafc;
+    --docmd-tooltip-border: #334155;
     color-scheme: dark;
 }
 
@@ -2494,6 +2500,14 @@ img.lightbox {
     vertical-align: middle;
 }
 
+a.docmd-tag-link {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
 .docmd-tag {
     display: inline-flex;
     align-items: center;
@@ -2506,6 +2520,8 @@ img.lightbox {
     vertical-align: middle;
     margin: 0 0.2em;
     transition: all 0.2s;
+    width: fit-content;
+    max-width: 100%;
 }
 
 a.docmd-tag-link .docmd-tag:hover {
@@ -2516,6 +2532,72 @@ a.docmd-tag-link .docmd-tag:hover {
 .docmd-tag .tag-icon {
     display: inline-block;
     margin-right: 5px;
+}
+
+.docmd-tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dashed var(--link-color, #3b82f6);
+    cursor: help;
+    color: var(--text-heading);
+    font-weight: 500;
+}
+
+.docmd-tooltip.docmd-tooltip-link,
+a.docmd-tooltip {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.docmd-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background-color: var(--docmd-tooltip-bg, #1e293b);
+    color: var(--docmd-tooltip-color, #ffffff) !important;
+    border: 1px solid var(--docmd-tooltip-border, #334155);
+    padding: 0.35em 0.65em;
+    border-radius: var(--radius-md, 6px);
+    font-size: 0.78em;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+    z-index: 1000;
+}
+
+.docmd-tooltip.docmd-tooltip-link::after,
+a.docmd-tooltip::after {
+    pointer-events: auto;
+    padding-bottom: 0.5em;
+}
+
+.docmd-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0 5px;
+    border-style: solid;
+    border-color: var(--docmd-tooltip-bg, #1e293b) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+.docmd-tooltip:hover::after,
+.docmd-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
 }
 
 .callout-title {

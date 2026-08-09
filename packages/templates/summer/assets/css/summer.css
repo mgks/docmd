@@ -91,6 +91,9 @@
   --summer-banner-height: 0px;
   --summer-main-padding-top: 32px;
 
+  --docmd-tooltip-bg: #1e293b;
+  --docmd-tooltip-color: #f8fafc;
+  --docmd-tooltip-border: #334155;
 }
 
 .summer-template:not(.has-menubar) {
@@ -152,6 +155,10 @@ html[data-theme="dark"] {
   --summer-ring-soft: 0 0 0 3px rgba(255, 138, 92, 0.12);
 
   --summer-header-divider: 0 1px 0 0 rgba(255, 255, 255, 0.08);
+
+  --docmd-tooltip-bg: #0f172a;
+  --docmd-tooltip-color: #f8fafc;
+  --docmd-tooltip-border: #334155;
 }
 
 *,
@@ -2959,6 +2966,14 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   flex-shrink: 0;
 }
 
+.summer-content a.docmd-tag-link {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+  text-decoration: none;
+  vertical-align: middle;
+}
+
 .summer-content .docmd-tag {
   display: inline-flex;
   align-items: center;
@@ -2973,6 +2988,8 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   margin: 0 2px;
   vertical-align: middle;
   transition: filter var(--summer-fast) var(--summer-ease);
+  width: fit-content;
+  max-width: 100%;
 }
 
 .summer-content a.docmd-tag-link .docmd-tag:hover {
@@ -2982,6 +2999,142 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
 .summer-content .docmd-tag .tag-icon {
   display: inline-block;
   margin-right: 4px;
+}
+
+.summer-content .docmd-tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dashed var(--summer-accent, #3b82f6);
+  cursor: help;
+  color: var(--summer-fg);
+  font-weight: 500;
+}
+
+.summer-content .docmd-tooltip.docmd-tooltip-link,
+.summer-content a.docmd-tooltip {
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.summer-content .docmd-tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  background-color: var(--docmd-tooltip-bg, #1e293b);
+  color: var(--docmd-tooltip-color, #ffffff) !important;
+  border: 1px solid var(--docmd-tooltip-border, #334155);
+  padding: 0.35em 0.65em;
+  border-radius: var(--summer-radius-sm, 6px);
+  font-size: 0.78em;
+  font-weight: 400;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--summer-fast) var(--summer-ease), transform var(--summer-fast) var(--summer-ease), visibility var(--summer-fast);
+  pointer-events: none;
+  box-shadow: var(--summer-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
+  z-index: 1000;
+}
+
+.summer-content .docmd-tooltip.docmd-tooltip-link::after,
+.summer-content a.docmd-tooltip::after {
+  pointer-events: auto;
+  padding-bottom: 0.5em;
+}
+
+.summer-content .docmd-tooltip::before {
+  content: '';
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-style: solid;
+  border-color: var(--docmd-tooltip-bg, #1e293b) transparent transparent transparent;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--summer-fast) var(--summer-ease), visibility var(--summer-fast);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.summer-content .docmd-tooltip:hover::after,
+.summer-content .docmd-tooltip:hover::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.summer-content .docmd-mermaid-container {
+  position: relative;
+  margin: 1.5rem 0;
+  padding: 1.5rem 1rem;
+  border: 1px solid var(--summer-border);
+  border-radius: var(--summer-radius-lg);
+  box-shadow: var(--summer-shadow-sm);
+  background-color: var(--summer-surface);
+}
+
+.summer-content .mermaid-wrapper {
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+.summer-content .mermaid-wrapper:active {
+  cursor: grabbing;
+}
+
+.summer-content .mermaid-controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity var(--summer-fast) var(--summer-ease);
+}
+
+.summer-content .mermaid-wrapper:hover .mermaid-controls,
+.summer-content .mermaid-wrapper.mermaid-fullscreen .mermaid-controls {
+  opacity: 1;
+}
+
+.summer-content .mermaid-wrapper.mermaid-fullscreen {
+  background-color: var(--summer-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-height: none;
+}
+
+.summer-content .docmd-mermaid-container svg {
+  max-width: none;
+  display: block;
+  margin: 0 auto;
+}
+
+.summer-content .mermaid-error {
+  color: var(--summer-rose);
+  padding: 1rem;
+  margin: 0;
+  background-color: rgba(225, 29, 72, 0.1);
+  border-left: 4px solid var(--summer-rose);
+  border-radius: var(--summer-radius-xs);
+  font-size: 0.9rem;
+}
+
+.summer-content pre.mermaid {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  border: none;
+  display: none;
 }
 
 .summer-content .docmd-embed {

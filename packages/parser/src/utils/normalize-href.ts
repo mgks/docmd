@@ -138,6 +138,37 @@ export function resolveHref(href: string): NormalizedHref {
 }
 
 /**
+ * Process a link with context-aware relative path adjustments for subpages.
+ */
+export function processHref(rawLink: string, state: any): { href: string; isExternal: boolean } {
+  const result = resolveHref(rawLink);
+  let href = result.href;
+
+  if (!result.isRaw && !result.isExternal && !href.startsWith('#')) {
+    let hashPart = '';
+    let pathPart = href;
+    const hashIdx = href.indexOf('#');
+    if (hashIdx >= 0) {
+      hashPart = href.substring(hashIdx);
+      pathPart = href.substring(0, hashIdx);
+    }
+
+    const isProtocol = pathPart.match(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i);
+    if (!isProtocol && !pathPart.startsWith('/') && state && state.env && state.env.isIndex === false) {
+      if (pathPart.startsWith('./')) {
+        pathPart = '../' + pathPart.substring(2);
+      } else if (pathPart !== '') {
+        pathPart = '../' + pathPart;
+      }
+    }
+
+    href = pathPart + hashPart;
+  }
+
+  return { href, isExternal: result.isExternal };
+}
+
+/**
  * Simplified normaliser for backward compatibility.
  * Returns only the normalised href string (no external/raw flags).
  * Used by navigation normalisation where external detection is handled separately.

@@ -13,15 +13,10 @@
  */
 
 import { renderIcon } from '../utils/icon-renderer.js';
-import { resolveHref } from '../utils/normalize-href.js';
+import { processHref } from '../utils/normalize-href.js';
 
-/**
- * Strips a matched pair of surrounding quotes from a value if present.
- * The tag options parser captures both quoted ("..." or '...') and
- * unquoted forms in a single regex; this normalises them to a plain
- * string before passing to downstream helpers like resolveHref.
- */
 function unquote(value: string): string {
+  if (!value) return '';
   if (value.length >= 2) {
     const first = value.charAt(0);
     const last = value.charAt(value.length - 1);
@@ -32,55 +27,61 @@ function unquote(value: string): string {
   return value;
 }
 
-function tagInlineRule(state, silent) {
-  const start = state.pos;
-  const max = state.posMax;
-  
-  if (state.src.charCodeAt(start) !== 0x3A /* : */) return false;
-  if (state.src.slice(start, start + 3) !== ':::') return false;
+function resolveTagColor(val: string): string {
+  const v = unquote(val).toLowerCase();
+  switch (v) {
+    case 'success': return '#10b981';
+    case 'warning': return '#f59e0b';
+    case 'danger':
+    case 'error': return '#ef4444';
+    case 'info': return '#3b82f6';
+    case 'primary': return '#fe551b';
+    default: return unquote(val);
+  }
+}
 
-  // We are at `:::`. Let's see if it's `::: tag` or `:::tag` (spaceless).
-  //
-  // Option values accept three forms so URLs and other values that
-  // contain reserved characters can be wrapped in quotes for clarity
-  // (matching the rule used by other docmd containers):
-  //   - icon:check-circle        (unquoted)
-  //   - color:#ef4444            (unquoted)
-  //   - url:"../../release.md"   (double-quoted, recommended for URLs)
-  //   - url:'../../release.md'   (single-quoted)
-  //
-  // `url:` is the canonical name; `link:` is kept as an alias for
-  // backward compatibility with existing pages.
-  const match = state.src.slice(start, max).match(
-    /^:::\s*tag\s+(?:["']([^"']+)["']|(\S+))((?:\s+(?:icon|color|link|url):(?:"[^"]*"|'[^']*'|\S+))*)/
-  );
-  if (!match) return false;
-
-  if (silent) return true;
-
-  const text = match[1] || match[2] || 'Tag';
-  const optionsStr = match[3] || '';
-  
+function parseTagArgs(rawInput: string): { text: string; icon: string; color: string; link: string } {
+  let text = 'Tag';
   let icon = '';
   let color = '';
   let link = '';
 
-  const parts = optionsStr.trim().split(/\s+/);
-  for (const part of parts) {
-    if (!part) continue;
-    if (part.startsWith('icon:')) icon = unquote(part.substring(5));
-    else if (part.startsWith('color:')) color = unquote(part.substring(6));
-    else if (part.startsWith('link:')) link = unquote(part.substring(5));
-    else if (part.startsWith('url:')) link = unquote(part.substring(4));
+  const match = rawInput.match(/^\s*(?:["']([^"']+)["']|(\S+))(.*)$/);
+  if (!match) return { text, icon, color, link };
+
+  text = match[1] || match[2] || 'Tag';
+  const rest = (match[3] || '').trim();
+
+  const optionRegex = /(?:icon|color|style|link|url|href):(?:"[^"]*"|'[^']*'|\S+)/gi;
+  const optionsFound: string[] = rest.match(optionRegex) || [];
+
+  for (const opt of optionsFound) {
+    if (/^icon:/i.test(opt)) icon = unquote(opt.substring(5));
+    else if (/^color:/i.test(opt)) color = unquote(opt.substring(6));
+    else if (/^style:/i.test(opt)) color = unquote(opt.substring(6));
+    else if (/^link:/i.test(opt)) link = unquote(opt.substring(5));
+    else if (/^url:/i.test(opt)) link = unquote(opt.substring(4));
+    else if (/^href:/i.test(opt)) link = unquote(opt.substring(5));
   }
 
-  state.pos += match[0].length;
+  if (!link && rest) {
+    const nonOptionRest = rest.replace(optionRegex, '').trim();
+    if (nonOptionRest) {
+      const positionalMatch = nonOptionRest.match(/^(?:"([^"]*)"|'([^']*)'|(\S+))/);
+      if (positionalMatch) {
+        link = unquote(positionalMatch[1] || positionalMatch[2] || positionalMatch[3] || '');
+      }
+    }
+  }
 
-  const token = state.push('html_inline', '', 0);
+  return { text, icon, color, link };
+}
 
+function renderTagHtml(text: string, icon: string, color: string, link: string, state: any): string {
   let styleAttr = '';
   if (color) {
-    styleAttr = ` style="--tag-color: ${color}; background-color: color-mix(in srgb, ${color} 15%, transparent); color: ${color}; border-color: color-mix(in srgb, ${color} 30%, transparent);"`;
+    const resolvedColor = resolveTagColor(color);
+    styleAttr = ` style="--tag-color: ${resolvedColor}; background-color: color-mix(in srgb, ${resolvedColor} 15%, transparent); color: ${resolvedColor}; border-color: color-mix(in srgb, ${resolvedColor} 30%, transparent);"`;
   }
 
   let iconHtml = '';
@@ -91,19 +92,62 @@ function tagInlineRule(state, silent) {
   let tagHtml = `<span class="docmd-tag"${styleAttr}>${iconHtml}${state.md.renderInline(text)}</span>`;
 
   if (link) {
-    const result = resolveHref(link);
-    const targetAttr = result.isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-    tagHtml = `<a href="${result.href}" class="docmd-tag-link" style="text-decoration:none;"${targetAttr}>${tagHtml}</a>`;
+    const { href, isExternal } = processHref(link, state);
+    const targetAttr = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+    tagHtml = `<a href="${href}" class="docmd-tag-link"${targetAttr}>${tagHtml}</a>`;
   }
 
-  token.content = tagHtml;
+  return tagHtml;
+}
+
+function tagBlockRule(state: any, startLine: number, endLine: number, silent: boolean) {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+
+  const match = lineContent.match(/^:::\s*tag\s+(.*)$/i);
+  if (!match) return false;
+  if (silent) return true;
+
+  let rest = match[1].trim();
+  rest = rest.replace(/\s*:::\s*(?:\/tag|\/|)?$/i, '').trim();
+
+  const { text, icon, color, link } = parseTagArgs(rest);
+
+  const token = state.push('html_inline', '', 0);
+  token.content = renderTagHtml(text, icon, color, link, state);
+
+  state.line = startLine + 1;
+  return true;
+}
+
+function tagInlineRule(state: any, silent: boolean) {
+  const start = state.pos;
+  const max = state.posMax;
+
+  if (state.src.charCodeAt(start) !== 0x3A /* : */) return false;
+  if (state.src.slice(start, start + 3) !== ':::') return false;
+
+  const match = state.src.slice(start, max).match(
+    /^:::\s*tag\s+(.*?)(?:\s*:::\s*(?:\/tag|\/|)?(?=\s|$))/i
+  );
+  if (!match) return false;
+  if (silent) return true;
+
+  const { text, icon, color, link } = parseTagArgs(match[1].trim());
+
+  state.pos += match[0].length;
+
+  const token = state.push('html_inline', '', 0);
+  token.content = renderTagHtml(text, icon, color, link, state);
 
   return true;
 }
 
 export default {
   name: 'tags',
-  setup(md) {
+  setup(md: any) {
+    md.block.ruler.before('paragraph', 'docmd_tag', tagBlockRule, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
     md.inline.ruler.before('text', 'docmd_tag_inline', tagInlineRule);
   }
 };

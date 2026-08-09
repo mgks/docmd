@@ -91,7 +91,7 @@ export function createDepthTrackingContainer(md: any, name: string, renderOpen: 
       if (!fenceMarker) {
         if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|embed|tag)\b/)) {
           depth++;
-        } else if (nextContent.match(/^:::\s*$/)) {
+        } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
           depth--;
           if (depth === 0) {
             found = true;
@@ -231,7 +231,6 @@ export default {
     // Callout type aliases - map directly to callout variants
     const calloutAliases = [
       // VitePress aliases
-      { name: 'tip', type: 'tip' },
       { name: 'warning', type: 'warning' },
       { name: 'danger', type: 'danger' },
       { name: 'info', type: 'info' },

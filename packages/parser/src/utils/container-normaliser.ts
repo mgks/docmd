@@ -155,6 +155,11 @@ export function indentOf(line: string): number {
  */
 export function classifyLine(line: string): ClassifiedLine {
   const trimmed = line.trim();
+
+  if (trimmed.startsWith('::::') && !trimmed.match(/^:{3,}\s*\//)) {
+    return { kind: 'other' };
+  }
+
   const colMatch = trimmed.match(/^:::\s*(.*)$/);
   if (!colMatch) return { kind: 'other' };
 
@@ -166,13 +171,13 @@ export function classifyLine(line: string): ClassifiedLine {
     rest = rest.slice(0, commentIdx).trim();
   }
 
-  // Bare ::: or ::: /<name> or ::: end<name>
+  // Bare ::: (or ::::) or ::: /<name> or ::: end<name> or ::: end
   if (rest === '' || rest.startsWith('/') || /^end\b/i.test(rest) || /^end[_-]?\w+$/i.test(rest)) {
     const name = rest.replace(/^(\/|end[_-]?)/i, '').trim().split(/\s+/)[0];
     return name ? { kind: 'close', name } : { kind: 'close' };
   }
 
-  // Open tag candidate: ::: <name> [args]
+  // Open tag candidate: ::: <name> [args] or :::name [args]
   const openMatch = rest.match(/^([a-zA-Z][\w-]*)(?:\s+(.*))?$/);
   if (openMatch) {
     return { kind: 'open', name: openMatch[1] };
@@ -237,6 +242,20 @@ export function normaliseContainers(
       fenceMarker = fenceMatch[1][0]; // '`' or '~'
       out.push(line);
       continue;
+    }
+
+    // Auto-close open containers before major section headings (e.g. #, ##, ###)
+    if (/^\s*#{1,6}\s+/.test(line) && stack.length > 0) {
+      while (stack.length > 0) {
+        const frame = stack.pop()!;
+        recordWarning({
+          line: i + 1,
+          severity: 'info',
+          path: sourcePath,
+          message: `Unclosed <${frame.name}> from line ${frame.line} — auto-closed before heading at line ${i + 1}.`
+        });
+        out.push(' '.repeat(frame.indent) + ':::');
+      }
     }
 
     const cls = classifyLine(line);
