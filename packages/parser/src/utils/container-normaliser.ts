@@ -156,11 +156,11 @@ export function indentOf(line: string): number {
 export function classifyLine(line: string): ClassifiedLine {
   const trimmed = line.trim();
 
-  if (trimmed.startsWith('::::') && !trimmed.match(/^:{3,}\s*\//)) {
+  if (trimmed.startsWith('::::') && !trimmed.match(/^:{3,}\s*(?:\/|end)/i)) {
     return { kind: 'other' };
   }
 
-  const colMatch = trimmed.match(/^:::\s*(.*)$/);
+  const colMatch = trimmed.match(/^:{3,}\s*(.*)$/);
   if (!colMatch) return { kind: 'other' };
 
   let rest = colMatch[1].trim();
@@ -170,6 +170,9 @@ export function classifyLine(line: string): ClassifiedLine {
   if (commentIdx !== -1) {
     rest = rest.slice(0, commentIdx).trim();
   }
+
+  // Strip extra colons left at start of rest (e.g. from 4+ colon closes like ::::/tag)
+  rest = rest.replace(/^:+/, '').trim();
 
   // Bare ::: (or ::::) or ::: /<name> or ::: end<name> or ::: end
   if (rest === '' || rest.startsWith('/') || /^end\b/i.test(rest) || /^end[_-]?\w+$/i.test(rest)) {

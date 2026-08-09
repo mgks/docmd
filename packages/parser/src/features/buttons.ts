@@ -13,9 +13,10 @@
  */
 
 import { renderIcon } from '../utils/icon-renderer.js';
-import { resolveHref } from '../utils/normalize-href.js';
+import { processHref } from '../utils/normalize-href.js';
 
 function unquote(value: string): string {
+  if (!value) return '';
   if (value.length >= 2) {
     const first = value.charAt(0);
     const last = value.charAt(value.length - 1);
@@ -26,69 +27,53 @@ function unquote(value: string): string {
   return value;
 }
 
-function processHref(rawLink: string, state: any): { href: string; isExternal: boolean } {
-  const result = resolveHref(rawLink);
-  let href = result.href;
-
-  if (!result.isRaw && !result.isExternal && !href.startsWith('#')) {
-    let hashPart = '';
-    let pathPart = href;
-    const hashIdx = href.indexOf('#');
-    if (hashIdx >= 0) {
-      hashPart = href.substring(hashIdx);
-      pathPart = href.substring(0, hashIdx);
-    }
-
-    const isProtocol = pathPart.match(/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i);
-    if (!isProtocol && !pathPart.startsWith('/') && state.env && state.env.isIndex === false) {
-      if (pathPart.startsWith('./')) {
-        pathPart = '../' + pathPart.substring(2);
-      } else if (pathPart !== '') {
-        pathPart = '../' + pathPart;
-      }
-    }
-
-    href = pathPart + hashPart;
+function cleanLink(raw: string): string {
+  let val = unquote(raw);
+  if (/^(?:url|link|href):/i.test(val)) {
+    val = val.replace(/^(?:url|link|href):/i, '');
+    val = unquote(val);
   }
-
-  return { href, isExternal: result.isExternal };
+  return val;
 }
 
-function buttonRule(state: any, startLine: number, endLine: number, silent: boolean) {
-  const start = state.bMarks[startLine] + state.tShift[startLine];
-  const max = state.eMarks[startLine];
-  const lineContent = state.src.slice(start, max).trim();
-
-  // Regex matches: ::: button "Text" Link [options] [::: /button]
-  const match = lineContent.match(
-    /^:::\s*button\s+(?:["'](.*?)["']|(\S+))\s+(?:(url:|link:)?(?:"([^"]*)"|'([^']*)'|(\S+)))(.*)$/i
-  );
-
-  if (!match) return false;
-  if (silent) return true;
-
-  let text = match[1] || match[2] || 'Button';
-  if (match[2]) text = text.replace(/_/g, ' ');
-
-  const rawLink = unquote(match[4] || match[5] || match[6] || match[3] || '');
-  let rest = (match[7] || '').trim();
-
-  // Strip trailing optional closing ::: /button or :::
-  rest = rest.replace(/\s*:::\s*(?:\/button|\/|)?$/i, '').trim();
-
-  let color = '';
+function parseButtonArgs(rawInput: string): { text: string; link: string; icon: string; color: string } {
+  let text = 'Button';
+  let link = '';
   let icon = '';
+  let color = '';
 
-  const parts = rest.split(/\s+/);
-  for (const p of parts) {
-    if (!p) continue;
-    if (p.startsWith('color:')) color = unquote(p.substring(6));
-    else if (p.startsWith('icon:')) icon = unquote(p.substring(5));
+  const match = rawInput.match(/^\s*(?:["']([^"']+)["']|(\S+))(.*)$/);
+  if (!match) return { text, link, icon, color };
+
+  text = match[1] || match[2] || 'Button';
+  if (!match[1] && match[2]) text = text.replace(/_/g, ' ');
+  const rest = (match[3] || '').trim();
+
+  const optionRegex = /(?:icon|color|style|link|url|href):(?:"[^"]*"|'[^']*'|\S+)/gi;
+  const optionsFound: string[] = rest.match(optionRegex) || [];
+
+  for (const opt of optionsFound) {
+    if (/^icon:/i.test(opt)) icon = unquote(opt.substring(5));
+    else if (/^color:/i.test(opt)) color = unquote(opt.substring(6));
+    else if (/^style:/i.test(opt)) color = unquote(opt.substring(6));
+    else if (/^(?:link|url|href):/i.test(opt)) link = cleanLink(opt);
   }
 
-  const { href, isExternal } = processHref(rawLink, state);
+  if (!link && rest) {
+    const nonOptionRest = rest.replace(optionRegex, '').trim();
+    if (nonOptionRest) {
+      const positionalMatch = nonOptionRest.match(/^(?:"([^"]*)"|'([^']*)'|(\S+))/);
+      if (positionalMatch) {
+        link = cleanLink(positionalMatch[1] || positionalMatch[2] || positionalMatch[3] || '');
+      }
+    }
+  }
 
-  const token = state.push('html_inline', '', 0);
+  return { text, link, icon, color };
+}
+
+function renderButtonHtml(text: string, link: string, icon: string, color: string, state: any): string {
+  const { href, isExternal } = processHref(link, state);
 
   let styleAttr = '';
   if (color) {
@@ -102,7 +87,25 @@ function buttonRule(state: any, startLine: number, endLine: number, silent: bool
     iconHtml = renderIcon(icon, { class: 'button-icon' });
   }
 
-  token.content = `<a href="${href}" class="docmd-button"${styleAttr}${targetAttr}>${iconHtml}${state.md.renderInline(text)}</a>`;
+  return `<a href="${href}" class="docmd-button"${styleAttr}${targetAttr}>${iconHtml}${state.md.renderInline(text)}</a>`;
+}
+
+function buttonRule(state: any, startLine: number, endLine: number, silent: boolean) {
+  const start = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+  const lineContent = state.src.slice(start, max).trim();
+
+  const match = lineContent.match(/^:::\s*button\s+(.*)$/i);
+  if (!match) return false;
+  if (silent) return true;
+
+  let rest = match[1].trim();
+  rest = rest.replace(/\s*:::\s*(?:\/button|\/|)?$/i, '').trim();
+
+  const { text, link, icon, color } = parseButtonArgs(rest);
+
+  const token = state.push('html_inline', '', 0);
+  token.content = renderButtonHtml(text, link, icon, color, state);
 
   state.line = startLine + 1;
   return true;
@@ -116,47 +119,17 @@ function buttonInlineRule(state: any, silent: boolean) {
   if (state.src.slice(start, start + 3) !== ':::') return false;
 
   const match = state.src.slice(start, max).match(
-    /^:::\s*button\s+(?:["'](.*?)["']|(\S+))\s+(?:(?:url:|link:)?(?:"([^"]*)"|'([^']*)'|(\S+)))((?:\s+(?:color|icon|style):(?:"[^"]*"|'[^']*'|\S+))*)(?:\s*:::\s*(?:\/button|\/|)?(?=\s|$))?/i
+    /^:::\s*button\s+(.*?)(?:\s*:::\s*(?:\/button|\/|)?(?=\s|$))/i
   );
-
   if (!match) return false;
   if (silent) return true;
 
-  let text = match[1] || match[2] || 'Button';
-  if (match[2]) text = text.replace(/_/g, ' ');
-
-  const rawLink = unquote(match[3] || match[4] || match[5] || '');
-  const optionsStr = match[6] || '';
-
-  let color = '';
-  let icon = '';
-
-  const parts = optionsStr.trim().split(/\s+/);
-  for (const p of parts) {
-    if (!p) continue;
-    if (p.startsWith('color:')) color = unquote(p.substring(6));
-    else if (p.startsWith('icon:')) icon = unquote(p.substring(5));
-  }
-
-  const { href, isExternal } = processHref(rawLink, state);
+  const { text, link, icon, color } = parseButtonArgs(match[1].trim());
 
   state.pos += match[0].length;
 
   const token = state.push('html_inline', '', 0);
-
-  let styleAttr = '';
-  if (color) {
-    styleAttr = ` style="background-color: ${color}; border-color: ${color}; color: #fff;"`;
-  }
-
-  const targetAttr = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
-
-  let iconHtml = '';
-  if (icon) {
-    iconHtml = renderIcon(icon, { class: 'button-icon' });
-  }
-
-  token.content = `<a href="${href}" class="docmd-button"${styleAttr}${targetAttr}>${iconHtml}${state.md.renderInline(text)}</a>`;
+  token.content = renderButtonHtml(text, link, icon, color, state);
 
   return true;
 }
