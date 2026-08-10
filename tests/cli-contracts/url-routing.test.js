@@ -17,6 +17,7 @@ import {
   DOCMD,
   setup,
   writeFile,
+  build,
   runTestFile
 } from '../shared.js';
 import { execSync } from 'node:child_process';
@@ -192,6 +193,53 @@ export const test = runTestFile({
       const frLiEnd = indexHtml.indexOf('>', frLiStart);
       const frLiTag = indexHtml.slice(frLiStart, frLiEnd);
       assert(!frLiTag.includes('collapsible'), 'Auto Nav: Folder "fr" with only an index page is rendered as a simple non-collapsible link');
+    }
+
+    // 5. Zero-config root homepage SPA link synchronization (#196)
+    {
+      const docmdMainJsPath = path.join(rootDir, 'packages/ui/assets/js/docmd-main.js');
+      const docmdMainJs = fs.readFileSync(docmdMainJsPath, 'utf8');
+
+      // Verify docmd-main.js does not turn empty string newHref into '#'
+      assert(
+        docmdMainJs.includes("if (newHref !== null && newHref !== undefined && newHref !== '#')") ||
+        docmdMainJs.includes("newHref !== null"),
+        'SPA Router: docmd-main.js properly checks newHref to preserve and resolve empty homepage hrefs without falling back to #'
+      );
+      assert(
+        !docmdMainJs.includes("oldA.setAttribute('href', newHref || '#')"),
+        'SPA Router: docmd-main.js does not perform falsy fallback (newHref || "#") which corrupts <a href=""> into <a href="#">'
+      );
+    }
+
+    // 6. Banner rendering in Summer and default templates
+    {
+      const proj = setup('banner-rendering-summer');
+      writeFile(proj, 'docs/index.md', '# Banner Test\n');
+      writeFile(proj, 'docmd.config.json', JSON.stringify({
+        title: 'Banner Test',
+        theme: { template: 'summer' },
+        layout: {
+          banner: {
+            content: '**v0.9.1 is live!** — Read technical docs.',
+            type: 'info',
+            icon: 'sparkles',
+            dismissible: true,
+            link: { text: 'Read more', url: '/changelog' }
+          }
+        }
+      }, null, 2) + '\n');
+
+      const result = build(proj);
+      assert(result.ok, 'Banner Test: build with summer template and object banner succeeds');
+      const html = fs.readFileSync(path.join(proj, 'site/index.html'), 'utf8');
+
+      assert(html.includes('summer-banner'), 'Banner Test: summer-banner element rendered');
+      assert(html.includes('<strong>v0.9.1 is live!</strong>'), 'Banner Test: Markdown content formatted inside summer-banner');
+      assert(html.includes('summer-banner__icon'), 'Banner Test: Icon rendered inside summer-banner');
+      assert(html.includes('summer-banner__link'), 'Banner Test: Link rendered inside summer-banner');
+      assert(html.includes('data-docmd-banner-dismiss'), 'Banner Test: Dismiss button present inside summer-banner');
+      assert(html.includes('summer-banner--info'), 'Banner Test: Type class applied to summer-banner');
     }
   }
 });

@@ -387,8 +387,10 @@ ${projectsList}`;
 
 CRITICAL SCOPE & NAVIGATION RULES:
 1. SCOPE PRIORITIZATION: Prioritize answers using content from the Current Active Project ("${currentProjectName}")${hasVersions && activeVersion ? `, active version branch (${activeVersion.label})` : ''}${hasLocales && activeLocale ? `, and active language (${activeLocale.label})` : ''}.
-2. STRICT ACTIVE / LATEST VERSION: When versioning is configured, ONLY cite, explain, recommend, and link to pages from the active version (${activeVersion?.label || defaultVer?.label}) or latest branch (${defaultVer?.label}). Never suggest or list deprecated historical versions in overviews or greetings unless the user explicitly asks for a previous version.
-3. RELEASE NOTES & PATCH VERSIONS: The configured documentation version (${defaultVer?.label || 'latest'}) represents the major/minor documentation branch. If a user asks about specific patch releases, recent updates, or changelogs (e.g., v0.9.1), ALWAYS check or search the documentation release notes using \`search_documentation\`. Never claim a release does not exist without searching.
+2. STRICT ACTIVE / LATEST VERSION ONLY: ONLY cite, explain, recommend, and link to pages from the active version (${activeVersion?.label || defaultVer?.label}) or latest branch (${defaultVer?.label}). Never suggest, cite, or list deprecated historical versions unless the user explicitly asks for an older version.
+3. AUTONOMOUS & PROACTIVE TOOL EXECUTION:
+   - Always use your tools proactively. NEVER ask the user "Would you like me to search?" or "Should I check?". Directly invoke \`search_documentation\` or \`get_site_structure\` to retrieve facts before answering.
+   - For any question about version numbers, latest releases, recent updates, or changelogs, you MUST search the release notes with \`search_documentation\` (query: "release notes" or specific version like "0.9.1") to find the newest release note before giving the final answer. Never state that a release does not exist without searching.
 4. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.`;
 
     const defaultBasePrompt = `You are docmd assistant — a professional, precise, and concise technical AI assistant for this documentation site.
@@ -396,8 +398,8 @@ CRITICAL SCOPE & NAVIGATION RULES:
 CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. IDENTITY: Your name is "docmd assistant". You are an expert AI guide specifically for this documentation site. Never identify yourself simply as "docmd" or "I am docmd".
 2. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. Politely decline off-topic queries.
-3. PROFESSIONAL & CONCISE: Provide direct, succinct, and professional answers. Do NOT use excessive emojis (keep emojis to a minimum or none). Avoid conversational fluff, verbose meta-apologies, or boilerplate filler. Get straight to the answer.
-4. TOOL SELECTION & SEARCH:
+3. PROFESSIONAL & CONCISE: Provide direct, succinct, and professional answers. Do NOT use excessive emojis (keep emojis to a minimum or none). Avoid conversational fluff, boilerplate apologies, or asking for permission. Get straight to the answer.
+4. TOOL SELECTION & EXECUTION:
    - Use \`get_site_structure\` whenever you need extended structural inspection of available documentation versions, supported locales, or navigation trees.
    - Use \`search_documentation\` to search documentation content for specific technical terms, API parameters, error messages, or release notes. Keyword search is always active; pass clean, focused search terms (e.g. "0.9.1 release notes" or "cards container") for highest accuracy.
 5. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for referenced pages.`;
@@ -440,13 +442,23 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 
     // Compute version & locale scoping
     const versionsObj = cfg.versions || {};
-    const allVerList: Array<{ id: string; dir?: string }> = Array.isArray(versionsObj.all) ? versionsObj.all : [];
+    const allVerList: Array<{ id: string; dir?: string; label?: string }> = Array.isArray(versionsObj.all) ? versionsObj.all : [];
+    const currentVerId = String(versionsObj.current || '');
     const currentVerDir = versionsObj.current ? (allVerList.find(v => v.id === versionsObj.current)?.dir || `v${versionsObj.current}`) : '';
-    const olderVersionDirs = allVerList
-      .filter(v => v.id !== versionsObj.current)
-      .map(v => v.dir || `v${v.id}`)
-      .filter(Boolean);
-    const isExplicitOlderVerRequest = olderVersionDirs.some(oldDir => query.toLowerCase().includes(oldDir.toLowerCase()));
+    
+    // Collect older version tokens
+    const olderVerTokens: string[] = [];
+    for (const v of allVerList) {
+      if (String(v.id) !== currentVerId) {
+        if (v.id) olderVerTokens.push(String(v.id).toLowerCase());
+        if (v.dir) olderVerTokens.push(String(v.dir).toLowerCase());
+        if (v.label) {
+          olderVerTokens.push(String(v.label).toLowerCase());
+          olderVerTokens.push(String(v.label).replace(/^v/i, '').toLowerCase());
+        }
+      }
+    }
+    const isExplicitOlderVerRequest = olderVerTokens.some(tok => query.toLowerCase().includes(tok));
 
     const i18nObj = cfg.i18n || {};
     const allLocales: Array<{ id: string }> = Array.isArray(i18nObj.locales) ? i18nObj.locales : [];
@@ -456,25 +468,67 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       const foundLoc = allLocales.find(l => pathParts.includes(l.id));
       if (foundLoc) activeLocaleId = foundLoc.id;
     }
-    const nonActiveLocaleIds = allLocales.filter(l => l.id !== activeLocaleId).map(l => l.id);
-    const isExplicitLocaleRequest = nonActiveLocaleIds.some(locId => query.toLowerCase().includes(locId.toLowerCase()));
+    const nonActiveLocaleIds = allLocales.filter(l => l.id !== activeLocaleId).map(l => l.id.toLowerCase());
+    const isExplicitLocaleRequest = nonActiveLocaleIds.some(locId => query.toLowerCase().includes(locId));
+
+    const isPathExcluded = (rawId: string): boolean => {
+      const norm = String(rawId || '').replace(/^\//, '').toLowerCase();
+      if (!isExplicitOlderVerRequest) {
+        for (const tok of olderVerTokens) {
+          if (norm === tok || norm.startsWith(`${tok}/`) || norm.includes(`/${tok}/`)) {
+            return true;
+          }
+        }
+      }
+      if (!isExplicitLocaleRequest) {
+        for (const loc of nonActiveLocaleIds) {
+          if (norm === loc || norm.startsWith(`${loc}/`) || norm.includes(`/${loc}/`)) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    const queryTokens = query.toLowerCase().replace(/[\-_.]/g, ' ').split(/\s+/).filter(t => t.length > 0);
+    const versionMatches = query.match(/\d+[\.\-_]\d+[\.\-_]\d+/g);
 
     // 1. Local Active Search Index (via window.docmdSearch)
     try {
       if ((window as any).docmdSearch && typeof (window as any).docmdSearch.search === 'function') {
         const localHits = await (window as any).docmdSearch.search(query);
         if (Array.isArray(localHits)) {
-          for (const item of localHits) {
-            const rawId = String(item.id || item.url || '');
-            if (!isExplicitOlderVerRequest && olderVersionDirs.some(oldDir => rawId.includes(`/${oldDir}/`))) {
-              continue;
-            }
-            if (!isExplicitLocaleRequest && nonActiveLocaleIds.some(locId => rawId.includes(`/${locId}/`))) {
-              continue;
-            }
+          const filteredAndScored = localHits
+            .filter((item: any) => !isPathExcluded(item.id || item.url || ''))
+            .map((item: any) => {
+              const rawId = String(item.id || item.url || '');
+              const cleanId = rawId.startsWith('/') ? rawId.slice(1) : rawId;
+              const titleLower = String(item.title || cleanId).toLowerCase();
+              const textLower = String(item.text || item.snippet || '').toLowerCase();
+              const idLower = cleanId.toLowerCase();
 
-            const cleanId = rawId.startsWith('/') ? rawId.slice(1) : rawId;
-            const fullUrl = rawId.startsWith('http') ? rawId : new URL(cleanId, siteBaseUrl).href;
+              let score = typeof item.score === 'number' ? item.score : 1;
+              for (const tok of queryTokens) {
+                if (titleLower.includes(tok)) score += 15;
+                if (idLower.includes(tok)) score += 10;
+                if (textLower.includes(tok)) score += 2;
+              }
+              if (versionMatches) {
+                for (const vm of versionMatches) {
+                  const normV = vm.replace(/[\-_]/g, '.');
+                  const dashV = vm.replace(/[\.]/g, '-');
+                  if (titleLower.includes(normV) || titleLower.includes(dashV) || idLower.includes(dashV) || idLower.includes(normV)) {
+                    score += 60;
+                  }
+                }
+              }
+              return { item, score, cleanId };
+            })
+            .sort((a, b) => b.score - a.score);
+
+          for (const entry of filteredAndScored) {
+            const { item, cleanId } = entry;
+            const fullUrl = cleanId.startsWith('http') ? cleanId : new URL(cleanId, siteBaseUrl).href;
             if (!hits.some(existing => existing.url === fullUrl)) {
               hits.push({
                 project: 'Current Project',
@@ -484,7 +538,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
                 searchType: 'keyword'
               });
             }
-            if (hits.length >= 5) break;
+            if (hits.length >= 6) break;
           }
         }
       }
@@ -504,17 +558,10 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
           if (res.ok) {
             const indexData = await res.json();
             const docs = indexData.storedFields ? Object.values(indexData.storedFields) : (Array.isArray(indexData) ? indexData : []);
-            const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
 
             const filteredDocs = docs.filter((doc: any) => {
               const rawId = String(doc.id || doc.url || '');
-              if (!isExplicitOlderVerRequest && olderVersionDirs.some(oldDir => rawId.includes(`/${oldDir}/`))) {
-                return false;
-              }
-              if (!isExplicitLocaleRequest && nonActiveLocaleIds.some(locId => rawId.includes(`/${locId}/`))) {
-                return false;
-              }
-              return true;
+              return !isPathExcluded(rawId);
             });
 
             const scored = filteredDocs.map((doc: any) => {
@@ -522,9 +569,20 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
               const textStr = String(doc.text || '').toLowerCase();
               const rawId = String(doc.id || '');
               let score = 0;
-              for (const term of terms) {
-                if (titleStr.includes(term)) score += 5;
-                if (textStr.includes(term)) score += 1;
+              for (const term of queryTokens) {
+                if (titleStr.includes(term)) score += 15;
+                if (rawId.toLowerCase().includes(term)) score += 10;
+                if (textStr.includes(term)) score += 2;
+              }
+
+              if (versionMatches) {
+                for (const vm of versionMatches) {
+                  const normV = vm.replace(/[\-_]/g, '.');
+                  const dashV = vm.replace(/[\.]/g, '-');
+                  if (titleStr.includes(normV) || titleStr.includes(dashV) || rawId.toLowerCase().includes(dashV)) {
+                    score += 60;
+                  }
+                }
               }
 
               if (currentVerDir && rawId.includes(`/${currentVerDir}/`)) score += 10;
@@ -685,9 +743,14 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
   private formatMarkdown(raw: string): string {
     if (!raw) return '';
     let cleaned = raw
+      .replace(/<mm:think>[\s\S]*?<\/mm:think>/gi, '')
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')
+      .replace(/<\/?(?:mm:)?think>/gi, '')
       .replace(/\]<\]minimax\[>\[[\s\S]*?(?:<\/request>|$)/gi, '')
+      .replace(/\]<\]minimax\[>\[/gi, '')
       .replace(/<request>[\s\S]*?<\/request>/gi, '')
       .replace(/<tool\b[^>]*>[\s\S]*?<\/tool>/gi, '')
+      .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '')
       .trim();
     if (!cleaned) cleaned = raw;
     let text = this.escapeHtml(cleaned);

@@ -934,7 +934,7 @@
               // Resolve new href to absolute URL to prevent relative path nesting issues
               // But preserve external URLs (http/https, mailto:, tel:, etc.) as-is
               const newHref = newA.getAttribute('href');
-              if (newHref && newHref !== '#') {
+              if (newHref !== null && newHref !== undefined && newHref !== '#') {
                 try {
                   // Check if this is an external URL or special protocol - preserve as-is
                   if (/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(newHref)) {
@@ -948,7 +948,7 @@
                   oldA.setAttribute('href', newHref);
                 }
               } else {
-                oldA.setAttribute('href', newHref || '#');
+                oldA.setAttribute('href', newHref !== null ? newHref : '#');
               }
               oldA.classList.toggle('active', newA.classList.contains('active'));
             }
@@ -1114,6 +1114,7 @@ function initBanner() {
   try {
     if (sessionStorage.getItem('docmd-banner-dismissed') === '1') {
       banner.remove();
+      document.body.classList.remove('has-banner');
       return;
     }
   } catch (_) { /* sessionStorage blocked — leave visible */ }
@@ -1131,6 +1132,7 @@ function initBanner() {
     banner.style.margin = '0';
     setTimeout(() => {
       banner.remove();
+      document.body.classList.remove('has-banner');
       try { sessionStorage.setItem('docmd-banner-dismissed', '1'); } catch (_) { /* ignore */ }
     }, 260);
   });

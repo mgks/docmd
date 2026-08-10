@@ -2414,21 +2414,96 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   border-bottom: 1px solid var(--summer-border-soft);
   color: var(--summer-fg);
   font-size: var(--summer-text-sm);
+  line-height: 1.45;
+}
+
+.summer-banner--info {
+  background: linear-gradient(90deg, var(--summer-accent-soft), color-mix(in srgb, var(--summer-accent) 8%, var(--summer-surface)));
+  border-bottom-color: color-mix(in srgb, var(--summer-accent) 20%, var(--summer-border-soft));
+}
+
+.summer-banner--success {
+  background: linear-gradient(90deg, var(--summer-green-soft), color-mix(in srgb, var(--summer-green) 8%, var(--summer-surface)));
+  border-bottom-color: color-mix(in srgb, var(--summer-green) 25%, var(--summer-border-soft));
+}
+
+.summer-banner--warning {
+  background: linear-gradient(90deg, var(--summer-amber-soft), color-mix(in srgb, var(--summer-amber) 10%, var(--summer-surface)));
+  border-bottom-color: color-mix(in srgb, var(--summer-amber) 25%, var(--summer-border-soft));
+}
+
+.summer-banner--danger {
+  background: linear-gradient(90deg, rgba(244, 63, 94, 0.08), color-mix(in srgb, var(--summer-rose) 8%, var(--summer-surface)));
+  border-bottom-color: color-mix(in srgb, var(--summer-rose) 20%, var(--summer-border-soft));
 }
 
 .summer-banner__inner {
   max-width: var(--summer-page-max);
   margin: 0 auto;
-  padding: 10px 28px;
+  padding: 10px 36px 10px 28px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   justify-content: center;
+  flex-wrap: wrap;
 }
 
-.summer-banner a {
+.summer-banner__icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--summer-accent);
+}
+
+.summer-banner--warning .summer-banner__icon {
+  color: var(--summer-amber);
+}
+
+.summer-banner--success .summer-banner__icon {
+  color: var(--summer-green);
+}
+
+.summer-banner--danger .summer-banner__icon {
+  color: var(--summer-rose);
+}
+
+.summer-banner__icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.summer-banner__text {
+  word-break: break-word;
+}
+
+.summer-banner__text code {
+  font-family: var(--summer-font-mono);
+  font-size: 0.85em;
+  padding: 1px 5px;
+  background: var(--summer-surface);
+  border: 1px solid var(--summer-border-soft);
+  border-radius: 4px;
+}
+
+.summer-banner a,
+.summer-banner__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: var(--summer-accent);
   font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.summer-banner a:hover,
+.summer-banner__link:hover {
+  color: var(--summer-fg);
+}
+
+.summer-banner__link-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .summer-banner__close {
@@ -2443,11 +2518,21 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   justify-content: center;
   color: var(--summer-fg-soft);
   border-radius: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--summer-fast) var(--summer-ease), color var(--summer-fast) var(--summer-ease);
 }
 
 .summer-banner__close:hover {
   background: var(--summer-surface);
   color: var(--summer-fg);
+}
+
+.summer-banner__close svg {
+  width: 15px;
+  height: 15px;
 }
 
 @media (max-width: 1280px) {

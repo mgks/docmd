@@ -142,11 +142,7 @@ export function buildAutoNav(dir: string, basePath = '/'): any[] { // Default ba
       const isReadme = item.name.toLowerCase() === 'readme.md';
 
       if (isIndex || (isReadme && !hasIndex)) {
-        // For the root index (basePath === '/'), emit an empty string so the
-        // nav link is page-relative. A literal '/' would be intercepted by
-        // workspace project matching in buildContextualUrl and resolve to the
-        // workspace root project rather than the current project's root.
-        linkPath = basePath === '/' ? '' : normalizeInternalHref(basePath);
+        linkPath = basePath === '/' ? '/' : normalizeInternalHref(basePath);
       } else {
         // Use centralised normaliser for clean URLs with trailing slash
         linkPath = normalizeInternalHref(linkPath);
@@ -159,8 +155,8 @@ export function buildAutoNav(dir: string, basePath = '/'): any[] { // Default ba
   // Sort: Put index.md (Home) at the top, then sort alphabetically
   return nav.sort((a, b) => {
     // Check if path effectively points to current folder root
-    const aIsRoot = a.path === basePath || a.path === basePath + '/' || a.path === '';
-    const bIsRoot = b.path === basePath || b.path === basePath + '/' || b.path === '';
+    const aIsRoot = a.path === basePath || a.path === basePath + '/' || a.path === '' || a.path === '/';
+    const bIsRoot = b.path === basePath || b.path === basePath + '/' || b.path === '' || b.path === '/';
 
     if (aIsRoot && !bIsRoot) return -1;
     if (!aIsRoot && bIsRoot) return 1;
