@@ -22,6 +22,7 @@
   <h4>
     <a href="https://docmd.io">Website</a> &nbsp;·&nbsp;
     <a href="https://docs.docmd.io">Documentation</a> &nbsp;·&nbsp;
+    <a href="https://cloud.docmd.io">AI Cloud Relay</a> &nbsp;·&nbsp;
     <a href="https://live.docmd.io">Live Editor</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd-skills">Agent Skills</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd/issues">Report a Bug</a>
@@ -36,6 +37,27 @@
   <br/><br/>
 
 </div>
+
+> ## ✦ 0.9.x — AI, Automation & Security
+>
+> The 0.9.x series is where docmd expands from an AI-ready documentation
+> generator into a documentation platform designed for both **people and
+> AI agents**.
+>
+> The series introduces the **AI Assistant**, allowing documentation to
+> be queried conversationally using your own provider, local AI, or the
+> **docmd Cloud Relay** for static sites that don't have their own backend.
+> It also expands docmd's AI ecosystem with MCP, generated LLM context,
+> Agent Skills, and structured knowledge formats.
+>
+> Alongside AI, this series focuses on **security, privacy and automation**,
+> while continuing to improve the core documentation experience, search,
+> deployment and developer workflows.
+>
+> **Current release:** `0.9.1`
+>
+> [View 0.9.1 →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
+> [Follow the 0.9.x roadmap →](https://github.com/orgs/docmd-io/discussions/10)
 
 ## Quick Start
 
@@ -54,44 +76,41 @@ npx @docmd/core dev
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
 
- v1.x.x
+ v0.9.0
 
-┌─ Build
-│  Engine          JS
-│  Source          docs/
-│  Output          site/
-│  Versions        2 (06, 05)
-│  Locales         7 (en, hi, zh, es, de, ja, fr)
-└──────────────────────────────────────────────────────────
-┌─ Data Indexing
-│  [ DONE ] Syncing git metadata
-│  [ DONE ] Building semantic search index (multi-version)
-└──────────────────────────────────────────────────────────
-┌─ Publishing
-│  [ DONE ] Generated robots.txt
-│  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-│  [ DONE ] Generated sitemap
-│  [ DONE ] Generating LLMs context files
-└──────────────────────────────────────────────────────────
+BUILD
+  Engine          JS
+  Source          docs/
+  Output          site/
+  Versions        2 (06, 05)
+  Locales         7 (en, hi, zh, es, de, ja, fr)
+
+DATA INDEXING
+  [ DONE ] Syncing git metadata
+  [ DONE ] Building search index & RAG embeddings (multi-version)
+  [ DONE ] Generating AI Assistant RAG context
+
+PUBLISHING
+  [ DONE ] Generated robots.txt
+  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
+  [ DONE ] Generated sitemap
+  [ DONE ] Generating LLMs context files (llms.txt)
+  [ DONE ] Generating OKF bundles
 
 ⬢ Initial build completed in 1.2s.
 
-┌─ Watching
-│  Source          ./docs
-│  Config          ./docmd.config.json
-│  Assets          ./assets
-└──────────────────────────────────────────────────────────
-┌─ Development Server Running
-│  Local Access    http://127.0.0.1:3000
-│  Network Access  http://192.168.1.6:3000
-│  Serving from    ./site
-└──────────────────────────────────────────────────────────
-```
-</details>
+WATCHING
+  Source          ./docs
+  Config          ./docmd.config.json
+  Assets          ./assets
 
-<p align="center">
-  <img alt="docmd dev server preview" width="820" src="https://docmd.io/assets/images/dev-preview.gif">
-</p>
+DEVELOPMENT SERVER RUNNING
+  Local Access    http://127.0.0.1:3000
+  Network Access  http://192.168.1.6:3000
+  Serving from    ./site
+```
+
+</details>
 
 Navigation is generated from your file structure. No config file, no frontmatter required, no framework to learn.
 
@@ -123,7 +142,7 @@ docmd build  # build for deployment
 Or run via Docker:
 
 ```bash
-docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
+docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ```
 
 > Pin a version for reproducible builds.
@@ -141,6 +160,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
 | **i18n** | **Native** | Native (complex) | Plugin-based | Native | Native |
 | **Multi-project** | **Native** | Plugin | Plugin | - | - |
 | **Search** | **Built-in** | Algolia (cloud) | Built-in | MiniSearch | Cloud |
+| **AI Assistant** | **Built-in — BYOK + Cloud Relay** | - | - | - | Built-in (Cloud) |
 | **AI context (`llms.txt`)** | **Built-in** | - | - | - | Built-in |
 | **MCP server** | **Built-in** | - | - | - | Built-in |
 | **Agent skills** | **Built-in** | - | - | - | - |
@@ -157,11 +177,14 @@ Point docmd at any Markdown folder and it runs. Navigation is built automaticall
 The default JavaScript payload is ~18 kb. Pages navigate as an instant SPA. The output is static HTML — SEO-optimised, with sitemap, canonical URLs, and Open Graph metadata included. Offline full-text search is built in, no cloud service required.
 
 ### AI-native
-docmd is built for the way documentation is read and used today:
+docmd treats AI as a first-class way to consume documentation — without replacing the documentation itself.
+- **AI Assistant (`@docmd/plugin-ai`)** — RAG-powered chat grounded in your documentation. Use your own API key or connect a local AI provider, with support for a wide range of 100+ providers through AIPlug.
+- **Cloud Relay** — enable the AI Assistant on static documentation without running your own AI backend. [Try it →](https://cloud.docmd.io)
 - **MCP Server** — `docmd mcp` exposes your docs to AI agents over stdio, letting them search, read, and validate content directly.
-- **Context (`llms.txt` / `llms-full.txt`)** — complete documentation context generated at build time, ready for any LLM.
-- **Agent Skills** — modular instruction sets for LLMs and IDE agents ([docmd-skills](https://github.com/docmd-io/docmd-skills)).
-- **Copy as Markdown / Copy Context** — one-click buttons in the browser, optimised for pasting into AI chat.
+- **Context (`llms.txt` / `llms-full.txt`)** — complete documentation context generated at build time.
+- **Agent Skills** — modular instruction sets for LLMs and IDE agents.
+- **Open Knowledge Format (OKF)** — structured, multi-locale knowledge bundles for AI systems.
+- **Copy as Markdown / Copy Context** — one-click context extraction directly from the browser.
 
 ### Built to scale
 - Internationalisation with multi-locale builds (per-locale search index, llms, okf, hreflang)
@@ -192,6 +215,7 @@ Core functionality is powered by a robust plugin system. The essentials are incl
 
 | Plugin | Status | Description |
 | :--- | :---: | :--- |
+| `ai` | Core | RAG-powered AI Assistant with BYOK, local providers, and Cloud Relay |
 | `search` | Core | Offline full-text search (keyword + optional semantic via `docmd-search`) |
 | `seo` | Core | SEO tags and Open Graph metadata |
 | `sitemap` | Core | Generates `sitemap.xml` |
@@ -243,10 +267,6 @@ my-docs/
 ## Live Editor
 
 A browser-based editor for writing and previewing docs — no local setup required.
-
-<p>
-  <img alt="docmd live editor preview" width="820" src="https://docs.docmd.io/assets/previews/live-editor-preview.webp">
-</p>
 
 **Try it at [live.docmd.io](https://live.docmd.io)**
 

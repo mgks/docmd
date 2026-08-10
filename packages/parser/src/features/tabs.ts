@@ -13,7 +13,7 @@
  */
 
 import { renderIcon } from '../utils/icon-renderer.js';
-import { parseTitleAndIcon } from '../utils/container-helper.js';
+import { parseTitleAndIcon, stripContainerComment } from '../utils/container-helper.js';
 
 function smartDedent(str) {
   const lines = str.split('\n');
@@ -47,9 +47,10 @@ function tabsRule(state: any, startLine: number, endLine: number, silent: boolea
   const start = state.bMarks[startLine] + state.tShift[startLine];
   const max = state.eMarks[startLine];
   const lineContent = state.src.slice(start, max).trim();
+  const cleanContent = stripContainerComment(lineContent);
 
   // Support both '::: tabs' and ':::tabs' (spaceless)
-  if (lineContent !== '::: tabs' && lineContent !== ':::tabs') return false;
+  if (cleanContent !== '::: tabs' && cleanContent !== ':::tabs') return false;
   if (silent) return true;
 
   let nextLine = startLine;
@@ -80,7 +81,7 @@ function tabsRule(state: any, startLine: number, endLine: number, silent: boolea
       const INLINE_CONTAINERS = /^:::\s*(tag|button|embed)\b/;
       if (nextContent.match(/^:::\s*[a-zA-Z]/) && !INLINE_CONTAINERS.test(nextContent)) {
         depth++;
-      } else if (nextContent.match(/^:::\s*$/)) {
+      } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
         depth--;
         if (depth === 0) {
           found = true;
@@ -99,26 +100,67 @@ function tabsRule(state: any, startLine: number, endLine: number, silent: boolea
     content += state.src.slice(lineStart, lineEnd) + '\n';
   }
 
-  // Parse "== tab" lines
+  // Parse tab items (supports both ::: tab and legacy == tab)
   const lines = content.split('\n');
   const tabs = [];
   let currentTab = null;
   let currentContentLines = [];
+  let nestedDepth = 0;
+  let inFence = false;
+  let innerFenceMarker = null;
+  const INLINE_CONTAINERS = /^:::\s*(tag|button|embed)\b/i;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
     const trimmedLine = rawLine.trim();
-    const tabMatch = trimmedLine.match(/^==\s*tab\s+(.*)/);
 
-    if (tabMatch) {
+    if (inFence) {
+      if (innerFenceMarker && trimmedLine.startsWith(innerFenceMarker)) {
+        inFence = false;
+        innerFenceMarker = null;
+      }
+      if (currentTab) {
+        currentContentLines.push(rawLine);
+      }
+      continue;
+    }
+
+    const matchFence = trimmedLine.match(/^(`{3,}|~{3,})/);
+    if (matchFence) {
+      inFence = true;
+      innerFenceMarker = matchFence[1];
+      if (currentTab) {
+        currentContentLines.push(rawLine);
+      }
+      continue;
+    }
+
+    const tabMatch = trimmedLine.match(/^(?::::\s*tab|==\s*tab)(?:\s+(.*))?$/i);
+
+    if (nestedDepth === 0 && (trimmedLine === ':::' || /^:::\s*(\/tab|endtab|\/tabs|endtabs)\b/i.test(trimmedLine))) {
+      if (currentTab) {
+        currentTab.content = smartDedent(currentContentLines.join('\n'));
+        tabs.push(currentTab);
+        currentTab = null;
+        currentContentLines = [];
+      }
+      continue;
+    }
+
+    if (nestedDepth === 0 && tabMatch) {
       if (currentTab) {
         currentTab.content = smartDedent(currentContentLines.join('\n'));
         tabs.push(currentTab);
       }
-      const { title, icon } = parseTitleAndIcon(tabMatch[1]);
-      currentTab = { title, icon, content: '' };
+      const { title, icon } = parseTitleAndIcon(tabMatch[1] || '');
+      currentTab = { title: title || 'Tab', icon, content: '' };
       currentContentLines = [];
     } else if (currentTab) {
+      if (trimmedLine.match(/^:::\s*[a-zA-Z]/) && !INLINE_CONTAINERS.test(trimmedLine)) {
+        nestedDepth++;
+      } else if (nestedDepth > 0 && (trimmedLine === ':::' || /^:::\s*\/[a-zA-Z]/i.test(trimmedLine))) {
+        nestedDepth--;
+      }
       currentContentLines.push(rawLine);
     }
   }

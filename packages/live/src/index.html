@@ -11,7 +11,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="generator" content="docmd v0.4.x">
+    <meta name="generator" content="docmd v0.9.1">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Docmd Live Editor</title>
     <meta name="description" content="Real-time Markdown preview and editor powered by docmd.">
@@ -66,7 +66,11 @@
                     <button onclick="loadPreset('math', this)">Math</button>
                 </div>
             </div>
-            <textarea id="input" spellcheck="false"></textarea>
+            <div class="editor-container">
+                <pre class="editor-highlight" id="highlightBg" aria-hidden="true"><code id="highlightCode"></code></pre>
+                <textarea id="input" spellcheck="false"></textarea>
+                <button id="copyBtn" class="copy-markdown-btn" type="button" title="Copy Markdown">Copy</button>
+            </div>
         </div>
 
         <!-- Resizer Handle -->
@@ -92,29 +96,36 @@
     </div>
 
     <script>
-        const SNIPPETS = {
-            basics: `---\ntitle: Welcome to docmd\ndescription: The zero-config documentation engine\n---\n\n# Hello World\n\nThis is **docmd**. It turns Markdown folders into production-ready static sites with built-in search, i18n, theming, and an MCP server.\n\n::: card "Why docmd?" icon:zap\nThe core engine is **isomorphic** — the same parser runs in Node, the browser, and edge runtimes. Build thousands of pages in milliseconds.\n:::\n\n::: callout tip "Just starting?" icon:rocket\nRun \`npx @docmd/core init\` in an empty folder, then \`npx @docmd/core dev\` to see this live editor in action.\n:::`,
-
-            containers: `---\ntitle: Containers\n---\n\n# UI Components\n\n::: callout info "Five semantic types" icon:info\nCallouts isolate information that requires attention. Choose from \`info\`, \`tip\`, \`warning\`, \`danger\`, or \`success\`.\n:::\n\n::: callout warning "Breaking Change" icon:alert-triangle\n\`docmd.config.ts\` files are no longer supported in v0.8+. Migrate to \`docmd.config.json\` or \`docmd.config.js\`.\n:::\n\n::: card "Feature Highlight" icon:sparkles\nCards give content a distinct frame with optional title and icon. They support nested Markdown including code and buttons.\n\n::: button "Cards Reference" /containers/cards.md\n:::`,
-
-            tabs: `---\ntitle: Tabs\n---\n\n# Package Manager Instructions\n\n::: tabs\n\n== tab "pnpm" icon:package\n\`\`\`bash\npnpm add @docmd/core\n\`\`\`\n\n== tab "npm" icon:package\n\`\`\`bash\nnpm install @docmd/core\n\`\`\`\n\n== tab "yarn" icon:package\n\`\`\`bash\nyarn add @docmd/core\n\`\`\`\n\n== tab "bun" icon:package\n\`\`\`bash\nbun add @docmd/core\n\`\`\`\n\n:::`,
-
-            steps: `---\ntitle: Steps\n---\n\n# Quick Start\n\n::: steps\n\n1. **Initialise Project**\n   Run \`npx @docmd/core init\` to scaffold your directory with a starter \`docmd.config.json\`.\n\n2. **Author Content**\n   Write your docs in standard Markdown. The parser auto-discovers \`.md\` files in your \`src/\` directory.\n\n3. **Build & Deploy**\n   Run \`npx @docmd/core build\` to produce a static site under \`./site\`, ready for any CDN.\n\n:::`,
-
-            mermaid: `---\ntitle: Diagrams\n---\n\n# Mermaid.js Support\n\n\`\`\`mermaid\ngraph TD\n  Start((Start)) --> Process1[Process One]\n  Process1 --> Decision{Is it valid?}\n  Decision -- No --> Error[Error Handling]\n  Decision -- Yes --> Process2[Process Two]\n  Process2 --> Subgraph1\n  subgraph Subgraph1 [Critical Path]\n  Step1[Step 1] --> Step2[Step 2]\n  end\n  Step2 --> End((End))\n  Error --> End\n\`\`\``,
-
-            math: `---\ntitle: Math\n---\n\n# KaTeX Math Support\n\nInline math with single dollar signs: $E = mc^2$\n\nBlock equations with double dollar signs:\n\n$$\n\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}\n$$\n\n$$\n\\sum_{i=1}^n i^2 = \\frac{n(n+1)(2n+1)}{6}\n$$\n\nThe quadratic formula: $x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$`
-        };
+        const SNIPPETS = {};
 
         const input = document.getElementById('input');
         const preview = document.getElementById('preview');
+        const highlightBg = document.getElementById('highlightBg');
+        const highlightCode = document.getElementById('highlightCode');
+
+        function updateEditorHighlight() {
+            if (window.docmd && typeof window.docmd.highlight === 'function') {
+                const text = input.value || '';
+                const res = docmd.highlight(text);
+                highlightCode.innerHTML = res.value + (text.endsWith('\n') ? '\n' : '');
+            } else {
+                highlightCode.textContent = (input.value || '') + (input.value.endsWith('\n') ? '\n' : '');
+            }
+        }
+
+        input.addEventListener('scroll', () => {
+            highlightBg.scrollTop = input.scrollTop;
+            highlightBg.scrollLeft = input.scrollLeft;
+        });
 
         // Initialize with Basics
         if (!input.value) input.value = SNIPPETS.basics;
+        updateEditorHighlight();
 
         function loadPreset(key, btn) {
             if (SNIPPETS[key]) {
                 input.value = SNIPPETS[key];
+                updateEditorHighlight();
                 if (btn) {
                     document.querySelectorAll('.presets-bar button').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
@@ -159,8 +170,46 @@
 
         let timer;
         input.addEventListener('input', () => {
+            updateEditorHighlight();
             clearTimeout(timer);
             timer = setTimeout(render, 300);
+        });
+
+        // Copy Markdown Button Handler
+        const copyBtn = document.getElementById('copyBtn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(input.value);
+                    copyBtn.textContent = 'Copied !';
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => {
+                        copyBtn.textContent = 'Copy';
+                        copyBtn.classList.remove('copied');
+                    }, 2000);
+                } catch (err) {
+                    console.error('Failed to copy markdown:', err);
+                }
+            });
+        }
+
+        // Auto Scroll Sync (textarea -> iframe preview) - Disabled by default
+        const ENABLE_SCROLL_SYNC = false;
+        let isSyncingInputScroll = false;
+        input.addEventListener('scroll', () => {
+            if (!ENABLE_SCROLL_SYNC || isSyncingInputScroll) return;
+            isSyncingInputScroll = true;
+            const maxInputScroll = input.scrollHeight - input.clientHeight;
+            if (maxInputScroll > 0 && preview.contentWindow && preview.contentWindow.document) {
+                const ratio = input.scrollTop / maxInputScroll;
+                const win = preview.contentWindow;
+                const doc = win.document.documentElement;
+                const maxPreviewScroll = doc.scrollHeight - win.innerHeight;
+                if (maxPreviewScroll > 0) {
+                    win.scrollTo({ top: ratio * maxPreviewScroll, behavior: 'instant' });
+                }
+            }
+            requestAnimationFrame(() => { isSyncingInputScroll = false; });
         });
 
         // Preview pane: light/dark toggle. Mutates the iframe's

@@ -70,6 +70,9 @@
     --glow-color: rgba(6, 138, 213, 0.10);
     --glow-color-strong: rgba(6, 138, 213, 0.18);
     --halo-soft: 0 0 0 4px rgba(6, 138, 213, 0.10);
+    --docmd-tooltip-bg: #1e293b;
+    --docmd-tooltip-color: #f8fafc;
+    --docmd-tooltip-border: #334155;
 }
 
 :root[data-theme=dark] {
@@ -94,6 +97,9 @@
     --glow-color: rgba(56, 189, 248, 0.18);
     --glow-color-strong: rgba(56, 189, 248, 0.28);
     --halo-soft: 0 0 0 4px rgba(56, 189, 248, 0.18);
+    --docmd-tooltip-bg: #0f172a;
+    --docmd-tooltip-color: #f8fafc;
+    --docmd-tooltip-border: #334155;
     color-scheme: dark;
 }
 
@@ -415,7 +421,6 @@ span.collapse-icon-wrapper .collapse-icon {
 .sidebar nav li a.active {
     font-weight: 600;
     color: var(--link-color)
-
 }
 
 .copy-code-button:hover,
@@ -549,7 +554,6 @@ img {
     flex-direction: column;
     min-width: 0;
     min-height: 100vh;
-    transition: margin-left 0.3s ease;
 }
 
 .header-left,
@@ -566,7 +570,7 @@ img {
     border-bottom: 1px solid var(--header-border);
     position: sticky;
     top: var(--header-top-offset);
-    z-index: 50;
+    z-index: 1100;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     gap: 0.5rem
@@ -574,7 +578,7 @@ img {
 
 @media (min-width: 769px) {
     body.sidebar-collapsible .page-header {
-        z-index: 150;
+        z-index: 1150;
     }
 }
 
@@ -755,7 +759,7 @@ html {
 }
 
 .docmd-menubar {
-    z-index: 200;
+    z-index: 1200;
     height: var(--menubar-h);
     background-color: var(--menubar-bg);
     border-bottom: 1px solid var(--menubar-border);
@@ -783,7 +787,7 @@ body.has-menubar-top .docmd-menubar {
 body.has-menubar-header .docmd-menubar {
     position: sticky;
     top: 0;
-    z-index: 250;
+    z-index: 1250;
 }
 
 .menubar-inner {
@@ -1167,7 +1171,7 @@ blockquote.docmd-embed {
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     list-style: none;
-    z-index: 100;
+    z-index: 1300;
     opacity: 0;
     visibility: hidden;
     transition: all 0.2s ease;
@@ -1577,14 +1581,23 @@ html[data-theme=dark] .theme-toggle-button .icon-sun {
 
 }
 
-.callout-info    { --callout-color: #3498db; }
-.callout-warning {--callout-color: #f39c12;}
+.callout-info {
+    --callout-color: #3498db;
+}
+
+.callout-warning {
+    --callout-color: #f39c12;
+}
+
 .callout-success,
-.callout-tip     {
+.callout-tip {
     --callout-color: #2ecc71;
 
 }
-.callout-danger  { --callout-color: #e74c3c; }
+
+.callout-danger {
+    --callout-color: #e74c3c;
+}
 
 .callout-title {
     font-weight: 700;
@@ -1596,8 +1609,8 @@ html[data-theme=dark] .theme-toggle-button .icon-sun {
 
 .card {
     transition: transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-                box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
-                border-color 0.18s ease;
+        box-shadow 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.18s ease;
     will-change: transform;
 }
 
@@ -2042,13 +2055,12 @@ button,
 .docmd-button,
 .docmd-tag {
     transition: color 0.15s ease, background-color 0.15s ease,
-                border-color 0.15s ease, transform 0.15s ease,
-                box-shadow 0.15s ease, opacity 0.15s ease;
+        border-color 0.15s ease, transform 0.15s ease,
+        box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .page-footer {
     border-top: 1px solid var(--border-color)
-
 }
 
 .page-navigation {
@@ -2109,16 +2121,16 @@ button,
     margin-bottom: .25rem
 }
 
-.next-page > span,
-.prev-page > span {
+.next-page>span,
+.prev-page>span {
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap
 }
 
-.next-page > span > strong,
-.prev-page > span > strong {
+.next-page>span>strong,
+.prev-page>span>strong {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap
@@ -2469,10 +2481,12 @@ img.lightbox {
     border-radius: var(--radius-md);
     background-color: var(--link-color);
     font-weight: 500;
+    font-size: initial;
     transition: background-color .15s ease, transform .15s ease, box-shadow .15s ease, filter .15s ease;
     border: medium;
     cursor: pointer;
     width: fit-content;
+    vertical-align: middle;
 }
 
 .docmd-button:hover {
@@ -2494,6 +2508,14 @@ img.lightbox {
     vertical-align: middle;
 }
 
+a.docmd-tag-link {
+    display: inline-flex;
+    width: fit-content;
+    max-width: 100%;
+    text-decoration: none;
+    vertical-align: middle;
+}
+
 .docmd-tag {
     display: inline-flex;
     align-items: center;
@@ -2506,6 +2528,8 @@ img.lightbox {
     vertical-align: middle;
     margin: 0 0.2em;
     transition: all 0.2s;
+    width: fit-content;
+    max-width: 100%;
 }
 
 a.docmd-tag-link .docmd-tag:hover {
@@ -2516,6 +2540,79 @@ a.docmd-tag-link .docmd-tag:hover {
 .docmd-tag .tag-icon {
     display: inline-block;
     margin-right: 5px;
+}
+
+.docmd-tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dashed var(--link-color, #3b82f6);
+    cursor: help;
+    color: var(--text-heading);
+    font-weight: 500;
+}
+
+.docmd-tooltip.docmd-tooltip-link,
+a.docmd-tooltip {
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.docmd-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background-color: var(--docmd-tooltip-bg, #1e293b);
+    color: var(--docmd-tooltip-color, #ffffff) !important;
+    border: 1px solid var(--docmd-tooltip-border, #334155);
+    padding: 0.35em 0.65em;
+    border-radius: var(--radius-md, 6px);
+    font-size: 0.78em;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+    z-index: 900;
+}
+
+.docmd-tooltip.docmd-tooltip-link::after,
+a.docmd-tooltip::after {
+    pointer-events: auto;
+    padding-bottom: 0.5em;
+}
+
+.docmd-tooltip::before {
+    content: '';
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0 5px;
+    border-style: solid;
+    border-color: var(--docmd-tooltip-bg, #1e293b) transparent transparent transparent;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s;
+    pointer-events: none;
+    z-index: 900;
+}
+
+.docmd-container.mermaid-container .mermaid-wrapper,
+.docmd-container.mermaid-container .mermaid {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.docmd-tooltip:hover::after,
+.docmd-tooltip:hover::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
 }
 
 .callout-title {
@@ -2599,7 +2696,7 @@ hr {
     position: fixed;
     inset: 0;
     background-color: #00000080;
-    z-index: 1000;
+    z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -3295,7 +3392,7 @@ code {
 }
 
 .grids .grid-item .card {
-  height: stretch;
+    height: stretch;
 }
 
 ul.contains-task-list {
@@ -3563,274 +3660,288 @@ ul.contains-task-list>li::marker {
 }
 
 .docmd-banner {
-  width: 100%;
-  border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-  font-size: 0.9rem;
-  line-height: 1.5;
-  background-color: var(--bg-color, #fff);
-  color: var(--text-color, #1f2937);
+    width: 100%;
+    border-bottom: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+    font-size: 0.9rem;
+    line-height: 1.5;
+    background-color: var(--bg-color, #fff);
+    color: var(--text-color, #1f2937);
 }
 
 .docmd-banner--info {
-  background-color: color-mix(in srgb, var(--accent-color, #3b82f6) 8%, var(--bg-color, #fff));
-  border-bottom-color: color-mix(in srgb, var(--accent-color, #3b82f6) 20%, transparent);
+    background-color: color-mix(in srgb, var(--accent-color, #3b82f6) 8%, var(--bg-color, #fff));
+    border-bottom-color: color-mix(in srgb, var(--accent-color, #3b82f6) 20%, transparent);
 }
 
 .docmd-banner--success {
-  background-color: color-mix(in srgb, #10b981 8%, var(--bg-color, #fff));
-  border-bottom-color: color-mix(in srgb, #10b981 20%, transparent);
+    background-color: color-mix(in srgb, #10b981 8%, var(--bg-color, #fff));
+    border-bottom-color: color-mix(in srgb, #10b981 20%, transparent);
 }
 
 .docmd-banner--warning {
-  background-color: color-mix(in srgb, #f59e0b 10%, var(--bg-color, #fff));
-  border-bottom-color: color-mix(in srgb, #f59e0b 25%, transparent);
+    background-color: color-mix(in srgb, #f59e0b 10%, var(--bg-color, #fff));
+    border-bottom-color: color-mix(in srgb, #f59e0b 25%, transparent);
 }
 
 .docmd-banner--danger {
-  background-color: color-mix(in srgb, #ef4444 8%, var(--bg-color, #fff));
-  border-bottom-color: color-mix(in srgb, #ef4444 20%, transparent);
+    background-color: color-mix(in srgb, #ef4444 8%, var(--bg-color, #fff));
+    border-bottom-color: color-mix(in srgb, #ef4444 20%, transparent);
 }
 
 .docmd-banner__inner {
-  max-width: var(--content-max-width, 1400px);
-  margin: 0 auto;
-  padding: 0.65rem 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+    max-width: var(--content-max-width, 1400px);
+    margin: 0 auto;
+    padding: 0.65rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .docmd-banner__icon {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  color: var(--text-heading, inherit);
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    color: var(--text-heading, inherit);
 }
 
 .docmd-banner__icon svg {
-  width: 1.1em;
-  height: 1.1em;
+    width: 1.1em;
+    height: 1.1em;
 }
 
 .docmd-banner__content {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex: 1 1 auto;
-  flex-wrap: wrap;
-  min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    min-width: 0;
 }
 
 .docmd-banner__text {
-  word-break: break-word;
+    word-break: break-word;
 }
 
 .docmd-banner__text code {
-  font-size: 0.85em;
-  padding: 0.05em 0.3em;
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 4px;
+    font-size: 0.85em;
+    padding: 0.05em 0.3em;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
 }
 
 .docmd-banner__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 500;
-  text-decoration: none;
-  color: inherit;
-  border-bottom: 1px solid currentColor;
-  padding-bottom: 1px;
-  white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 500;
+    text-decoration: none;
+    color: inherit;
+    border-bottom: 1px solid currentColor;
+    padding-bottom: 1px;
+    white-space: nowrap;
 }
 
 .docmd-banner__link:hover {
-  opacity: 0.85;
+    opacity: 0.85;
 }
 
 .docmd-banner__link-icon {
-  width: 0.95em;
-  height: 0.95em;
+    width: 0.95em;
+    height: 0.95em;
 }
 
 .docmd-banner__close {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  background-color: transparent;
-  border: none;
-  border-radius: 4px;
-  color: inherit;
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
 .docmd-banner__close:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.05);
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .docmd-banner__close svg {
-  width: 1em;
-  height: 1em;
+    width: 1em;
+    height: 1em;
 }
 
 .docmd-banner[hidden] {
-  display: none;
+    display: none;
 }
 
 .docmd-cookie-banner {
-  position: fixed;
-  z-index: 9999;
-  font-size: 0.9rem;
-  line-height: 1.5;
-  color: var(--text-color, #1f2937);
-  background-color: var(--bg-color, #fff);
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-  border-radius: var(--radius-md, 8px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  max-width: min(560px, calc(100vw - 2rem));
-  animation: docmd-cookie-banner-in 0.25s ease-out;
+    position: fixed;
+    z-index: 9999;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--text-color, #1f2937);
+    background-color: var(--bg-color, #fff);
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    max-width: min(560px, calc(100vw - 2rem));
+    animation: docmd-cookie-banner-in 0.25s ease-out;
 }
 
 .docmd-cookie-banner--bottom {
-  left: 50%;
-  bottom: 1.5rem;
-  transform: translateX(-50%);
+    left: 50%;
+    bottom: 1.5rem;
+    transform: translateX(-50%);
 }
 
 .docmd-cookie-banner--bottom-left {
-  left: 1.5rem;
-  bottom: 1.5rem;
+    left: 1.5rem;
+    bottom: 1.5rem;
 }
 
 .docmd-cookie-banner--bottom-right {
-  right: 1.5rem;
-  bottom: 1.5rem;
+    right: 1.5rem;
+    bottom: 1.5rem;
 }
 
 .docmd-cookie-banner--center {
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .docmd-cookie-banner__inner {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1rem 1.25rem;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
 }
 
 .docmd-cookie-banner__content {
-  flex: 1 1 240px;
-  min-width: 0;
+    flex: 1 1 240px;
+    min-width: 0;
 }
 
 .docmd-cookie-banner__message {
-  margin: 0;
-  color: var(--text-color, inherit);
+    margin: 0;
+    color: var(--text-color, inherit);
 }
 
 .docmd-cookie-banner__policy {
-  display: inline-block;
-  margin-top: 0.35rem;
-  font-size: 0.85em;
-  text-decoration: underline;
-  color: inherit;
-  opacity: 0.85;
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.85em;
+    text-decoration: underline;
+    color: inherit;
+    opacity: 0.85;
 }
 
 .docmd-cookie-banner__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
 }
 
 .docmd-cookie-banner__btn {
-  appearance: none;
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
-  background-color: var(--bg-color, #fff);
-  color: var(--text-color, inherit);
-  border-radius: var(--radius-sm, 6px);
-  padding: 0.4rem 0.85rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    appearance: none;
+    border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
+    background-color: var(--bg-color, #fff);
+    color: var(--text-color, inherit);
+    border-radius: var(--radius-sm, 6px);
+    padding: 0.4rem 0.85rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .docmd-cookie-banner__btn--accept {
-  background-color: var(--accent-color, #3b82f6);
-  border-color: var(--accent-color, #3b82f6);
-  color: #fff;
+    background-color: var(--accent-color, #3b82f6);
+    border-color: var(--accent-color, #3b82f6);
+    color: #fff;
 }
 
 .docmd-cookie-banner__btn--accept:hover {
-  filter: brightness(0.95);
+    filter: brightness(0.95);
 }
 
 .docmd-cookie-banner__btn--decline:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+    background-color: rgba(0, 0, 0, 0.04);
 }
 
 .docmd-cookie-banner__close {
-  appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 0.25rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0.5;
-  color: inherit;
-  border-radius: 4px;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+    appearance: none;
+    background-color: transparent;
+    border: none;
+    padding: 0.25rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+    color: inherit;
+    border-radius: 4px;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
 }
 
 .docmd-cookie-banner__close:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.05);
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.05);
 }
 
 .docmd-cookie-banner__close svg {
-  width: 1em;
-  height: 1em;
+    width: 1em;
+    height: 1em;
 }
 
 .docmd-cookie-banner[hidden] {
-  display: none;
+    display: none;
 }
 
 @keyframes docmd-cookie-banner-in {
-  from { opacity: 0; transform: translate(-50%, 1rem); }
-  to   { opacity: 1; transform: translate(-50%, 0); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, 1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
 }
 
 .docmd-cookie-banner--bottom-left,
 .docmd-cookie-banner--bottom-right {
-  animation-name: docmd-cookie-banner-in-corner;
+    animation-name: docmd-cookie-banner-in-corner;
 }
 
 @keyframes docmd-cookie-banner-in-corner {
-  from { opacity: 0; transform: translateY(1rem); }
-  to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .sidebar nav li a:hover {
     background-color: var(--sidebar-link-active-bg);
 }
 
-.callout code {
+.callout code:not(.callout pre code) {
     background-color: color-mix(in srgb, var(--callout-color, var(--code-bg)) 25%, transparent);
 }
 

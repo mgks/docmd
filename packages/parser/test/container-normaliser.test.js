@@ -389,7 +389,7 @@ test('F5: 5-level nested callouts → already balanced, normalisation is a no-op
 
 // Build a fresh processor per test so module-level caches don't leak.
 function freshProcessor() {
-  return createMarkdownProcessor({}, () => {});
+  return createMarkdownProcessor({}, () => { });
 }
 
 test('integration: plain markdown renders unchanged', async () => {
@@ -811,4 +811,219 @@ test('F6: mismatched fence markers (``` open vs ~~~ close) do not close the fenc
   const r = normaliseContainers(src);
   assert.equal(r.warnings.length, 0);
   assert.equal(r.source, src);
+});
+
+// ─────────────────────────────────────────────────────────────────────
+// 9. Slash and End closing container tags & Issue #187 HTML rendering
+// ─────────────────────────────────────────────────────────────────────
+
+test('slash and end closing tags match corresponding open container by name', () => {
+  const src = [
+    '::: callout info "Callout Title"',
+    'body text',
+    '::: /callout',
+    '',
+    '::: card "Card Title"',
+    'card body',
+    '::: endcard'
+  ].join('\n');
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '::: callout info "Callout Title"',
+    'body text',
+    ':::',
+    '',
+    '::: card "Card Title"',
+    'card body',
+    ':::'
+  ].join('\n'));
+});
+
+test('Issue #187: HTML blocks with blank lines render as HTML without breaking into code/plain text', async () => {
+  const md = freshProcessor();
+  const htmlInput = [
+    '<div class="hero">',
+    '    <h1>Hero Heading</h1>',
+    '',
+    '    <p>Hero paragraph text</p>',
+    '',
+    '    <div class="actions">',
+    '        <a href="#">Button</a>',
+    '    </div>',
+    '</div>'
+  ].join('\n');
+
+  const r = await processContentAsync(htmlInput, md, {}, { filePath: 'no-style.md' });
+  assert.match(r.htmlContent, /<div class="hero">/);
+  assert.match(r.htmlContent, /<h1>Hero Heading<\/h1>/);
+  assert.match(r.htmlContent, /<p>Hero paragraph text<\/p>/);
+  assert.match(r.htmlContent, /<div class="actions">/);
+  assert.match(r.htmlContent, /<\/div>/);
+  // Ensure it did NOT get converted to indented code block or escaped plain text
+  assert.doesNotMatch(r.htmlContent, /<pre><code>&lt;div class="actions"&gt;/);
+});
+
+test('sub-containers ::: tab, ::: step, ::: log render correctly and ignore inline comments', async () => {
+  const md = freshProcessor();
+  const input = [
+    '::: tabs # main navigation tabs',
+    '::: tab "JavaScript" icon:code-2 # first tab',
+    'console.log("Hello JS");',
+    '::: /tab # end first tab',
+    '::: tab "TypeScript" icon:file-code # second tab',
+    'console.log("Hello TS");',
+    '::: /tab',
+    '::: /tabs',
+    '',
+    '::: steps # installation guide',
+    '::: step "Clone Repo" # step 1',
+    'git clone https://github.com/docmd-io/docmd',
+    '::: /step',
+    '::: step "Build Project"',
+    'pnpm build',
+    '::: /step',
+    '::: /steps',
+    '',
+    '::: changelog # release history',
+    '::: log "v1.0.0 (2026-01-01)" # initial release',
+    'Initial launch.',
+    '::: /log',
+    '::: /changelog'
+  ].join('\n');
+
+  const r = await processContentAsync(input, md, {}, { filePath: 'test-containers.md' });
+
+  assert.match(r.htmlContent, /docmd-tabs/);
+  assert.match(r.htmlContent, /JavaScript/);
+  assert.match(r.htmlContent, /TypeScript/);
+  assert.match(r.htmlContent, /steps-list/);
+  assert.match(r.htmlContent, /Clone Repo/);
+  assert.match(r.htmlContent, /Build Project/);
+  assert.match(r.htmlContent, /changelog-timeline/);
+  assert.match(r.htmlContent, /v1\.0\.0/);
+});
+
+test('smart self-closing container stripping logs info warning and removes stray ::: /tag', () => {
+  const src = [
+    '::: tag "v1.0" color:#3b82f6',
+    '::: /tag'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.source, '::: tag "v1.0" color:#3b82f6');
+  assert.equal(r.warnings.length, 1);
+  assert.match(r.warnings[0].message, /Self-closing container <tag> does not require a closing tag/);
+});
+
+test('heading inside container is preserved when explicit closing tag exists ahead', () => {
+  const src = [
+    '::: card "Feature Highlight" icon:sparkles',
+    'Cards give content a distinct frame.',
+    '',
+    '# Heading inside card',
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success',
+    '::: /card'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '::: card "Feature Highlight" icon:sparkles',
+    'Cards give content a distinct frame.',
+    '',
+    '# Heading inside card',
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success',
+    ':::'
+  ].join('\n'));
+});
+
+test('self-closing containers: dedicated lines emit <br> while same line stays inline', async () => {
+  const md = createMarkdownProcessor();
+
+  // 1. Dedicated adjacent lines -> separated by <br>
+  const srcDedicated = [
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success'
+  ].join('\n');
+  const resDedicated = await processContentAsync(srcDedicated, md, {}, { filePath: 'test.md' });
+  assert.match(resDedicated.htmlContent, /class="docmd-button"[^>]*>GitHub<\/a><br>\s*<span class="docmd-tag"/);
+
+  // 2. Same line -> no <br> inserted between inline elements
+  const srcSameLine = '::: button "GitHub" url:"https://github.com" :::/button ::: tag "v0.9.1" style:success :::/tag';
+  const resSameLine = await processContentAsync(srcSameLine, md, {}, { filePath: 'test.md' });
+  assert.match(resSameLine.htmlContent, /class="docmd-button"[^>]*>GitHub<\/a>\s*<span class="docmd-tag"/);
+  assert.equal(resSameLine.htmlContent.includes('<br>'), false);
+});
+
+test('normaliseContainers: skips containers inside frontmatter at top of document', () => {
+  const src = [
+    '---',
+    'title: "Frontmatter Title"',
+    'description: "Usage of ::: tip in docmd"',
+    'note: "::: card is not parsed here"',
+    '---',
+    '',
+    '::: card "Real Card"',
+    'body',
+    '::: /card'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '---',
+    'title: "Frontmatter Title"',
+    'description: "Usage of ::: tip in docmd"',
+    'note: "::: card is not parsed here"',
+    '---',
+    '',
+    '::: card "Real Card"',
+    'body',
+    ':::'
+  ].join('\n'));
+});
+
+test('normaliseContainers: horizontal rule --- in body is NOT treated as frontmatter', () => {
+  const src = [
+    '# Heading',
+    '',
+    '---',
+    '',
+    '::: card "Card After HR"',
+    'body'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  // Card after HR is unclosed at EOF so normaliser auto-closes it
+  assert.equal(r.warnings.length, 1);
+  assert.equal(r.warnings[0].severity, 'error');
+  assert.match(r.warnings[0].message, /Unclosed `<card>`/);
+});
+
+test('hero slider layout: explicit ::: /slide and ::: /hero tags render slides cleanly without ::: leak', async () => {
+  const md = freshProcessor();
+  const src = [
+    '::: hero layout:slider # Interactive slider container',
+    '::: slide # Panel 1',
+    '# Isomorphic Core Engine',
+    'Renders statically and executes client-side seamlessly.',
+    '::: /slide',
+    '',
+    '::: slide # Panel 2',
+    '# AI Context Optimisation',
+    'Structure-aware parsing for LLM agents.',
+    '::: /slide',
+    '::: /hero'
+  ].join('\n');
+
+  const result = await processContentAsync(src, md, {}, { filePath: 'hero.md' });
+  assert.ok(result.htmlContent.includes('<div class="hero-slide">'));
+  assert.ok(result.htmlContent.includes('Isomorphic Core Engine'));
+  assert.ok(result.htmlContent.includes('AI Context Optimisation'));
+  // Ensure closing tag ':::' is not leaked into paragraph text
+  assert.ok(!result.htmlContent.includes('<p>:::</p>'));
+  assert.ok(!result.htmlContent.includes(':::'));
 });

@@ -143,15 +143,108 @@ export function indentOf(line: string): number {
  *   close  — bare `:::` with optional surrounding whitespace.
  *   other  — anything else, passed through verbatim.
  */
+/**
+ * Classify a single source line as `open`, `close`, or `other`.
+ *
+ *   open   — `::: <name>...` where `<name>` starts with a letter.
+ *            Self-closing names (`button`, `tag`, `embed`) are still
+ *            classified as `open` — the algorithm distinguishes them via
+ *            the SELF_CLOSING_CONTAINER_NAMES set, not here.
+ *   close  — bare `:::`, `::: /<name>`, `::: end<name>`, or `::: end`.
+ *   other  — anything else, passed through verbatim.
+ */
 export function classifyLine(line: string): ClassifiedLine {
-  if (/^\s*:::\s*[a-zA-Z]/.test(line)) {
-    const m = line.match(/^\s*:::\s*([a-zA-Z][\w-]*)/);
-    return { kind: 'open', name: m ? m[1] : undefined };
+  const trimmed = line.trim();
+
+  if (trimmed.startsWith('::::') && !trimmed.match(/^:{3,}\s*(?:\/|end)/i)) {
+    return { kind: 'other' };
   }
-  if (/^\s*:::\s*$/.test(line)) {
-    return { kind: 'close' };
+
+  const colMatch = trimmed.match(/^:{3,}\s*(.*)$/);
+  if (!colMatch) return { kind: 'other' };
+
+  let rest = colMatch[1].trim();
+
+  // Strip inline comments (# ...) if preceded by space or tab
+  const commentIdx = rest.search(/(^|\s+)#.*/);
+  if (commentIdx !== -1) {
+    rest = rest.slice(0, commentIdx).trim();
   }
+
+  // Strip extra colons left at start of rest (e.g. from 4+ colon closes like ::::/tag)
+  rest = rest.replace(/^:+/, '').trim();
+
+  // Bare ::: (or ::::) or ::: /<name> or ::: end<name> or ::: end
+  if (rest === '' || rest.startsWith('/') || /^end\b/i.test(rest) || /^end[_-]?\w+$/i.test(rest)) {
+    const name = rest.replace(/^(\/|end[_-]?)/i, '').trim().split(/\s+/)[0];
+    return name ? { kind: 'close', name } : { kind: 'close' };
+  }
+
+  // Open tag candidate: ::: <name> [args] or :::name [args]
+  const openMatch = rest.match(/^([a-zA-Z][\w-]*)(?:\s+(.*))?$/);
+  if (openMatch) {
+    return { kind: 'open', name: openMatch[1] };
+  }
+
   return { kind: 'other' };
+}
+
+/**
+ * Look ahead in source lines to check if an open container frame has a matching
+ * closing tag (`:::`, `::: /<name>`, etc.) further down in the document.
+ */
+function hasMatchingCloseAhead(lines: string[], startIdx: number, frame: OpenFrame): boolean {
+  let depth = 0;
+  let inFence = false;
+  let fenceMarker: string | null = null;
+
+  for (let j = startIdx; j < lines.length; j++) {
+    const line = lines[j];
+    if (inFence) {
+      if (/^\s*(```+|~~~+)/.test(line) && line.trimStart().startsWith(fenceMarker!)) {
+        inFence = false;
+        fenceMarker = null;
+      }
+      continue;
+    }
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      inFence = true;
+      fenceMarker = fenceMatch[1][0];
+      continue;
+    }
+
+    const cls = classifyLine(line);
+
+    if (cls.kind === 'open') {
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
+        continue;
+      }
+      if (cls.name && cls.name.toLowerCase() === frame.name.toLowerCase()) {
+        depth++;
+      }
+      continue;
+    }
+
+    if (cls.kind === 'close') {
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
+        continue;
+      }
+
+      const isNameMatch = Boolean(cls.name && cls.name.toLowerCase() === frame.name.toLowerCase());
+      const isIndentMatch = !cls.name && indentOf(line) <= frame.indent;
+
+      if (isNameMatch || isIndentMatch) {
+        if (depth > 0) {
+          depth--;
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -183,9 +276,11 @@ export function normaliseContainers(
   const stack: OpenFrame[] = [];
   const warnings: NormaliserWarning[] = [];
 
-  // Fenced code block tracking — see the in-loop comment below.
+  // Fenced code block & frontmatter tracking — see the in-loop comment below.
   let inFence = false;
   let fenceMarker: string | null = null;
+  let inFrontmatter = false;
+  let hasSeenContent = false;
 
   const recordWarning = (w: NormaliserWarning): void => {
     warnings.push(w);
@@ -194,23 +289,31 @@ export function normaliseContainers(
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const cls = classifyLine(line);
     const indent = indentOf(line);
+    const trimmed = line.trim();
 
-    // Fenced code block tracking. The normaliser must not interpret
-    // `:::` lines that appear inside a ``` fence as container opens or
-    // closes — they are literal text in a code listing. Without this
-    // check, any docs page that shows a `::: card ... :::` example
-    // inside a markdown code fence triggers a spurious "Unclosed
-    // <card>" error (the fence-opened line is classified as an open,
-    // pushed on the stack, and never matched because the matching :::
-    // is also inside the fence and would have been the close).
-    //
-    // We track the fence by its opening marker (``` or ~~~) and close
-    // on the same marker at the start of a later line. Tildes are
-    // included because CommonMark allows ~~~ as an alternative fence.
+    // 0. Skip frontmatter at the top of the document (--- or +++)
+    if (inFrontmatter) {
+      if (trimmed === '---' || trimmed === '+++') {
+        inFrontmatter = false;
+        hasSeenContent = true;
+      }
+      out.push(line);
+      continue;
+    }
+
+    if (!hasSeenContent) {
+      if (trimmed === '---' || trimmed === '+++') {
+        inFrontmatter = true;
+        out.push(line);
+        continue;
+      }
+      if (trimmed !== '') {
+        hasSeenContent = true;
+      }
+    }
+
     if (inFence) {
-      // Pass through verbatim; only check for the matching close marker.
       if (/^\s*(```+|~~~+)/.test(line) && line.trimStart().startsWith(fenceMarker!)) {
         inFence = false;
         fenceMarker = null;
@@ -226,11 +329,29 @@ export function normaliseContainers(
       continue;
     }
 
+    // Auto-close open containers before major section headings (e.g. #, ##, ###)
+    // ONLY if the container does not have a matching close tag later in the document.
+    if (/^\s*#{1,6}\s+/.test(line) && stack.length > 0) {
+      while (stack.length > 0) {
+        const topFrame = stack[stack.length - 1];
+        if (hasMatchingCloseAhead(lines, i + 1, topFrame)) {
+          break;
+        }
+        const frame = stack.pop()!;
+        recordWarning({
+          line: i + 1,
+          severity: 'info',
+          path: sourcePath,
+          message: `Unclosed <${frame.name}> from line ${frame.line} — auto-closed before heading at line ${i + 1}.`
+        });
+        out.push(' '.repeat(frame.indent) + ':::');
+      }
+    }
+
+    const cls = classifyLine(line);
+
     if (cls.kind === 'open') {
-      // The shim's classification only tells us the line LOOKS like an open;
-      // the SELF_CLOSING set is the source of truth for whether the body
-      // exists. Without this distinction `::: tag` would corrupt depth (F2).
-      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name)) {
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
         out.push(line);
         if (debug) {
           console.log(`[normaliser] ${sourcePath}:${i + 1} self-close <${cls.name}>`);
@@ -244,15 +365,35 @@ export function normaliseContainers(
     }
 
     if (cls.kind === 'close') {
-      // Walk the stack from innermost outward and find the first open whose
-      // indent is <= this close's indent. That is the container this `:::`
-      // logically closes — anything above it was closed implicitly by the
-      // same user gesture.
+      // Smart check: if closing tag targets a self-closing container name, strip it gracefully
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
+        recordWarning({
+          line: i + 1,
+          severity: 'info',
+          path: sourcePath,
+          message: `Self-closing container <${cls.name}> does not require a closing tag. Stripped unnecessary ::: /${cls.name}.`
+        });
+        continue;
+      }
       let matchIdx = -1;
-      for (let j = stack.length - 1; j >= 0; j--) {
-        if (stack[j].indent <= indent) {
-          matchIdx = j;
-          break;
+
+      // 1. Try matching by name if close specified a name
+      if (cls.name) {
+        for (let j = stack.length - 1; j >= 0; j--) {
+          if (stack[j].name.toLowerCase() === cls.name.toLowerCase()) {
+            matchIdx = j;
+            break;
+          }
+        }
+      }
+
+      // 2. Fallback to indent matching if no name match
+      if (matchIdx === -1) {
+        for (let j = stack.length - 1; j >= 0; j--) {
+          if (stack[j].indent <= indent) {
+            matchIdx = j;
+            break;
+          }
         }
       }
 
@@ -269,10 +410,6 @@ export function normaliseContainers(
       const closed = stack.splice(matchIdx);
       const outerIndent = closed[0].indent;
 
-      // Emit one `:::` per closed entry, all at the outer indent. The
-      // upstream parser's `smartDedent` collapses higher indents to the
-      // outer indent, so N closes at the outer indent correctly pop N
-      // entries from its depth counter.
       for (let k = 0; k < closed.length; k++) {
         out.push(' '.repeat(outerIndent) + ':::');
       }

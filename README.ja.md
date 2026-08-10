@@ -1,6 +1,6 @@
 <div align="right">
   <sup>
-    <a href="./README.md">EN</a> &nbsp;|&nbsp; <a href="./README.es.md">ES</a> &nbsp;|&nbsp; <a href="./README.de.md">DE</a> &nbsp;|&nbsp; <b>日本語</b> &nbsp;|&nbsp; <a href="./README.fr.md">FR</a> &nbsp;|&nbsp; <a href="./README.zh.md">中文</a>
+    <a href="./README.md">EN</a> &nbsp;|&nbsp; <a href="./README.de.md">DE</a> &nbsp;|&nbsp; <a href="./README.zh.md">中文</a> &nbsp;|&nbsp; <a href="./README.es.md">ES</a> &nbsp;|&nbsp; <b>日本語</b> &nbsp;|&nbsp; <a href="./README.fr.md">FR</a> &nbsp;|&nbsp; <a href="./README.ru.md">RU</a>
   </sup>
 </div>
 
@@ -16,36 +16,50 @@
 
   <br/>
 
-  <p><b>Markdown から数秒でプロダクション品質のドキュメントを。</b><br/>Zero config。AI ネイティブ。開発者のために。</p>
+  <p><b>Markdown から数秒で本番運用可能なドキュメントを生成。</b><br/>設定不要。AI ネイティブ。開発者のために設計。</p>
 
   <p>
     <a href="https://www.npmjs.com/package/@docmd/core"><img src="https://img.shields.io/npm/v/@docmd/core.svg?style=flat-square&color=CB3837" alt="npm version"></a>
-    <a href="https://www.npmjs.com/package/@docmd/core?activeTab=versions"><img src="https://img.shields.io/npm/dm/@docmd/core.svg?style=flat-square&color=38bd24" alt="monthly downloads"></a>
+    <a href="https://www.npmjs.com/package/@docmd/core?activeTab=versions"><img src="https://img.shields.io/npm/dm/@docmd/core.svg?style=flat-square&color=38bd24" alt="月間ダウンロード数"></a>
     <a href="https://github.com/docmd-io/docmd"><img src="https://img.shields.io/github/stars/docmd-io/docmd?style=flat-square&logo=github" alt="GitHub stars"></a>
-    <a href="https://github.com/docmd-io/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/docmd-io/docmd.svg?style=flat-square&color=A31F34" alt="license"></a>
+    <a href="https://github.com/docmd-io/docmd/blob/main/LICENSE"><img src="https://img.shields.io/github/license/docmd-io/docmd.svg?style=flat-square&color=A31F34" alt="ライセンス"></a>
   </p>
 
   <h4>
-    <a href="https://docmd.io">ウェブサイト</a> &nbsp;·&nbsp;
-    <a href="https://docs.docmd.io">ドキュメント</a> &nbsp;·&nbsp;
+    <a href="https://docmd.io">公式ウェブサイト</a> &nbsp;·&nbsp;
+    <a href="https://docs.docmd.io/ja/">ドキュメント</a> &nbsp;·&nbsp;
+    <a href="https://cloud.docmd.io">AI Cloud Relay</a> &nbsp;·&nbsp;
     <a href="https://live.docmd.io">ライブエディタ</a> &nbsp;·&nbsp;
     <a href="https://github.com/docmd-io/docmd-skills">Agent Skills</a> &nbsp;·&nbsp;
-    <a href="https://github.com/docmd-io/docmd/issues">バグ報告</a>
+    <a href="https://github.com/docmd-io/docmd/issues">バグを報告</a>
   </h4>
 
   <br/>
 
-  <a href="https://docs.docmd.io">
-    <img width="820" alt="docmd デフォルトテーマ — ライト/ダークモードのプレビュー" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
+  <a href="https://docs.docmd.io/ja/">
+    <img width="820" alt="docmd デフォルトテーマ — ライト＆ダークモード プレビュー" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
   </a>
 
   <br/><br/>
 
 </div>
 
+> ## ✦ 0.9.x — AI、自動化、セキュリティ
+>
+> 0.9.x シリーズは、docmd が AI 対応のドキュメントジェネレーターから、**人間と AI エージェントの両方**のために設計されたドキュメントプラットフォームへと拡張する重要なリリースです。
+>
+> このシリーズでは **AI アシスタント** が導入され、独自の API キー、ローカル AI、または独自のバックエンドを持たない静的サイト向けの **docmd Cloud Relay** を使用して、対話形式でドキュメントを検索できるようになります。また、MCP、生成された LLM コンテキスト、Agent Skills、構造化ナレッジフォーマットにより、docmd の AI エコシステムが拡張されます。
+>
+> AI に加え、コアなドキュメント体験、検索、デプロイ、開発者ワークフローの改善を継続しながら、**セキュリティ、プライバシー、自動化** に焦点を当てています。
+>
+> **現在のリリース:** `0.9.1`
+>
+> [0.9.1 を見る →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
+> [0.9.x ロードマップを追う →](https://github.com/orgs/docmd-io/discussions/10)
+
 ## クイックスタート
 
-Markdown ファイルがある任意のフォルダで docmd を実行 — インストール不要：
+Markdown ファイルが含まれる任意のフォルダで docmd を実行できます（インストール不要）:
 
 ```bash
 npx @docmd/core dev
@@ -55,64 +69,61 @@ npx @docmd/core dev
   <summary><b><code>http://localhost:3000</code> で開きます</b></summary><br>
 
 ```bash
-    _                 _
+    _                 _ 
   _| |___ ___ _____ _| |
  | . | . |  _|     | . |
  |___|___|___|_|_|_|___|
 
- v1.x.x
+ v0.9.0
 
-┌─ Build
-│  Engine          JS
-│  Source          docs/
-│  Output          site/
-│  Versions        2 (06, 05)
-│  Locales         7 (en, hi, zh, es, de, ja, fr)
-└──────────────────────────────────────────────────────────
-┌─ Data Indexing
-│  [ DONE ] Syncing git metadata
-│  [ DONE ] Building semantic search index (multi-version)
-└──────────────────────────────────────────────────────────
-┌─ Publishing
-│  [ DONE ] Generated robots.txt
-│  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
-│  [ DONE ] Generated sitemap
-│  [ DONE ] Generating LLMs context files
-└──────────────────────────────────────────────────────────
+BUILD
+  Engine          JS
+  Source          docs/
+  Output          site/
+  Versions        2 (06, 05)
+  Locales         7 (en, hi, zh, es, de, ja, fr)
+
+DATA INDEXING
+  [ DONE ] Syncing git metadata
+  [ DONE ] Building search index & RAG embeddings (multi-version)
+  [ DONE ] Generating AI Assistant RAG context
+
+PUBLISHING
+  [ DONE ] Generated robots.txt
+  [ DONE ] Generated .nojekyll (disables Jekyll on GitHub Pages)
+  [ DONE ] Generated sitemap
+  [ DONE ] Generating LLMs context files (llms.txt)
+  [ DONE ] Generating OKF bundles
 
 ⬢ Initial build completed in 1.2s.
 
-┌─ Watching
-│  Source          ./docs
-│  Config          ./docmd.config.json
-│  Assets          ./assets
-└──────────────────────────────────────────────────────────
-┌─ Development Server Running
-│  Local Access    http://127.0.0.1:3000
-│  Network Access  http://192.168.1.6:3000
-│  Serving from    ./site
-└──────────────────────────────────────────────────────────
+WATCHING
+  Source          ./docs
+  Config          ./docmd.config.json
+  Assets          ./assets
+
+DEVELOPMENT SERVER RUNNING
+  Local Access    http://127.0.0.1:3000
+  Network Access  http://192.168.1.6:3000
+  Serving from    ./site
 ```
+
 </details>
 
-<p align="center">
-  <img alt="docmd dev サーバーのプレビュー" width="820" src="https://docmd.io/assets/images/dev-preview.gif">
-</p>
+ナビゲーションはファイル構造から自動生成されます。設定ファイル、Frontmatter、特別なフレームワークの学習は一切不要です。
 
-ナビゲーションはファイル構造から自動生成されます。設定ファイル不要、frontmatter 必須なし、学ぶべきフレームワークもありません。
-
-**公開の準備ができたら：**
+**本番デプロイの準備が整ったら:**
 
 ```bash
 npx @docmd/core build
 ```
 
-これは Vercel、Cloudflare Pages、Netlify、GitHub Pages、その他の静的ホストにデプロイ可能な、高度に最適化された静的サイト（SPA）を出力します。
+Vercel、Cloudflare Pages、Netlify、GitHub Pages、またはその他の静的ホスティングに即座にデプロイ可能な高最適化静的サイト（SPA）が出力されます。
 
-**要件：** Node.js 18+
+**動作要件:** Node.js 18+
 
 <details>
-  <summary><b>またはグローバルインストール / Docker 経由</b></summary><br/>
+  <summary><b>またはグローバルインストール / Docker 経由で実行</b></summary><br/>
 
 ```bash
 # npm でグローバルインストール
@@ -122,106 +133,111 @@ npm install -g @docmd/core
 pnpm add -g @docmd/core
 
 # 実行
-docmd dev    # dev サーバーを起動
-docmd build  # デプロイ用にビルド
+docmd dev    # 開発サーバー起動
+docmd build  # 本番ビルド
 ```
 
-または Docker 経由：
+または Docker 経由で実行:
 
 ```bash
-docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.8.7
+docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ```
 
-> 再現可能なビルドのためにバージョンを固定してください。
+> 再現可能なビルドのためにバージョンを固定することを推奨します。
 
 </details>
 
-## なぜ docmd？
+## なぜ docmd なのか？
 
 | 機能 | docmd | Docusaurus | MkDocs | VitePress | Mintlify |
 | :--- | :---: | :---: | :---: | :---: | :---: |
-| **設定が必要** | **なし** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
+| **設定の要否** | **不要** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
 | **JS ペイロード** | **~18 kb** | ~250 kb | ~40 kb | ~50 kb | ~120 kb |
-| **ナビゲーション** | **即時 SPA** | React SPA | フルリロード | Vue SPA | ホスト型 SPA |
-| **バージョン管理** | **ネイティブ** | ネイティブ（複雑） | mike プラグイン | 手動 | ネイティブ |
-| **i18n** | **ネイティブ** | ネイティブ（複雑） | プラグインベース | ネイティブ | ネイティブ |
-| **マルチプロジェクト** | **ネイティブ** | プラグイン | プラグイン | - | - |
-| **検索** | **組み込み** | Algolia（クラウド） | 組み込み | MiniSearch | クラウド |
-| **AI コンテキスト (`llms.txt`)** | **組み込み** | - | - | - | 組み込み |
-| **MCP サーバー** | **組み込み** | - | - | - | 組み込み |
-| **Agent Skills** | **組み込み** | - | - | - | - |
-| **Docker イメージ** | **公式** | - | 公式 | - | - |
-| **セルフホスト** | **可** | 可 | 可 | 可 | - |
-| **コスト** | **無料 (OSS)** | 無料 (OSS) | 無料 (OSS) | 無料 (OSS) | フリーミアム |
+| **画面遷移** | **高速 SPA** | React SPA | フルリロード | Vue SPA | ホスト型 SPA |
+| **バージョン管理** | **標準対応** | 標準対応 (複雑) | mike プラグイン | 手動 | 標準対応 |
+| **多言語対応 (i18n)** | **標準対応** | 標準対応 (複雑) | プラグイン依存 | 標準対応 | 標準対応 |
+| **マルチプロジェクト** | **標準対応** | プラグイン | プラグイン | - | - |
+| **検索機能** | **内蔵** | Algolia (クラウド) | 内蔵 | MiniSearch | クラウド |
+| **AI アシスタント** | **内蔵 — BYOK + Cloud Relay** | - | - | - | 内蔵 (クラウド) |
+| **AI コンテキスト (`llms.txt`)** | **標準対応** | - | - | - | 標準対応 |
+| **MCP サーバー** | **標準対応** | - | - | - | 標準対応 |
+| **Agent Skills** | **標準対応** | - | - | - | - |
+| **Docker イメージ** | **公式提供** | - | 公式提供 | - | - |
+| **セルフホスト** | **対応** | 対応 | 対応 | 対応 | - |
+| **費用** | **無料 (OSS)** | 無料 (OSS) | 無料 (OSS) | 無料 (OSS) | Freemium |
 
-## 機能
+## 主な特徴
 
-### Zero config、即時スタート
-任意の Markdown フォルダを docmd に指定するだけで実行できます。ナビゲーションはファイル構造から自動生成されます。最初のドキュメントを書いて 1 分以内に公開可能 — ボイラープレートなし、ビルドパイプラインの設定なし、事前の意思決定は不要です。
+### 設定不要、即座にスタート
+Markdown フォルダを指定するだけで docmd が起動します。ファイル階層構造からナビゲーションが自動構築されるため、設定ファイルや事前設計なしで 1 分以内に最初のドキュメントを公開可能です。
 
-### 標準で軽量、どこでも高速
-デフォルトの JavaScript ペイロードは ~18 kb。ページは即時 SPA としてナビゲートします。出力は静的 HTML — SEO 最適化済み、sitemap、正規 URL、Open Graph メタデータを含む。オフラインの全文検索を内蔵、クラウドサービス不要。
+### 超軽量、どこでも高速
+デフォルトの JavaScript ペイロードは僅か約 18 kb。高速な SPA 画面遷移を実現します。出力は SEO に最適化された静的 HTML で、サイトマップ、カノニカル URL、Open Graph メタデータが含まれます。クラウド不要のオフライン全文検索も内蔵しています。
 
-### AI ネイティブ
-docmd は今ドキのドキュメントの読み方・使われ方に合わせて構築されています：
-- **MCP サーバー** — `docmd mcp` がドキュメントを stdio 経由で AI Agent に公開し、検索・読み取り・検証を直接行えます。
-- **コンテキスト (`llms.txt` / `llms-full.txt`)** — ビルド時に生成される完全なドキュメントコンテキスト、あらゆる LLM で即利用可能。
-- **Agent Skills** — LLM と IDE Agent 向けのモジュール式インストラクショセット ([docmd-skills](https://github.com/docmd-io/docmd-skills))。
-- **Markdown としてコピー / コンテキストをコピー** — ブラウザ内のワンクリックボタン。AI チャットへの貼り付けに最適化。
+### AI ネイティブ設計
+docmd は、ドキュメント自体を置き換えることなく、現代におけるドキュメントの読み取り・活用方法として AI を第一級の要素として扱います。
+- **AI アシスタント (`@docmd/plugin-ai`)** — あなたのドキュメントに基づく RAG 駆動のチャット。独自の API キーまたはローカル AI プロバイダーを使用でき、AIPlug 経由で 100 以上のプロバイダーをサポート。
+- **Cloud Relay** — 独自バックエンドを運用することなく、静的ドキュメント上で AI アシスタントを有効化。[試してみる →](https://cloud.docmd.io)
+- **MCP サーバー** — `docmd mcp` により stdio 経由で AI エージェントにドキュメントを公開し、直接検索・閲覧・検証を可能にします。
+- **コンテキスト生成 (`llms.txt` / `llms-full.txt`)** — ビルド時に生成される完全なドキュメントコンテキスト。
+- **Agent Skills** — LLM および IDE エージェント向けのモジュール式指示セット。
+- **Open Knowledge Format (OKF)** — AI システム向けの構造化された多言語知識パッケージ。
+- **Markdown / コンテキストとしてコピー** — ブラウザからワンクリックで抽出でき、AI チャットへの貼り付けに最適化。
 
-### スケールを見据えて構築
-- マルチロケールビルドによる国際化
-- 複数ドキュメントリリースに対応するバージョン管理
-- モノレポ・マルチプロジェクト構成向け Workspaces
-- コア機能を拡張するプラグインシステム
-- 完全なテーマ対応、ビルトインテンプレート、カスタム CSS/JS、ライト/ダークモード
+### 拡張性と拡張機能
+- 多言語マルチロケールビルド対応（言語ごとの検索インデックス、llms、okf、hreflang）
+- 複数リリースのバージョン管理（現在の最新バージョンを自動認識）
+- モノレポや複数プロジェクト構築のための Workspaces 機能
+- コア機能を拡張する強固なプラグインシステム（Hook 毎の型検証、非同期処理対応）
+- テーマカスタマイズ、組み込みテンプレート、カスタム CSS/JS、ライト/ダークモード対応
 
 ## CLI
 
 ```bash
-docmd dev            # ローカル dev サーバー
-docmd build          # デプロイ用ビルド
-docmd live           # ブラウザベースのライブエディタ
-docmd init           # 現在のディレクトリに新しい docmd.config.json を作成
+docmd dev            # ローカル開発サーバー起動
+docmd build          # 本番用静的サイトビルド
+docmd live           # ブラウザベースの Live エディタ起動
+docmd init           # カレントフォルダに docmd.config.json を初期化
 docmd stop           # 実行中の `docmd dev` / `docmd live` サーバーを停止
-docmd doctor         # 事前チェック: 設定 + プラグインのインストール状況
-docmd migrate        # Docusaurus / VitePress / MkDocs / Starlight から取り込み
-docmd deploy         # Docker / NGINX / Caddy / Vercel / Netlify 用設定を生成
-docmd validate       # 内部リンクを全てチェック
-docmd mcp            # stdio 上で MCP サーバーとして動作
-docmd add <name>     # プラグインまたはテンプレートをインストール
+docmd doctor         # 設定とプラグインの診断チェック
+docmd migrate        # Docusaurus, VitePress, MkDocs, Starlight からの移行
+docmd deploy         # Docker, NGINX, Caddy, Vercel, Netlify 用設定の自動生成
+docmd validate       # 内部リンクとアンカーの死線チェック
+docmd mcp            # stdio 経由で MCP サーバーとして実行
+docmd add <name>     # プラグインまたはテンプレートの追加
 ```
 
 ## プラグイン
 
-コア機能は堅牢なプラグインシステムによって支えられています。必須機能は標準で含まれており、特定のニーズに応じてオプショナルプラグインを追加できます。
+コア機能は強固なプラグインシステムによって駆動されます。基本機能はデフォルトで含まれており、必要に応じてオプションのプラグインを追加できます。
 
 | プラグイン | ステータス | 説明 |
 | :--- | :---: | :--- |
-| `search` | コア | あいまい一致対応のオフライン全文検索 |
-| `seo` | コア | SEO タグと Open Graph メタデータ |
-| `sitemap` | コア | `sitemap.xml` を生成 |
-| `git` | コア | Git のコミット履歴と最終更新日 |
-| `analytics` | コア | 軽量なアナリティクス連携 |
-| `llms` | コア | AI コンテキスト生成 (`llms.txt` / `llms-full.txt`) |
-| `mermaid` | コア | Mermaid 図対応 |
-| `openapi` | コア | ビルド時の OpenAPI 3.x スペックレンダラー |
-| `okf` | Core | AI エージェント向け Open Knowledge Format バンドル (ロケール別) |
-| `pwa` | オプション | Progressive Web App — オフラインナビゲーション |
+| `ai` | コア | BYOK、ローカルプロバイダー、Cloud Relay 対応の RAG 駆動 AI アシスタント |
+| `search` | コア | オフライン全文検索（キーワード検索 ＋ `docmd-search` 経由のセマンティック検索） |
+| `seo` | コア | SEO タグおよび Open Graph メタデータ生成 |
+| `sitemap` | コア | `sitemap.xml` の自動生成 |
+| `git` | コア | Git コミット履歴と最終更新日時の取得 |
+| `analytics` | コア | 軽量アクセス解析インテグレーション |
+| `llms` | コア | AI コンテキストファイル生成 (`llms.txt` / `llms-full.txt`) |
+| `okf` | コア | AI エージェント向け Open Knowledge Format パッケージ（ロケール別） |
+| `mermaid` | コア | Mermaid ダイアグラム表示対応 |
+| `openapi` | コア | ビルド時の OpenAPI 3.x 仕様レンダラー |
+| `pwa` | オプション | Progressive Web App — オフライン閲覧 |
 | `threads` | オプション | インラインディスカッションスレッド *(by @svallory)* |
 | `math` | オプション | KaTeX / LaTeX 数式レンダリング |
 
-オプショナルプラグインのインストール：
+オプションプラグインの追加:
 
 ```bash
 docmd add <plugin-name>
 ```
 
-自作：[プラグイン開発ガイド](https://docs.docmd.io/development/building-plugins/)
+独自プラグインの作成: [プラグイン開発ガイド](https://docs.docmd.io/ja/development/building-plugins/)
 
 ## 設定
 
-始めるのに設定は不要です。プロジェクトルートに `docmd.config.json`（または `.ts` / `.js`）を追加するのは、より詳細な制御が必要な場合のみです：
+開発を開始するにあたり設定ファイルは一切不要です。より詳細な制御が必要な場合のみ、ルートディレクトリに `docmd.config.json` (または `.ts` / `.js`) を作成してください:
 
 ```json
 {
@@ -232,33 +248,29 @@ docmd add <plugin-name>
 }
 ```
 
-TypeScript / JavaScript 形式の設定ファイルは動的な値の指定に対応しています。
+動的な値を扱うための TypeScript および JavaScript 設定ファイルもサポートされています。
 
-リファレンス全体：[設定概要](https://docs.docmd.io/configuration/overview)
+詳細な設定オプション: [設定リファレンス](https://docs.docmd.io/ja/configuration/overview)
 
-## プロジェクト構成
+## プロジェクト構造例
 
 ```text
 my-docs/
-├── docs/                ← あなたの Markdown ファイル
-├── assets/              ← 画像と静的ファイル
-├── docmd.config.json    ← 任意の設定
+├── docs/                ← Markdown ドキュメント
+├── assets/              ← 画像や静的ファイル
+├── docmd.config.json    ← 任意の設定ファイル
 └── package.json
 ```
 
-## ライブエディタ
+## ライブエディタ (Live Editor)
 
-ブラウザベースのエディタでドキュメントを執筆・プレビュー — ローカル環境構築は不要。
-
-<p>
-  <img alt="docmd ライブエディタのプレビュー" width="820" src="https://docs.docmd.io/assets/previews/live-editor-preview.webp">
-</p>
+ローカル環境の構築不要で、ブラウザ上で直接ドキュメントの執筆とプレビューが可能です。
 
 **[live.docmd.io](https://live.docmd.io) で試す**
 
-## プログラマティック API
+## Node.js Programmatic API
 
-Node.js スクリプト、CI パイプライン、カスタムビルドステップで docmd を利用できます。（CommonJS / ESM の両対応。）
+Node.js スクリプト、CI パイプライン、カスタムビルドステップから docmd を利用可能です。（CommonJS および ESM 両対応）
 
 ```javascript
 import { build } from '@docmd/core';
@@ -266,21 +278,21 @@ import { build } from '@docmd/core';
 await build('./docmd.config.json', { isDev: false });
 ```
 
-リファレンス全体：[Node API](https://docs.docmd.io/development/node-api-reference/)
+詳細リファレンス: [Node API リファレンス](https://docs.docmd.io/ja/development/node-api-reference/)
 
 ## コミュニティ
 
-- **バグ報告・問題** → [GitHub Issues](https://github.com/docmd-io/docmd/issues)
+- **バグ・不具合報告** → [GitHub Issues](https://github.com/docmd-io/docmd/issues)
 - **質問・アイデア** → [Discussions](https://github.com/orgs/docmd-io/discussions)
-- **コントリビューション** → [CONTRIBUTING.md](.github/CONTRIBUTING.md)
+- **貢献方法** → [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 - **ロードマップ** → [GitHub Discussions](https://github.com/orgs/docmd-io/discussions/2)
 
-## サポート
+## 支援・サポート
 
-- docmd の開発を最も直接的に支援する方法は、周りの人に知らせることです。X で [シェア](https://twitter.com/intent/tweet?url=https://github.com/docmd-io/docmd&text=docmd%20-%20Markdown%20から%20数秒で%20プロダクション品質の%20ドキュメントを。) したり、スターを付けるのも良いでしょう。
-- docmd があなたの時間を節約できているなら、[GitHub Sponsorship](https://github.com/sponsors/mgks) は大きな励みになります。
-- アイデアやバグがあれば Issue や PR をお気軽に。プラグインのコントリビューションも歓迎します。
+- docmd の開発を最も直接的に支援する方法は、周囲の開発者に共有することです。[X で共有する](https://twitter.com/intent/tweet?url=https://github.com/docmd-io/docmd&text=docmd%20-%20Markdown%20から数秒で本番運用可能なドキュメントを生成。) か、スターを付けてください。
+- docmd が開発時間の節約に役立った場合は、[GitHub スポンサー](https://github.com/sponsors/mgks) をご検討ください。
+- アイデアやバグ報告、独自プラグインの PR も大歓迎です！
 
 ## ライセンス
 
-MIT — 詳細は [`LICENSE`](./LICENSE) を参照。
+MIT ライセンス。詳細は [`LICENSE`](./LICENSE) を参照してください。

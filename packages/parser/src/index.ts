@@ -31,6 +31,7 @@ export {
   setNormaliserVerbose
 };
 
+export { parseContainerHeader, stripContainerComment, parseTitleAndIcon } from './utils/container-helper.js';
 export { createDepthTrackingContainer } from './features/index.js';
 export {
   normaliseContainers,

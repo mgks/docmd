@@ -219,6 +219,10 @@ function packAndShip() {
       const versionless = file.replace(/-\d+\.\d+\.\d+(-[\w.]+)?\.tgz$/, '.tgz');
       fs.copyFileSync(path.join(TARBALL_DIR, file), path.join(LOCAL_TARS, versionless));
     }
+    const sourceNodeModules = path.join(SOURCE_DIR, 'node_modules');
+    if (fs.existsSync(sourceNodeModules)) {
+      rmrf(sourceNodeModules);
+    }
   });
 
   step('Cleaning staging', () => rmrf(STAGING_DIR));

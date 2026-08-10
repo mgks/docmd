@@ -74,6 +74,11 @@
 
     <a href="#main-content" class="skip-link"><%= typeof t === 'function' ? t('skipToContent') : 'Skip to content' %></a>
 
+    <% const _isTopMenubar = locals.menubarConfig && menubarConfig?.enabled !== false && menubarConfig.position === 'top'; %>
+    <% if (locals.config && config.layout && config.layout.banner && _isTopMenubar) { %>
+      <%- await include('partials/banner', { config, relativePathToRoot, assetBaseUrl, renderIcon, t: typeof t === 'function' ? t : null }) %>
+    <% } %>
+
     <% if (locals.menubarConfig && menubarConfig?.enabled !==false && menubarConfig.position !=='header' ) { %>
       <%- await include('partials/menubar', {
         menubarConfig, relativePathToRoot, assetBaseUrl, renderIcon, optionsMenu: locals.optionsMenu, t: typeof t === 'function' ? t : null
@@ -151,11 +156,10 @@
         </div>
       </aside>
       <% } %>
-      <%# Site-wide announcement banner (new in 0.8.7). Sits above the menubar. %>
-      <% if (locals.config && config.layout && config.layout.banner) { %>
-        <%- await include('partials/banner', { config, relativePathToRoot, assetBaseUrl, renderIcon, t: typeof t === 'function' ? t : null }) %>
-      <% } %>
       <div class="main-content-wrapper">
+        <% if (locals.config && config.layout && config.layout.banner && !_isTopMenubar) { %>
+          <%- await include('partials/banner', { config, relativePathToRoot, assetBaseUrl, renderIcon, t: typeof t === 'function' ? t : null }) %>
+        <% } %>
         <% if (locals.menubarConfig && menubarConfig?.enabled !==false && menubarConfig.position==='header' ) { %>
           <%- await include('partials/menubar', { menubarConfig, relativePathToRoot, assetBaseUrl, renderIcon, optionsMenu:
             locals.optionsMenu, t: typeof t === 'function' ? t : null }) %>

@@ -13,7 +13,7 @@
  */
 
 import { renderIcon } from '../utils/icon-renderer.js';
-import { parseTitleAndIcon } from '../utils/container-helper.js';
+import { parseTitleAndIcon, stripContainerComment } from '../utils/container-helper.js';
 import { normaliseContainers } from '../utils/container-normaliser.js';
 
 function smartDedent(str) {
@@ -60,10 +60,11 @@ export function createDepthTrackingContainer(md: any, name: string, renderOpen: 
     const start = state.bMarks[startLine] + state.tShift[startLine];
     const max = state.eMarks[startLine];
     const lineContent = state.src.slice(start, max).trim();
+    const cleanContent = stripContainerComment(lineContent);
 
     // Match opening tag e.g., `::: callout info Title` or `:::callout info Title` (spaceless)
     const regex = new RegExp(`^:::\\s*${name}(?:\\s+(.*))?$`);
-    const match = lineContent.match(regex);
+    const match = cleanContent.match(regex);
     if (!match) return false;
     if (silent) return true;
 
@@ -90,7 +91,7 @@ export function createDepthTrackingContainer(md: any, name: string, renderOpen: 
       if (!fenceMarker) {
         if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|embed|tag)\b/)) {
           depth++;
-        } else if (nextContent.match(/^:::\s*$/)) {
+        } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
           depth--;
           if (depth === 0) {
             found = true;
@@ -230,7 +231,6 @@ export default {
     // Callout type aliases - map directly to callout variants
     const calloutAliases = [
       // VitePress aliases
-      { name: 'tip', type: 'tip' },
       { name: 'warning', type: 'warning' },
       { name: 'danger', type: 'danger' },
       { name: 'info', type: 'info' },

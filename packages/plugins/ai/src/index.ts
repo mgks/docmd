@@ -22,7 +22,7 @@ import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
-  version: '0.9.0',
+  version: '0.9.1',
   capabilities: ['init', 'body', 'assets', 'actions', 'translations', 'post-build']
 };
 
@@ -64,9 +64,11 @@ const DEFAULT_SYSTEM_PROMPT = `You are docmd assistant — an expert, precise do
 
 CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. If a user asks off-topic, general knowledge, or unrelated questions, politely refuse and explain that you are strictly trained to assist with this documentation.
-2. AGGRESSIVE SEARCH USAGE: For EVERY technical question or user query, you MUST invoke the \`search_documentation\` tool FIRST to search for exact keywords, code examples, versioning rules, and configuration flags. Never guess parameters or invent APIs.
-3. ACCURACY & SOURCE CITATIONS: Ground all responses directly in the retrieved documentation results. Reference relevant page titles or section headers when available.
-4. VERSION & LOCALIZATION AWARENESS: Be aware of the active documentation version and locale. Utilize localized search results matching the user's language and active version.
+2. AGGRESSIVE TOOL USAGE:
+   - Use the \`get_site_structure\` tool FIRST whenever the user asks about available versions (e.g. current vs historical versions), supported languages/locales, site navigation, page hierarchy, or where topics are located.
+   - Use the \`search_documentation\` tool to query documentation page content. Full-text keyword search is ALWAYS active; semantic vector search is conditional (active only when enabled in site config). ALWAYS supply concise, high-precision search keywords (e.g. "containers hero" or "api setup") rather than conversational sentences.
+3. ACCURACY & SOURCE CITATIONS: Ground all responses directly in retrieved tool data or documentation results. Reference relevant page titles or section headers when available.
+4. VERSION & LOCALIZATION AWARENESS: Be aware of the active documentation version and locale. Utilize localized and versioned results matching the user's request.
 5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with code blocks where appropriate. Do not engage in casual off-topic banter.`;
 
 /** Resolved configuration cache per build */
@@ -303,6 +305,38 @@ export const actions = {
       systemPrompt: opts.systemPrompt
     });
 
+    const isSemanticUsable = ctx.config._searchConfig?.semanticUsable === true;
+
+    engine.registerTool({
+      name: 'get_site_structure',
+      description: 'Get the complete documentation site structure, including available versions (current and historical), supported languages/locales, workspace projects, and page navigation hierarchy with titles and URLs.',
+      execute: async () => {
+        return {
+          siteTitle: ctx.config.title || 'Documentation',
+          versions: ctx.config.versions || null,
+          i18n: ctx.config.i18n || null,
+          navigation: ctx.config.navigation || null,
+          searchCapabilities: {
+            keyword: true,
+            semantic: isSemanticUsable
+          },
+          workspaceProjects: (ctx.config._workspace?.projects || []).map((p: any) => ({
+            name: p.name || p.title || p.prefix,
+            prefix: p.prefix || '/',
+            src: p.src || ''
+          }))
+        };
+      }
+    });
+
+    engine.registerTool({
+      name: 'search_documentation',
+      description: `Search documentation pages across all projects in this workspace using keyword full-text matching ${isSemanticUsable ? 'and semantic vector search' : '(keyword search active; semantic search disabled)'}. Always supply concise, targeted keywords for best results.`,
+      execute: async ({ query, project }: { query: string; project?: string }) => {
+        return await searchDocumentationRAG(ctx.projectRoot, query, opts.contextLimit || 5);
+      }
+    });
+
     const res = await engine.sendMessage(message);
     return {
       text: res.message,
@@ -329,6 +363,8 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     src: p.src || ''
   }));
 
+  const isSemanticUsable = config._searchConfig?.semanticUsable === true;
+
   const clientConfig: Record<string, any> = {
     endpoint,
     projectId: targetProjectId,
@@ -341,6 +377,13 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
     siteTitle: config.title || 'Documentation',
     siteBase: config.base || '/',
     siteUrl: config.url || '',
+    versions: config.versions || null,
+    i18n: config.i18n || null,
+    navigation: config.navigation || null,
+    searchCapabilities: {
+      keyword: true,
+      semantic: isSemanticUsable
+    },
     isWorkspace: workspaceProjects.length > 0,
     workspaceProjects
   };

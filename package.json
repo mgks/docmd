@@ -1,11 +1,11 @@
 {
   "name": "@docmd/monorepo",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "private": true,
   "description": "The minimalist, zero-config documentation generator monorepo.",
   "scripts": {
     "dev": "node _playground/dev.js dev",
-    "live": "node _playground/dev.js live",
+    "live": "pnpm --filter @docmd/live build && node packages/live/bin/docmd-live.js",
     "build": "node _playground/dev.js build",
     "doctor": "pnpm docmd doctor",
     "validate": "pnpm docmd validate",
@@ -26,17 +26,17 @@
     "docker:test": "docker run --rm -v $(pwd)/docs:/docs docmd:latest --version",
     "docker:run": "docker run -p 3000:3000 docmd:latest",
     "stop": "node packages/core/dist/bin/docmd.js stop >/dev/null 2>&1 || true",
-    "clean": "rm -rf node_modules packages/*/node_modules packages/plugins/*/node_modules packages/engines/*/node_modules packages/*/dist packages/plugins/*/dist packages/engines/*/dist packages/engines/rust/native/bin/*.node packages/*/public packages/plugins/*/public packages/*/site packages/plugins/*/site *.tsbuildinfo temp-* >/dev/null 2>&1;",
+    "clean": "rm -rf node_modules packages/*/node_modules packages/plugins/*/node_modules packages/engines/*/node_modules packages/*/dist packages/plugins/*/dist packages/engines/*/dist packages/engines/rust/native/bin/*.node packages/*/public packages/plugins/*/public packages/*/site packages/plugins/*/site *.tsbuildinfo temp-* _playground/node_modules >/dev/null 2>&1;",
     "unlink": "npm uninstall -g @docmd/core @docmd/monorepo docmd docmd-live -s >/dev/null 2>&1 || true; pnpm uninstall -g @docmd/core @docmd/monorepo docmd docmd-live -s >/dev/null 2>&1 || true; rm -f $(which -a docmd 2>/dev/null) $(which -a docmd-live 2>/dev/null) >/dev/null 2>&1 || true;",
     "reset": "node tools/status.js start:reset && pnpm -s stop && pnpm -s unlink && pnpm -s clean && node tools/status.js reset"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.2.0",
     "chalk": "^5.6.2",
     "docmd-search": "^0.1.3",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.8.0",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.8.1",
     "globals": "^17.9.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.66.0"

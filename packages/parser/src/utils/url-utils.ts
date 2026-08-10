@@ -56,6 +56,8 @@ export interface UrlContext {
   readonly projectPrefix?: string;
   /** All workspace projects */
   readonly workspaceProjects?: readonly any[];
+  /** Configured locale IDs for current build */
+  readonly allLocales?: readonly string[];
 }
 
 /** Pre-computed URL data attached to every page object. */
@@ -178,7 +180,26 @@ export function buildContextualUrl(href: string, context: UrlContext): string {
         relPath += targetPfx;
       }
 
-      let combined = relPath + targetSubPath;
+      let combinedSubPath = targetSubPath;
+      if (context.outputPrefix) {
+        const prefixStr = context.outputPrefix.replace(/\/$/, '');
+        let alreadyHasPrefix = false;
+        if (prefixStr) {
+          if (targetSubPath === prefixStr || targetSubPath.startsWith(prefixStr + '/')) {
+            alreadyHasPrefix = true;
+          } else if (context.allLocales && context.allLocales.length > 0) {
+            const firstSegment = targetSubPath.split('/')[0];
+            if (context.allLocales.includes(firstSegment)) {
+              alreadyHasPrefix = true;
+            }
+          }
+        }
+        combinedSubPath = (prefixStr && !alreadyHasPrefix)
+          ? (targetSubPath ? prefixStr + '/' + targetSubPath : prefixStr + '/')
+          : targetSubPath;
+      }
+
+      let combined = relPath + combinedSubPath;
       if (context.offline) {
         combined = appendIndexHtml(combined);
       }
@@ -191,9 +212,20 @@ export function buildContextualUrl(href: string, context: UrlContext): string {
 
   // Prepend outputPrefix for root-relative paths (locale/version scoping)
   let combinedPath = cleanPath;
-  if (!isPageRelative) {
+  if (!isPageRelative && !isAsset) {
     const prefixStr = context.outputPrefix ? context.outputPrefix.replace(/\/$/, '') : '';
-    combinedPath = prefixStr
+    let alreadyHasPrefix = false;
+    if (prefixStr) {
+      if (cleanPath === prefixStr || cleanPath.startsWith(prefixStr + '/')) {
+        alreadyHasPrefix = true;
+      } else if (context.allLocales && context.allLocales.length > 0) {
+        const firstSegment = cleanPath.split('/')[0];
+        if (context.allLocales.includes(firstSegment)) {
+          alreadyHasPrefix = true;
+        }
+      }
+    }
+    combinedPath = (prefixStr && !alreadyHasPrefix)
       ? (cleanPath ? prefixStr + '/' + cleanPath : prefixStr + '/')
       : cleanPath;
   }
@@ -215,29 +247,10 @@ export function buildContextualUrl(href: string, context: UrlContext): string {
 }
 
 /**
- * Build a root-relative URL, ignoring the current locale/version prefix.
- *
- * Markdown authors write `[link](/guide/)` meaning the site root, not
- * the locale root. This drops `outputPrefix` and adjusts the relative
- * path to climb past the locale prefix for root-absolute hrefs (#190).
+ * Build a root-relative URL preserving active locale/version context.
  */
 export function buildRootRelativeUrl(href: string, context: UrlContext): string {
-  let adjustedRelPath = context.relativePathToRoot;
-  // #190: For root-absolute hrefs, climb past the locale/version prefix
-  if (context.outputPrefix && href.startsWith('/')) {
-    const prefixSegments = context.outputPrefix
-      .replace(/^\//, '').replace(/\/$/, '')
-      .split('/').filter(Boolean).length;
-    if (prefixSegments > 0) {
-      adjustedRelPath = adjustedRelPath + '../'.repeat(prefixSegments);
-    }
-  }
-  const rootContext: UrlContext = Object.freeze({
-    ...context,
-    outputPrefix: '',
-    relativePathToRoot: adjustedRelPath,
-  });
-  return buildContextualUrl(href, rootContext);
+  return buildContextualUrl(href, context);
 }
 
 /**
@@ -292,6 +305,7 @@ export function createUrlContext(options: {
   pathname?: string;
   projectPrefix?: string;
   workspaceProjects?: readonly any[];
+  allLocales?: readonly string[];
 }): UrlContext {
   const relativePathToRoot = options.relativePathToRoot || './';
   const base = options.base || '/';
@@ -306,6 +320,7 @@ export function createUrlContext(options: {
     pathname: options.pathname,
     projectPrefix: options.projectPrefix || '',
     workspaceProjects: (options.workspaceProjects && options.workspaceProjects.length > 0) ? options.workspaceProjects : [{ prefix: '/', title: 'Root' }],
+    allLocales: options.allLocales || [],
   });
 }
 

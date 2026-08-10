@@ -104,12 +104,21 @@ async function build(outputPath?: string) {
                         export default { join, resolve, basename, dirname, extname, sep };
                     `, loader: 'js'
                 }));
+                build.onResolve({ filter: /^(node:)?url$/ }, args => ({ path: args.path, namespace: 'url-shim' }));
+                build.onLoad({ filter: /.*/, namespace: 'url-shim' }, () => ({
+                    contents: `
+                        export const fileURLToPath = (u) => typeof u === 'string' ? u : (u ? u.pathname || '' : '');
+                        export const URL = globalThis.URL;
+                        export default { fileURLToPath, URL };
+                    `, loader: 'js'
+                }));
                 build.onResolve({ filter: /^(node:)?fs(\/promises)?|fs-extra$/ }, args => ({ path: args.path, namespace: 'fs-shim' }));
                 build.onLoad({ filter: /.*/, namespace: 'fs-shim' }, () => ({
                     contents: `
                         export const promises = {};
                         export const existsSync = () => false;
-                        export default { promises, existsSync };
+                        export const readFileSync = () => '{}';
+                        export default { promises, existsSync, readFileSync };
                     `, loader: 'js'
                 }));
             }
@@ -124,13 +133,39 @@ async function build(outputPath?: string) {
             format: 'iife',
             globalName: 'docmd',
             minify: true,
-            define: { 'process.env.NODE_ENV': '"production"' },
+            define: {
+                'process.env.NODE_ENV': '"production"',
+                'import.meta.url': 'window.location.href'
+            },
             inject: [shimPath],
             plugins: [templatePlugin, nodeShimPlugin]
         });
 
-        // 6. Copy Static Assets
-        await fs.copyFile(path.join(assetsDir, 'index.html'), path.join(finalOutputDir, 'index.html'));
+        // 6. Copy Static Assets, Auto-Load Presets & Inject Version
+        const livePkg = JSON.parse(await fs.readFile(path.join(PKG_ROOT, 'package.json'), 'utf8'));
+        let indexHtml = await fs.readFile(path.join(assetsDir, 'index.html'), 'utf8');
+        indexHtml = indexHtml.replace(/content="docmd v[^"]*"/, `content="docmd v${livePkg.version}"`);
+
+        const presetsDir = path.join(assetsDir, 'presets');
+        const snippets: Record<string, string> = {};
+        try {
+            const presetFiles = await fs.readdir(presetsDir);
+            for (const file of presetFiles) {
+                if (file.endsWith('.md')) {
+                    const key = path.basename(file, '.md');
+                    snippets[key] = await fs.readFile(path.join(presetsDir, file), 'utf8');
+                }
+            }
+        } catch { /* Ignore if missing presets */ }
+
+        if (Object.keys(snippets).length > 0) {
+            indexHtml = indexHtml.replace(
+                /const SNIPPETS = \{[\s\S]*?\};/,
+                `const SNIPPETS = ${JSON.stringify(snippets, null, 4)};`
+            );
+        }
+
+        await fs.writeFile(path.join(finalOutputDir, 'index.html'), indexHtml);
         await fs.copyFile(path.join(assetsDir, 'docmd-live.css'), path.join(finalOutputDir, 'docmd-live.css'));
 
         const cssDest = path.join(finalOutputDir, 'assets/css');
@@ -183,6 +218,6 @@ async function build(outputPath?: string) {
 
 export { build };
 
-if (process.argv[1].endsWith('build.js')) {
+if (process.argv[1]?.endsWith('build.js')) {
     build();
 }

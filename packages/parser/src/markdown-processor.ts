@@ -214,7 +214,7 @@ function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
   };
 
   // Syntax Highlighting (title extraction is handled separately in the fence renderer)
-  const highlightFn = (str, lang) => {
+  const highlightFn = (str: any, lang: any) => {
     if (lang === 'mermaid') {
       return `<pre class="mermaid">${new MarkdownIt().utils.escapeHtml(str)}</pre>`;
     }
@@ -233,11 +233,109 @@ function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
 
   const md = new MarkdownIt(mdOptions);
 
-  // 'strip' policy: drop html_block and html_inline rules entirely so HTML
+  const HTML_SEQUENCES: [RegExp, RegExp][] = [
+  [/^<(script|pre|style|textarea)(?=(\s|>|$))/i, /<\/(script|pre|style|textarea)>/i],
+  [/^<!--/, /-->/],
+  [/^<\?/, /\?>/],
+  [/^<![A-Z]/, />/],
+  [/^<!\[CDATA\[/, /\]\]>/]
+];
+
+function getHtmlTagDelta(line: string): number {
+  const voidTags = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+  let delta = 0;
+  const tagRegex = /<\/?([a-zA-Z0-9-]+)(?:\s+[^>]*?)?(\/?)>/g;
+  let m: RegExpExecArray | null;
+  while ((m = tagRegex.exec(line)) !== null) {
+    const tagName = m[1].toLowerCase();
+    const isSelfClosing = m[2] === '/' || voidTags.has(tagName);
+    const isClosing = m[0].startsWith('</');
+    if (isSelfClosing) continue;
+    if (isClosing) {
+      delta -= 1;
+    } else {
+      delta += 1;
+    }
+  }
+  return delta;
+}
+
+function customHtmlBlock(state: any, startLine: number, endLine: number, silent: boolean): boolean {
+  const pos = state.bMarks[startLine] + state.tShift[startLine];
+  const max = state.eMarks[startLine];
+
+  if (state.sCount[startLine] - state.blkIndent >= 4) return false;
+  if (!state.md.options.html) return false;
+  if (state.src.charCodeAt(pos) !== 0x3C /* < */) return false;
+
+  const lineText = state.src.slice(pos, max);
+
+  let seqIdx = -1;
+  for (let i = 0; i < HTML_SEQUENCES.length; i++) {
+    if (HTML_SEQUENCES[i][0].test(lineText.trim())) {
+      seqIdx = i;
+      break;
+    }
+  }
+
+  if (seqIdx !== -1) {
+    if (silent) return true;
+    let nextLine = startLine + 1;
+    const closeReg = HTML_SEQUENCES[seqIdx][1];
+    if (!closeReg.test(lineText)) {
+      for (; nextLine < endLine; nextLine++) {
+        const p = state.bMarks[nextLine] + state.tShift[nextLine];
+        const m = state.eMarks[nextLine];
+        const lText = state.src.slice(p, m);
+        if (closeReg.test(lText)) {
+          if (lText.length !== 0) nextLine++;
+          break;
+        }
+      }
+    }
+    state.line = nextLine;
+    const token = state.push('html_block', '', 0);
+    token.map = [startLine, nextLine];
+    token.content = state.getLines(startLine, nextLine, state.blkIndent, true);
+    return true;
+  }
+
+  if (!/^<\/?([a-zA-Z0-9-]+)/i.test(lineText.trim())) return false;
+  if (silent) return true;
+
+  let nextLine = startLine + 1;
+  let depth = getHtmlTagDelta(lineText);
+
+  for (; nextLine < endLine; nextLine++) {
+    if (depth <= 0 && state.isEmpty(nextLine)) {
+      break;
+    }
+    const p = state.bMarks[nextLine] + state.tShift[nextLine];
+    const m = state.eMarks[nextLine];
+    const lText = state.src.slice(p, m);
+    depth += getHtmlTagDelta(lText);
+    if (depth <= 0 && lText.trim().endsWith('>')) {
+      nextLine++;
+      break;
+    }
+  }
+
+  state.line = nextLine;
+
+  const token = state.push('html_block', '', 0);
+  token.map = [startLine, nextLine];
+  token.content = state.getLines(startLine, nextLine, state.blkIndent, true);
+
+  return true;
+}
+
+// 'strip' policy: drop html_block and html_inline rules entirely so HTML
   // tokens are never emitted. Distinct from 'escape' which keeps tokens and
   // HTML-escapes their content.
   if (htmlPolicy === 'strip') {
     md.disable(['html_block', 'html_inline']);
+  } else if (htmlPolicy === 'allow') {
+    md.block.ruler.at('html_block', customHtmlBlock);
   }
 
   // Core Plugins
@@ -279,11 +377,11 @@ function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
     return rendered;
   };
 
-  const defaultLinkOpen = md.renderer.rules.link_open || function (tokens, idx, options, env, self) {
+  const defaultLinkOpen = md.renderer.rules.link_open || function (tokens: any, idx: any, options: any, env: any, self: any) {
     return self.renderToken(tokens, idx, options);
   };
 
-  md.renderer.rules.link_open = function (tokens, idx, options, env, self) {
+  md.renderer.rules.link_open = function (tokens: any, idx: any, options: any, env: any, self: any) {
     const token = tokens[idx];
     const hrefIndex = token.attrIndex('href');
 
@@ -338,10 +436,14 @@ function createMarkdownProcessor(config: any = {}, pluginsCallback: any) {
     return defaultLinkOpen(tokens, idx, options, env, self);
   };
 
+  if (typeof pluginsCallback === 'function') {
+    pluginsCallback(md);
+  }
+
   return md;
 }
 
-function stripHtml(html) {
+function stripHtml(html: any) {
   if (!html) return '';
   return html.replace(/<[^>]*>?/gm, '');
 }
@@ -362,11 +464,11 @@ function decodeHtmlEntities(str: string): string {
     .replace(/&nbsp;/g, ' ');
 }
 
-function extractHeadings(html) {
-  const headings = [];
+function extractHeadings(html: any) {
+  const headings: any[] = [];
   // Require non-empty ID match to exclude stripped container headings: "([^"]+)"
   const regex = /<h([1-6])[^>]*?id="([^"]+)"[^>]*?>([\s\S]*?)<\/h\1>/g;
-  let match;
+  let match: any;
   while ((match = regex.exec(html)) !== null) {
     const rawText = match[3].replace(/<\/?[^>]+(>|$)/g, '').trim();
     headings.push({
@@ -378,14 +480,14 @@ function extractHeadings(html) {
   return headings;
 }
 
-function processContent(rawString, mdInstance, config, env = {}) {
-  let frontmatter, markdownContent;
+function processContent(rawString: any, mdInstance: any, config: any, env: any = {}) {
+  let frontmatter: any, markdownContent: any;
 
   try {
     const parsed = matter(rawString);
     frontmatter = parsed.data;
     markdownContent = parsed.content;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Error parsing frontmatter:', e.message);
     return null;
   }
@@ -408,7 +510,7 @@ function processContent(rawString, mdInstance, config, env = {}) {
     searchData = {
       title: frontmatter.title || 'Untitled',
       content: stripHtml(htmlContent).slice(0, 5000),
-      headings: headings.map(h => ({ id: h.id, text: h.text }))
+      headings: headings.map((h: any) => ({ id: h.id, text: h.text }))
     };
   }
 
@@ -416,13 +518,13 @@ function processContent(rawString, mdInstance, config, env = {}) {
 }
 
 async function processContentAsync(rawString: string, mdInstance: any, config: any, env: any = {}, hooks: any = null) {
-  let frontmatter, markdownContent;
+  let frontmatter: any, markdownContent: any;
 
   try {
     const parsed = matter(rawString);
     frontmatter = parsed.data;
     markdownContent = parsed.content;
-  } catch (e) {
+  } catch (e: any) {
     console.error('Error parsing frontmatter:', e.message);
     return null;
   }
@@ -470,13 +572,14 @@ async function processContentAsync(rawString: string, mdInstance: any, config: a
     // (fixHtmlLinks + rewriteInternalHrefsForOffline + stripDefaultLocalePrefix).
     const urlContext = createUrlContext({
       relativePathToRoot: env.relativePathToRoot || './',
-      outputPrefix: '',
+      outputPrefix: env.outputPrefix || '',
       offline: env.isOfflineMode === true,
       base: env.config?.base || '/',
       siteUrl: config.url || '',
       pathname: env.pathname,
       projectPrefix: config._activePrefix || '/',
       workspaceProjects: config._workspace?.projects || [],
+      allLocales: env.allLocales || (config._allLocales || []).map((l: any) => l.id),
     });
     htmlContent = rewriteHtmlLinks(htmlContent, urlContext, {
       defaultLocale: env.defaultLocale || null,

@@ -497,6 +497,7 @@ export async function renderPages({ config, srcDir, fallbackSrcDir, outputDir, h
           // locale lives at root, not under its own prefix).
           defaultLocale: config._defaultLocale || null,
           allLocales: (config._allLocales || []).map((l: any) => l.id),
+          outputPrefix: outputPrefix,
           config: { base: config.base || '/' },
           pathname: pageUrlsForMarkdown.pathname,
         },

@@ -22,7 +22,10 @@ import { fixSvgNamespaces } from './svg-utils.js';
   let iconsRegistered = false;
 
 
-  function getTheme() {
+  function getThemeForElement(el: HTMLElement) {
+    const container = el.closest('.mermaid-container') as HTMLElement | null;
+    const customTheme = container?.dataset.theme || el.dataset.theme;
+    if (customTheme) return customTheme;
     return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default';
   }
 
@@ -40,7 +43,6 @@ import { fixSvgNamespaces } from './svg-utils.js';
         console.warn('Mermaid icon registration failed:', e);
       }
     }
-    mermaid.initialize({ startOnLoad: false, theme: getTheme(), securityLevel: 'loose' });
 
     // Ensure DOM is settled
     await new Promise(resolve => requestAnimationFrame(resolve));
@@ -51,8 +53,9 @@ import { fixSvgNamespaces } from './svg-utils.js';
       if (!el.dataset.original) el.dataset.original = el.textContent || '';
       const code = el.dataset.original;
 
-
       try {
+        const elemTheme = getThemeForElement(el);
+        mermaid.initialize({ startOnLoad: false, theme: elemTheme, securityLevel: 'loose' });
         const id = `mermaid-svg-${counter++}`;
         const { svg } = await mermaid.render(id, code);
 

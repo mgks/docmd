@@ -144,6 +144,17 @@ body.dark #docmd-ai-plugin-root {
   opacity: 0.9;
 }
 
+.docmd-ai-bar-input:disabled,
+.docmd-ai-drawer-input:disabled,
+.docmd-ai-submit-btn:disabled,
+.docmd-ai-drawer-send-btn:disabled,
+.docmd-ai-pill-btn.disabled,
+.docmd-ai-pill-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
 /* --- Floating Non-blocking Sidebar Drawer --- */
 .docmd-ai-drawer {
   position: fixed;

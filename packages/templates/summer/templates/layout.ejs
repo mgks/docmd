@@ -91,7 +91,8 @@
     const _tocDisabled = (config.theme?.toc === false) || (locals.frontmatter && (frontmatter.toc === false || frontmatter.toc === 'false' || frontmatter.toc === 'hidden'));
     const _noHeader = (headerConfig?.enabled === false);
     const _hasMenubar = (locals.menubarConfig && menubarConfig?.enabled !== false);
-    const _hasBanner = (locals.config && config.layout && config.layout.banner);
+    const _banner = (locals.config && config.layout && config.layout.banner) || null;
+    const _hasBanner = Boolean(_banner && (_banner.content || _banner.html || _banner.link || (typeof _banner === 'string' && _banner.trim())));
     const _bodyClasses = ['summer-template'];
     if (_noSidebar) _bodyClasses.push('no-sidebar');
     if (_tocDisabled) _bodyClasses.push('toc-disabled');
@@ -119,12 +120,41 @@
       initBanner() listens for so close-state is sessionStorage-persisted)
       ───────────────────────────────────────────────────────────── %>
   <% if (_hasBanner) { %>
-    <div class="summer-banner" data-docmd-banner role="region" aria-label="Site announcement">
+    <%
+      const _b = (typeof _banner === 'object' && _banner !== null) ? _banner : { content: String(_banner || '') };
+      const _bType = _b.type || _b.style || 'info';
+      const _bDismissible = _b.dismissible !== false && _b.closable !== false;
+      const _bIcon = _b.icon || null;
+      const _bLink = _b.link || null;
+      let _bInner = _b.html || _b.content || '';
+      if (!_b.html && typeof _bInner === 'string') {
+        _bInner = _bInner
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>');
+      }
+    %>
+    <div class="summer-banner summer-banner--<%= _bType %><%= _bDismissible ? ' is-dismissible' : '' %>" data-docmd-banner role="region" aria-label="Site announcement">
       <div class="summer-banner__inner">
-        <span><%- typeof config.layout.banner === 'string' ? config.layout.banner : '' %></span>
-        <button class="summer-banner__close sidebar-menu-button" type="button" data-docmd-banner-dismiss aria-label="Dismiss banner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
+        <% if (_bIcon) { %>
+          <span class="summer-banner__icon" aria-hidden="true">
+            <%- renderIcon(_bIcon) %>
+          </span>
+        <% } %>
+        <span class="summer-banner__text"><%- _bInner %></span>
+        <% if (_bLink && _bLink.url) { %>
+          <a class="summer-banner__link" href="<%= relativePathToRoot %><%= _bLink.url.startsWith('/') ? _bLink.url.substring(1) : _bLink.url %>">
+            <%- _bLink.text || (typeof t === 'function' ? t('readMore') : 'Read more') %>
+            <%- renderIcon('arrow-right', { class: 'summer-banner__link-icon' }) %>
+          </a>
+        <% } %>
+        <% if (_bDismissible) { %>
+          <button class="summer-banner__close sidebar-menu-button" type="button" data-docmd-banner-dismiss aria-label="<%= typeof t === 'function' ? t('close') : 'Close' %>">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        <% } %>
       </div>
     </div>
   <% } %>
