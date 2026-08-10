@@ -386,8 +386,9 @@ ${projectsList}`;
     workspaceContext += `
 
 CRITICAL SCOPE & NAVIGATION RULES:
-1. SCOPE PRIORITIZATION: Prioritize answers using content from the Current Active Project ("${currentProjectName}")${hasVersions && activeVersion ? `, active version (${activeVersion.label})` : ''}${hasLocales && activeLocale ? `, and active language (${activeLocale.label})` : ''}. Do not cite older historical versions or alternate languages unless the user explicitly requests them.
-${hasVersions && defaultVer ? `2. LATEST VERSION QUERIES: If a user asks what the latest version or release is, refer to the configured latest version (${defaultVer.label}).\n` : ''}3. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.`;
+1. SCOPE PRIORITIZATION: Prioritize answers using content from the Current Active Project ("${currentProjectName}")${hasVersions && activeVersion ? `, active version (${activeVersion.label})` : ''}${hasLocales && activeLocale ? `, and active language (${activeLocale.label})` : ''}.
+2. STRICT ACTIVE / LATEST VERSION ONLY: When versioning is configured on this site, ONLY cite, explain, recommend, and link to pages from the active version (${activeVersion?.label || defaultVer?.label}) or latest version (${defaultVer?.label}). NEVER list, recommend, or mention older historical versions in greetings, general overviews, or resource summaries unless the user specifically and explicitly asks for a previous version.
+${hasVersions && defaultVer ? `3. LATEST VERSION QUERIES: If a user asks what the latest version or release is, refer to the configured latest version (${defaultVer.label}).\n` : ''}4. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.`;
 
     const defaultBasePrompt = `You are docmd assistant — an expert, precise documentation assistant strictly dedicated to answering technical questions about this documentation site.
 
@@ -436,22 +437,53 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
     };
     const siteBaseUrl = getSiteBaseUrl();
 
+    // Compute version & locale scoping
+    const versionsObj = cfg.versions || {};
+    const allVerList: Array<{ id: string; dir?: string }> = Array.isArray(versionsObj.all) ? versionsObj.all : [];
+    const currentVerDir = versionsObj.current ? (allVerList.find(v => v.id === versionsObj.current)?.dir || `v${versionsObj.current}`) : '';
+    const olderVersionDirs = allVerList
+      .filter(v => v.id !== versionsObj.current)
+      .map(v => v.dir || `v${v.id}`)
+      .filter(Boolean);
+    const isExplicitOlderVerRequest = olderVersionDirs.some(oldDir => query.toLowerCase().includes(oldDir.toLowerCase()));
+
+    const i18nObj = cfg.i18n || {};
+    const allLocales: Array<{ id: string }> = Array.isArray(i18nObj.locales) ? i18nObj.locales : [];
+    let activeLocaleId = i18nObj.default || 'en';
+    if (typeof location !== 'undefined') {
+      const pathParts = location.pathname.split('/');
+      const foundLoc = allLocales.find(l => pathParts.includes(l.id));
+      if (foundLoc) activeLocaleId = foundLoc.id;
+    }
+    const nonActiveLocaleIds = allLocales.filter(l => l.id !== activeLocaleId).map(l => l.id);
+    const isExplicitLocaleRequest = nonActiveLocaleIds.some(locId => query.toLowerCase().includes(locId.toLowerCase()));
+
     // 1. Local Active Search Index (via window.docmdSearch)
     try {
       if ((window as any).docmdSearch && typeof (window as any).docmdSearch.search === 'function') {
         const localHits = await (window as any).docmdSearch.search(query);
         if (Array.isArray(localHits)) {
-          for (const item of localHits.slice(0, 5)) {
-            const rawId = item.id || item.url || '';
+          for (const item of localHits) {
+            const rawId = String(item.id || item.url || '');
+            if (!isExplicitOlderVerRequest && olderVersionDirs.some(oldDir => rawId.includes(`/${oldDir}/`))) {
+              continue;
+            }
+            if (!isExplicitLocaleRequest && nonActiveLocaleIds.some(locId => rawId.includes(`/${locId}/`))) {
+              continue;
+            }
+
             const cleanId = rawId.startsWith('/') ? rawId.slice(1) : rawId;
             const fullUrl = rawId.startsWith('http') ? rawId : new URL(cleanId, siteBaseUrl).href;
-            hits.push({
-              project: 'Current Project',
-              title: item.title || cleanId,
-              url: fullUrl,
-              snippet: item.snippet || item.text || '',
-              searchType: 'keyword'
-            });
+            if (!hits.some(existing => existing.url === fullUrl)) {
+              hits.push({
+                project: 'Current Project',
+                title: item.title || cleanId,
+                url: fullUrl,
+                snippet: item.snippet || item.text || '',
+                searchType: 'keyword'
+              });
+            }
+            if (hits.length >= 5) break;
           }
         }
       }
@@ -473,17 +505,18 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
             const docs = indexData.storedFields ? Object.values(indexData.storedFields) : (Array.isArray(indexData) ? indexData : []);
             const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
 
-            const versionsObj = cfg.versions || {};
-            const allVerList: Array<{ id: string; dir?: string }> = Array.isArray(versionsObj.all) ? versionsObj.all : [];
-            const currentVerDir = versionsObj.current ? (allVerList.find(v => v.id === versionsObj.current)?.dir || `v${versionsObj.current}`) : '';
-            const i18nObj = cfg.i18n || {};
-            const defaultLocale = i18nObj.default || '';
-            const olderVersionDirs = allVerList
-              .filter(v => v.id !== versionsObj.current)
-              .map(v => v.dir || `v${v.id}`)
-              .filter(Boolean);
+            const filteredDocs = docs.filter((doc: any) => {
+              const rawId = String(doc.id || doc.url || '');
+              if (!isExplicitOlderVerRequest && olderVersionDirs.some(oldDir => rawId.includes(`/${oldDir}/`))) {
+                return false;
+              }
+              if (!isExplicitLocaleRequest && nonActiveLocaleIds.some(locId => rawId.includes(`/${locId}/`))) {
+                return false;
+              }
+              return true;
+            });
 
-            const scored = docs.map((doc: any) => {
+            const scored = filteredDocs.map((doc: any) => {
               const titleStr = String(doc.title || doc.id || '').toLowerCase();
               const textStr = String(doc.text || '').toLowerCase();
               const rawId = String(doc.id || '');
@@ -494,13 +527,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
               }
 
               if (currentVerDir && rawId.includes(`/${currentVerDir}/`)) score += 10;
-              if (defaultLocale && rawId.includes(`/${defaultLocale}/`)) score += 5;
-
-              for (const oldDir of olderVersionDirs) {
-                if (rawId.includes(`/${oldDir}/`) && !query.toLowerCase().includes(oldDir.toLowerCase())) {
-                  score -= 15;
-                }
-              }
+              if (activeLocaleId && rawId.includes(`/${activeLocaleId}/`)) score += 5;
 
               return { doc, score };
             }).filter((h: any) => h.score > 0).sort((a: any, b: any) => b.score - a.score);
@@ -530,6 +557,12 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
   }
 
   private async fetchLocalSearchContext(query: string): Promise<string> {
+    const trimmed = query.trim().toLowerCase();
+    const isGreetingOrCasual = /^(hi|hello|hey|howdy|greetings|good\s+(morning|afternoon|evening|day)|who\s+are\s+you|what\s+can\s+you\s+do|help|thanks|thank\s+you|bye|goodbye)[!?. ]*$/i.test(trimmed) || trimmed.length <= 2;
+    if (isGreetingOrCasual) {
+      return '';
+    }
+
     try {
       const hits = await this.searchAllWorkspaceIndexes(query);
       if (Array.isArray(hits) && hits.length > 0) {
