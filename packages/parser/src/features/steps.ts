@@ -63,9 +63,9 @@ function stepsRule(state, startLine, endLine, silent) {
     }
 
     if (!fenceMarker) {
-      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*button/)) {
+      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|tag|embed)\b/i)) {
         depth++;
-      } else if (nextContent.match(/^:::\s*$/)) {
+      } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
         depth--;
         if (depth === 0) {
           found = true;
@@ -92,12 +92,39 @@ function stepsRule(state, startLine, endLine, silent) {
     const steps = [];
     let currentStep = null;
     let currentContentLines = [];
+    let nestedDepth = 0;
+    let inFence = false;
+    let innerFenceMarker = null;
+    const INLINE_CONTAINERS = /^:::\s*(tag|button|embed)\b/i;
 
     for (let i = 0; i < lines.length; i++) {
       const rawLine = lines[i];
       const trimmedLine = rawLine.trim();
 
-      if (trimmedLine === ':::' || /^:::\s*(\/step|endstep|\/steps|endsteps)\b/i.test(trimmedLine)) {
+      if (inFence) {
+        if (innerFenceMarker && trimmedLine.startsWith(innerFenceMarker)) {
+          inFence = false;
+          innerFenceMarker = null;
+        }
+        if (currentStep) {
+          currentContentLines.push(rawLine);
+        }
+        continue;
+      }
+
+      const matchFence = trimmedLine.match(/^(`{3,}|~{3,})/);
+      if (matchFence) {
+        inFence = true;
+        innerFenceMarker = matchFence[1];
+        if (currentStep) {
+          currentContentLines.push(rawLine);
+        }
+        continue;
+      }
+
+      const stepMatch = trimmedLine.match(/^:::\s*step(?:\s+(.*))?$/i);
+
+      if (nestedDepth === 0 && (trimmedLine === ':::' || /^:::\s*(\/step|endstep|\/steps|endsteps)\b/i.test(trimmedLine))) {
         if (currentStep) {
           currentStep.content = smartDedent(currentContentLines.join('\n'));
           steps.push(currentStep);
@@ -107,8 +134,7 @@ function stepsRule(state, startLine, endLine, silent) {
         continue;
       }
 
-      const stepMatch = trimmedLine.match(/^:::\s*step(?:\s+(.*))?$/i);
-      if (stepMatch) {
+      if (nestedDepth === 0 && stepMatch) {
         if (currentStep) {
           currentStep.content = smartDedent(currentContentLines.join('\n'));
           steps.push(currentStep);
@@ -117,6 +143,11 @@ function stepsRule(state, startLine, endLine, silent) {
         currentStep = { title, icon, content: '' };
         currentContentLines = [];
       } else if (currentStep) {
+        if (trimmedLine.match(/^:::\s*[a-zA-Z]/) && !INLINE_CONTAINERS.test(trimmedLine)) {
+          nestedDepth++;
+        } else if (nestedDepth > 0 && (trimmedLine === ':::' || /^:::\s*\/[a-zA-Z]/i.test(trimmedLine))) {
+          nestedDepth--;
+        }
         currentContentLines.push(rawLine);
       }
     }

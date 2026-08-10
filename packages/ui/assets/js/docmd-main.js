@@ -52,26 +52,13 @@
     //   page's sidebar auto-expands the active group, so parents that are
     //   pages themselves (e.g. "Syntax" with children) open as pages,
     //   not as collapsed sections.
-    const navTrigger = e.target.closest('.nav-group, .collapse-icon-wrapper');
+    const navTrigger = e.target.closest('span.nav-group, a.nav-group, .collapse-icon-wrapper');
     if (navTrigger) {
       const item = navTrigger.closest('li.collapsible');
       const isChevron = navTrigger.classList.contains('collapse-icon-wrapper');
-      const isDummySpan = navTrigger.tagName !== 'A';
+      const isDummySpan = navTrigger.tagName === 'SPAN';
 
-      // Offline-mode safety (issue #164): under file:// the SPA click handler
-      // is not registered (initializeSPA short-circuits at line 581), so this
-      // is the only click handler that runs. closest('.nav-group') can walk
-      // past an empty-class nested <a> and match the parent <li class="nav-group">;
-      // navTrigger.tagName then equals 'LI', isDummySpan is true, and the
-      // preventDefault below would swallow the click and block the default
-      // <a href> navigation. Skip the toggle in that exact case so the click
-      // reaches the inner link's default behaviour. Non-offline builds keep
-      // their existing SPA-fall-through path unchanged — the gate only fires
-      // when location.protocol === 'file:' AND the matched element is an LI
-      // (never an A, span.nav-group, or chevron).
-      const isOffline = location.protocol === 'file:';
-      const matchedParentLi = navTrigger.tagName === 'LI';
-      const shouldToggle = (isChevron || isDummySpan) && item && !(isOffline && matchedParentLi);
+      const shouldToggle = (isChevron || isDummySpan) && item;
 
       if (shouldToggle) {
         e.preventDefault();
@@ -110,6 +97,42 @@
       if (tabPanes[index]) tabPanes[index].classList.add('active');
     }
 
+    function positionDropdown(container) {
+      if (!container) return;
+      const menu = container.querySelector('.version-dropdown-menu, .language-switcher-menu, .project-switcher-menu');
+      if (!menu) return;
+      menu.style.left = '';
+      menu.style.right = '';
+      menu.style.top = '';
+      menu.style.bottom = '';
+      menu.style.transform = '';
+
+      if (!container.classList.contains('open')) return;
+
+      requestAnimationFrame(() => {
+        const rect = menu.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        const viewportW = window.innerWidth || document.documentElement.clientWidth;
+        const viewportH = window.innerHeight || document.documentElement.clientHeight;
+        const margin = 12;
+
+        if (rect.right > viewportW - margin) {
+          menu.style.left = 'auto';
+          menu.style.right = '0';
+          menu.style.transform = 'translateY(0)';
+        } else if (rect.left < margin) {
+          menu.style.left = '0';
+          menu.style.right = 'auto';
+          menu.style.transform = 'translateY(0)';
+        }
+
+        if (rect.bottom > viewportH - margin && containerRect.top > rect.height + margin) {
+          menu.style.top = 'auto';
+          menu.style.bottom = 'calc(100% + 6px)';
+        }
+      });
+    }
+
     // Version Dropdown Toggle
     const versionToggle = e.target.closest('.version-dropdown-toggle');
     if (versionToggle) {
@@ -118,6 +141,7 @@
       const dropdown = versionToggle.closest('.docmd-version-dropdown');
       dropdown.classList.toggle('open');
       versionToggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+      positionDropdown(dropdown);
       // Close other switchers when opening version dropdown
       document.querySelectorAll('.docmd-language-switcher.open, .docmd-project-switcher.open').forEach(d => {
         d.classList.remove('open');
@@ -229,6 +253,7 @@
       const dropdown = langToggle.closest('.docmd-language-switcher');
       dropdown.classList.toggle('open');
       langToggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+      positionDropdown(dropdown);
       // Close version dropdown when opening language switcher
       document.querySelectorAll('.docmd-version-dropdown.open, .docmd-project-switcher.open').forEach(d => {
         d.classList.remove('open');
@@ -245,6 +270,7 @@
       const dropdown = projectToggle.closest('.docmd-project-switcher');
       dropdown.classList.toggle('open');
       projectToggle.setAttribute('aria-expanded', dropdown.classList.contains('open'));
+      positionDropdown(dropdown);
       // Close other dropdowns
       document.querySelectorAll('.docmd-version-dropdown.open, .docmd-language-switcher.open').forEach(d => {
         d.classList.remove('open');
@@ -953,16 +979,26 @@
           '.summer-sidebar nav'
         ];
 
+        const swappedNodes = new Set();
         selectorsToSwap.forEach(selector => {
           const oldEls = document.querySelectorAll(selector);
           const newEls = doc.querySelectorAll(selector);
           oldEls.forEach((oldEl, idx) => {
             const newEl = newEls[idx];
             if (oldEl && newEl) {
-              oldEl.textContent = '';
-              while (newEl.firstChild) {
-                oldEl.appendChild(newEl.firstChild);
+              let parent = oldEl.parentElement;
+              let parentSwapped = false;
+              while (parent) {
+                if (swappedNodes.has(parent)) {
+                  parentSwapped = true;
+                  break;
+                }
+                parent = parent.parentElement;
               }
+              if (parentSwapped) return;
+
+              swappedNodes.add(oldEl);
+              oldEl.replaceChildren(...Array.from(newEl.childNodes));
             }
           });
         });

@@ -475,7 +475,8 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
         // Gated on isMonorepoContext so external projects running the monorepo
         // binary (e.g. via `node ../docmd/.../docmd.js`) don't accidentally load
         // from the monorepo source and bypass auto-install.
-        if (isMonorepoContext && name.startsWith('@docmd/plugin-')) {
+        const isCoreOrMonorepo = isMonorepoContext || (name.startsWith('@docmd/plugin-') && isCorePlugin(name.replace('@docmd/plugin-', '')));
+        if (isCoreOrMonorepo && name.startsWith('@docmd/plugin-')) {
           const id = name.replace('@docmd/plugin-', '');
           const localPath = path.resolve(__monorepoRoot, 'packages/plugins', id, 'dist/index.js');
           if (nativeFs.existsSync(localPath)) {

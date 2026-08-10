@@ -29,9 +29,19 @@ export class DocmdAIAssistantUI {
       reasoning: cfg.reasoning ?? false
     });
 
+    const isSemanticUsable = cfg.searchCapabilities?.semantic === true;
+
+    this.engine.registerTool({
+      name: 'get_site_structure',
+      description: 'Get the complete documentation site structure, including available versions (current and historical), supported languages/locales, workspace projects, search capabilities, and page navigation hierarchy with titles and URLs.',
+      execute: async () => {
+        return this.getSiteStructure();
+      }
+    });
+
     this.engine.registerTool({
       name: 'search_documentation',
-      description: 'Search documentation pages across all projects in this workspace using keyword full-text matching and semantic vector search.',
+      description: `Search documentation pages across all projects in this workspace using full-text keyword matching ${isSemanticUsable ? 'and semantic vector search' : '(keyword search active; semantic search disabled)'}. Always supply concise, targeted search terms for highest accuracy.`,
       execute: async ({ query, project }: { query: string; project?: string }) => {
         return await this.searchAllWorkspaceIndexes(query, project);
       }
@@ -287,12 +297,29 @@ Ground all page hyperlinks strictly in real search results. All absolute URLs mu
 CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. IDENTITY & NAME: Your name is "docmd assistant". If asked who you are or what your name is, introduce yourself strictly as "docmd assistant", an expert AI guide for this documentation site. Never identify yourself simply as "docmd" or "I am docmd".
 2. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. If a user asks off-topic, general knowledge, or unrelated questions, politely refuse and explain that you are strictly trained to assist with this documentation.
-3. AGGRESSIVE SEARCH & READING: For EVERY technical question, query search/retrieval tools first to locate relevant page sections before rendering your final response.
+3. TOOL SELECTION & QUERY OPTIMIZATION:
+   - Use \`get_site_structure\` FIRST whenever asked about available documentation versions (current and historical), supported languages/locales, site navigation, page hierarchy, or where topics are located in the docs.
+   - Use \`search_documentation\` to search documentation content for specific technical terms, API parameters, or error messages. Full-text keyword search is ALWAYS active; semantic vector search is conditional (active only when enabled in site config). ALWAYS pass clean, focused search terms (e.g. "containers hero" or "api setup") rather than long conversational questions to guarantee high precision.
 4. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for any referenced pages or sections so users can open and read them directly.
 5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with headers, code blocks, and lists where appropriate. Do not engage in casual off-topic banter.`;
 
     const basePrompt = cfg.systemPrompt || defaultBasePrompt;
     return `${basePrompt}\n\n${workspaceContext}`;
+  }
+
+  private getSiteStructure(): Record<string, any> {
+    const cfg = (window as any).__docmd_ai_config || {};
+    return {
+      siteTitle: cfg.siteTitle || 'Documentation',
+      siteBaseUrl: cfg.siteUrl || cfg.siteBase || '/',
+      currentUrl: typeof location !== 'undefined' ? location.href : '',
+      versions: cfg.versions || null,
+      locales: cfg.i18n || null,
+      searchCapabilities: cfg.searchCapabilities || { keyword: true, semantic: false },
+      isWorkspace: !!cfg.isWorkspace,
+      workspaceProjects: cfg.workspaceProjects || [],
+      navigation: cfg.navigation || []
+    };
   }
 
   private async searchAllWorkspaceIndexes(query: string, projectFilter?: string): Promise<any[]> {

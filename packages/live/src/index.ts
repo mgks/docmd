@@ -63,30 +63,22 @@ async function start() {
   // 2. Native HTTP Server
   const server = http.createServer(async (req, res) => {
     // Normalize path and prevent directory traversal attacks
-    let safePath = path.normalize(req.url!).replace(/^(\.\.[\/\\])+/, '').split('?')[0].split('#')[0];
-    if (safePath === '/' || safePath === '\\') safePath = 'index.html';
+    const rawPath = decodeURIComponent(req.url!).split('?')[0].split('#')[0];
+    const safePathStr = rawPath.replace(/^[\\/]+/, '') || 'index.html';
 
-    // D-H6: use the canonical safePath from @docmd/api to resolve the
-    // requested path against the public dir, instead of relying on
-    // path.join + the ad-hoc `../` stripper. The ad-hoc stripper
-    // happened to be safe for `..` and absolute paths, but the canonical
-    // helper has explicit tests for both and throws with a clear
-    // message instead of returning a wrong-path silently. This
-    // change keeps the existing behaviour for in-bounds paths and
-    // upgrades the security check to the one the rest of the project
-    // uses.
     let filePath: string;
     try {
-      filePath = canonicalSafePath(publicDir, safePath);
-    } catch (e) {
+      filePath = canonicalSafePath(publicDir, safePathStr);
+    } catch (e: any) {
+      console.error('[LIVE 403 ERROR]', e.message, { publicDir, safePathStr });
       res.writeHead(403, { 'Content-Type': 'text/plain' });
       res.end('Forbidden');
       return;
     }
 
     // Dynamic routing for project-local user assets (bypassing the precompiled bundle)
-    if (safePath.startsWith('assets/')) {
-      const userAssetPath = path.join(process.cwd(), safePath);
+    if (safePathStr.startsWith('assets/')) {
+      const userAssetPath = path.join(process.cwd(), safePathStr);
       try {
         await fs.stat(userAssetPath);
         filePath = userAssetPath;
@@ -137,7 +129,7 @@ async function start() {
   server.listen(port, BIND_HOST, () => {
     TUI.section('Live Editor Running', TUI.green);
     TUI.item('', '', TUI.dim, TUI.green);
-    TUI.item('Local Access', `http://localhost:${port}`, TUI.bold, TUI.green);
+    TUI.item('Local Access', `http://127.0.0.1:${port}`, TUI.bold, TUI.green);
     if (BIND_HOST !== '127.0.0.1' && BIND_HOST !== '::1' && BIND_HOST !== 'localhost') {
       TUI.item('LAN Access', `http://${BIND_HOST}:${port}`, TUI.bold, TUI.yellow);
     }
@@ -169,7 +161,7 @@ async function start() {
 
     if (process.stdin.isTTY) process.stdin.setRawMode(false);
 
-    TUI.success('Shutting down Live Editor...');
+    TUI.success('Shutting down Live Editor...\n');
     server.close();
     process.exit(0);
   });

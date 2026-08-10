@@ -49,20 +49,20 @@ export function parseContainerHeader(info: string, positionalKeys: string[] = ['
 
   const result: Record<string, string> = {};
 
-  // 1. Extract named key-values (key:"val", key:'val', key:val)
-  const kvRegex = /\b([a-zA-Z0-9_-]+):(?:"([^"]*)"|'([^']*)'|(\S+))/g;
-  const remaining = cleaned.replace(kvRegex, (match, key, valDouble, valSingle, valBare) => {
-    const val = valDouble !== undefined ? valDouble : (valSingle !== undefined ? valSingle : valBare);
+  // 1. Extract named key-values (key:"val", key:'val', key:“val”, key:val)
+  const kvRegex = /\b([a-zA-Z0-9_-]+):(?:"([^"]*)"|'([^']*)'|[“«]([^”»]*)[”»]|(\S+))/g;
+  const remaining = cleaned.replace(kvRegex, (match, key, valDouble, valSingle, valSmart, valBare) => {
+    const val = valDouble !== undefined ? valDouble : (valSingle !== undefined ? valSingle : (valSmart !== undefined ? valSmart : valBare));
     result[key.toLowerCase()] = val;
     return ' ';
   });
 
   // 2. Extract remaining quoted or unquoted tokens
   const positionalTokens: string[] = [];
-  const tokenRegex = /(?:"([^"]*)"|'([^']*)'|(\S+))/g;
+  const tokenRegex = /(?:"([^"]*)"|'([^']*)'|[“«]([^”»]*)[”»]|(\S+))/g;
   let m;
   while ((m = tokenRegex.exec(remaining)) !== null) {
-    const token = m[1] !== undefined ? m[1] : (m[2] !== undefined ? m[2] : m[3]);
+    const token = m[1] !== undefined ? m[1] : (m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : m[4]));
     if (token && token.trim()) {
       positionalTokens.push(token.trim());
     }
@@ -93,4 +93,23 @@ export function parseTitleAndIcon(info: string) {
     icon: parsed.icon || '',
     url: parsed.url || parsed.link || parsed.href || ''
   };
+}
+
+/**
+ * Inserts `<br>` line break(s) if a self-closing block container (button, tag, embed)
+ * appears on a dedicated line directly following another inline block container.
+ */
+export function ensureLineBreakIfNeeded(state: any, startLine: number): void {
+  const prevEnd = state.env.__lastContainerEndLine;
+  if (
+    prevEnd !== undefined &&
+    state.tokens.length > 0 &&
+    state.tokens[state.tokens.length - 1].type === 'html_inline'
+  ) {
+    const gap = startLine - prevEnd;
+    if (gap >= 0) {
+      const brToken = state.push('html_inline', '', 0);
+      brToken.content = gap === 0 ? '<br>\n' : '<br>'.repeat(gap + 1) + '\n';
+    }
+  }
 }

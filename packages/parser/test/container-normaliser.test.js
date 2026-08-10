@@ -389,7 +389,7 @@ test('F5: 5-level nested callouts → already balanced, normalisation is a no-op
 
 // Build a fresh processor per test so module-level caches don't leak.
 function freshProcessor() {
-  return createMarkdownProcessor({}, () => {});
+  return createMarkdownProcessor({}, () => { });
 }
 
 test('integration: plain markdown renders unchanged', async () => {
@@ -914,4 +914,116 @@ test('smart self-closing container stripping logs info warning and removes stray
   assert.equal(r.source, '::: tag "v1.0" color:#3b82f6');
   assert.equal(r.warnings.length, 1);
   assert.match(r.warnings[0].message, /Self-closing container <tag> does not require a closing tag/);
+});
+
+test('heading inside container is preserved when explicit closing tag exists ahead', () => {
+  const src = [
+    '::: card "Feature Highlight" icon:sparkles',
+    'Cards give content a distinct frame.',
+    '',
+    '# Heading inside card',
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success',
+    '::: /card'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '::: card "Feature Highlight" icon:sparkles',
+    'Cards give content a distinct frame.',
+    '',
+    '# Heading inside card',
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success',
+    ':::'
+  ].join('\n'));
+});
+
+test('self-closing containers: dedicated lines emit <br> while same line stays inline', async () => {
+  const md = createMarkdownProcessor();
+
+  // 1. Dedicated adjacent lines -> separated by <br>
+  const srcDedicated = [
+    '::: button "GitHub" url:"https://github.com"',
+    '::: tag "v0.9.1" style:success'
+  ].join('\n');
+  const resDedicated = await processContentAsync(srcDedicated, md, {}, { filePath: 'test.md' });
+  assert.match(resDedicated.htmlContent, /class="docmd-button"[^>]*>GitHub<\/a><br>\s*<span class="docmd-tag"/);
+
+  // 2. Same line -> no <br> inserted between inline elements
+  const srcSameLine = '::: button "GitHub" url:"https://github.com" :::/button ::: tag "v0.9.1" style:success :::/tag';
+  const resSameLine = await processContentAsync(srcSameLine, md, {}, { filePath: 'test.md' });
+  assert.match(resSameLine.htmlContent, /class="docmd-button"[^>]*>GitHub<\/a>\s*<span class="docmd-tag"/);
+  assert.equal(resSameLine.htmlContent.includes('<br>'), false);
+});
+
+test('normaliseContainers: skips containers inside frontmatter at top of document', () => {
+  const src = [
+    '---',
+    'title: "Frontmatter Title"',
+    'description: "Usage of ::: tip in docmd"',
+    'note: "::: card is not parsed here"',
+    '---',
+    '',
+    '::: card "Real Card"',
+    'body',
+    '::: /card'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  assert.equal(r.warnings.length, 0);
+  assert.equal(r.source, [
+    '---',
+    'title: "Frontmatter Title"',
+    'description: "Usage of ::: tip in docmd"',
+    'note: "::: card is not parsed here"',
+    '---',
+    '',
+    '::: card "Real Card"',
+    'body',
+    ':::'
+  ].join('\n'));
+});
+
+test('normaliseContainers: horizontal rule --- in body is NOT treated as frontmatter', () => {
+  const src = [
+    '# Heading',
+    '',
+    '---',
+    '',
+    '::: card "Card After HR"',
+    'body'
+  ].join('\n');
+
+  const r = normaliseContainers(src);
+  // Card after HR is unclosed at EOF so normaliser auto-closes it
+  assert.equal(r.warnings.length, 1);
+  assert.equal(r.warnings[0].severity, 'error');
+  assert.match(r.warnings[0].message, /Unclosed `<card>`/);
+});
+
+test('hero slider layout: explicit ::: /slide and ::: /hero tags render slides cleanly without ::: leak', async () => {
+  const md = freshProcessor();
+  const src = [
+    '::: hero layout:slider # Interactive slider container',
+    '::: slide # Panel 1',
+    '# Isomorphic Core Engine',
+    'Renders statically and executes client-side seamlessly.',
+    '::: /slide',
+    '',
+    '::: slide # Panel 2',
+    '# AI Context Optimisation',
+    'Structure-aware parsing for LLM agents.',
+    '::: /slide',
+    '::: /hero'
+  ].join('\n');
+
+  const result = await processContentAsync(src, md, {}, { filePath: 'hero.md' });
+  assert.ok(result.htmlContent.includes('<div class="hero-slide">'));
+  assert.ok(result.htmlContent.includes('Isomorphic Core Engine'));
+  assert.ok(result.htmlContent.includes('AI Context Optimisation'));
+  // Ensure closing tag ':::' is not leaked into paragraph text
+  assert.ok(!result.htmlContent.includes('<p>:::</p>'));
+  assert.ok(!result.htmlContent.includes(':::'));
 });

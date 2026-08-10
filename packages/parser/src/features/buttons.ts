@@ -14,6 +14,7 @@
 
 import { renderIcon } from '../utils/icon-renderer.js';
 import { processHref } from '../utils/normalize-href.js';
+import { ensureLineBreakIfNeeded } from '../utils/container-helper.js';
 
 function unquote(value: string): string {
   if (!value) return '';
@@ -97,6 +98,7 @@ function buttonRule(state: any, startLine: number, endLine: number, silent: bool
 
   const match = lineContent.match(/^:::\s*button\s+(.*)$/i);
   if (!match) return false;
+  if (/^:::\s*button\s+.*:::\s*(?:\/button|\/|)?\s+\S/i.test(lineContent)) return false;
   if (silent) return true;
 
   let rest = match[1].trim();
@@ -104,8 +106,13 @@ function buttonRule(state: any, startLine: number, endLine: number, silent: bool
 
   const { text, link, icon, color } = parseButtonArgs(rest);
 
+  ensureLineBreakIfNeeded(state, startLine);
+
   const token = state.push('html_inline', '', 0);
   token.content = renderButtonHtml(text, link, icon, color, state);
+
+  if (!state.env) state.env = {};
+  state.env.__lastContainerEndLine = startLine + 1;
 
   state.line = startLine + 1;
   return true;
@@ -119,7 +126,7 @@ function buttonInlineRule(state: any, silent: boolean) {
   if (state.src.slice(start, start + 3) !== ':::') return false;
 
   const match = state.src.slice(start, max).match(
-    /^:::\s*button\s+(.*?)(?:\s*:::\s*(?:\/button|\/|)?(?=\s|$))/i
+    /^:::\s*button\s+((?:(?!:::).)+)(?:\s*:::\s*(?:\/button|\/)?(?=\s|$))?/i
   );
   if (!match) return false;
   if (silent) return true;

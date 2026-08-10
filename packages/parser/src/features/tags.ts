@@ -14,6 +14,7 @@
 
 import { renderIcon } from '../utils/icon-renderer.js';
 import { processHref } from '../utils/normalize-href.js';
+import { ensureLineBreakIfNeeded } from '../utils/container-helper.js';
 
 function unquote(value: string): string {
   if (!value) return '';
@@ -107,6 +108,7 @@ function tagBlockRule(state: any, startLine: number, endLine: number, silent: bo
 
   const match = lineContent.match(/^:::\s*tag\s+(.*)$/i);
   if (!match) return false;
+  if (/^:::\s*tag\s+.*:::\s*(?:\/tag|\/|)?\s+\S/i.test(lineContent)) return false;
   if (silent) return true;
 
   let rest = match[1].trim();
@@ -114,8 +116,13 @@ function tagBlockRule(state: any, startLine: number, endLine: number, silent: bo
 
   const { text, icon, color, link } = parseTagArgs(rest);
 
+  ensureLineBreakIfNeeded(state, startLine);
+
   const token = state.push('html_inline', '', 0);
   token.content = renderTagHtml(text, icon, color, link, state);
+
+  if (!state.env) state.env = {};
+  state.env.__lastContainerEndLine = startLine + 1;
 
   state.line = startLine + 1;
   return true;
@@ -129,7 +136,7 @@ function tagInlineRule(state: any, silent: boolean) {
   if (state.src.slice(start, start + 3) !== ':::') return false;
 
   const match = state.src.slice(start, max).match(
-    /^:::\s*tag\s+(.*?)(?:\s*:::\s*(?:\/tag|\/|)?(?=\s|$))/i
+    /^:::\s*tag\s+((?:(?!:::).)+)(?:\s*:::\s*(?:\/tag|\/)?(?=\s|$))?/i
   );
   if (!match) return false;
   if (silent) return true;

@@ -47,20 +47,12 @@ if (!existsSync(nodeModules)) {
   console.log(`\n  \x1b[36m→\x1b[0m installing _playground dependencies (one-time)…\n`);
   // --include=optional picks up engine-rust / engine-rust-binaries so
   // docmd doesn't lock trying to load a missing native module. Pair with
-  // --foreground-scripts to surface postinstall output (engine-rust's
-  // postinstall downloads the .node binary from a CDN).
-  let r = spawnSync('pnpm', ['install'], {
+  // --foreground-scripts to surface postinstall output.
+  const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps', '--include=optional', '--foreground-scripts'], {
     cwd: __dirname,
     stdio: 'inherit',
     env,
   });
-  if (r.status !== 0) {
-    r = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--legacy-peer-deps', '--include=optional', '--foreground-scripts'], {
-      cwd: __dirname,
-      stdio: 'inherit',
-      env,
-    });
-  }
   if (r.status !== 0) fail(`install failed (exit ${r.status})`);
 }
 

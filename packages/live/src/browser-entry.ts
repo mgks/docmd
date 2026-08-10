@@ -13,8 +13,8 @@
  */
 
 import { createMarkdownProcessor, processContent } from '@docmd/parser/dist/markdown-processor.js';
-import texmath from 'markdown-it-texmath';
-import katex from 'katex';
+import { markdownSetup as mathMarkdownSetup } from '@docmd/plugin-math';
+import { markdownSetup as mermaidMarkdownSetup } from '@docmd/plugin-mermaid';
 // @ts-expect-error virtual module
 import templates from 'virtual:docmd-templates';
 
@@ -30,17 +30,10 @@ async function compile(markdown: string, config: any = {}) {
     // 1. Process Markdown with Plugin Support
     const md = createMarkdownProcessor(defaults, (parser) => {
         // Math (KaTeX)
-        parser.use(texmath, { engine: katex, delimiters: 'dollars' });
+        mathMarkdownSetup(parser);
 
-        // Mermaid fence override
-        const defaultFence = parser.renderer.rules.fence;
-        parser.renderer.rules.fence = (tokens, idx, options, env, self) => {
-            const info = tokens[idx].info.trim();
-            if (info === 'mermaid') {
-                return `<div class="mermaid">${parser.utils.escapeHtml(tokens[idx].content)}</div>\n`;
-            }
-            return defaultFence(tokens, idx, options, env, self);
-        };
+        // Mermaid (container ::: mermaid and fence ```mermaid)
+        mermaidMarkdownSetup(parser);
     });
     const result = processContent(markdown, md, defaults);
 
@@ -129,4 +122,6 @@ ${mermaidScript}
 </html>`;
 }
 
-export { compile };
+import { highlightDocmd } from './docmd-highlighter.js';
+
+export { compile, highlightDocmd as highlight };

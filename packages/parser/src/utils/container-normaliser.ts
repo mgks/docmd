@@ -190,6 +190,64 @@ export function classifyLine(line: string): ClassifiedLine {
 }
 
 /**
+ * Look ahead in source lines to check if an open container frame has a matching
+ * closing tag (`:::`, `::: /<name>`, etc.) further down in the document.
+ */
+function hasMatchingCloseAhead(lines: string[], startIdx: number, frame: OpenFrame): boolean {
+  let depth = 0;
+  let inFence = false;
+  let fenceMarker: string | null = null;
+
+  for (let j = startIdx; j < lines.length; j++) {
+    const line = lines[j];
+    if (inFence) {
+      if (/^\s*(```+|~~~+)/.test(line) && line.trimStart().startsWith(fenceMarker!)) {
+        inFence = false;
+        fenceMarker = null;
+      }
+      continue;
+    }
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
+    if (fenceMatch) {
+      inFence = true;
+      fenceMarker = fenceMatch[1][0];
+      continue;
+    }
+
+    const cls = classifyLine(line);
+
+    if (cls.kind === 'open') {
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
+        continue;
+      }
+      if (cls.name && cls.name.toLowerCase() === frame.name.toLowerCase()) {
+        depth++;
+      }
+      continue;
+    }
+
+    if (cls.kind === 'close') {
+      if (cls.name && SELF_CLOSING_CONTAINER_NAMES.has(cls.name.toLowerCase())) {
+        continue;
+      }
+
+      const isNameMatch = Boolean(cls.name && cls.name.toLowerCase() === frame.name.toLowerCase());
+      const isIndentMatch = !cls.name && indentOf(line) <= frame.indent;
+
+      if (isNameMatch || isIndentMatch) {
+        if (depth > 0) {
+          depth--;
+        } else {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Rewrite a markdown source so that every `:::` block has a matching close.
  *
  * The function never throws; instead it returns the rewritten source plus
@@ -218,9 +276,11 @@ export function normaliseContainers(
   const stack: OpenFrame[] = [];
   const warnings: NormaliserWarning[] = [];
 
-  // Fenced code block tracking — see the in-loop comment below.
+  // Fenced code block & frontmatter tracking — see the in-loop comment below.
   let inFence = false;
   let fenceMarker: string | null = null;
+  let inFrontmatter = false;
+  let hasSeenContent = false;
 
   const recordWarning = (w: NormaliserWarning): void => {
     warnings.push(w);
@@ -230,6 +290,28 @@ export function normaliseContainers(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const indent = indentOf(line);
+    const trimmed = line.trim();
+
+    // 0. Skip frontmatter at the top of the document (--- or +++)
+    if (inFrontmatter) {
+      if (trimmed === '---' || trimmed === '+++') {
+        inFrontmatter = false;
+        hasSeenContent = true;
+      }
+      out.push(line);
+      continue;
+    }
+
+    if (!hasSeenContent) {
+      if (trimmed === '---' || trimmed === '+++') {
+        inFrontmatter = true;
+        out.push(line);
+        continue;
+      }
+      if (trimmed !== '') {
+        hasSeenContent = true;
+      }
+    }
 
     if (inFence) {
       if (/^\s*(```+|~~~+)/.test(line) && line.trimStart().startsWith(fenceMarker!)) {
@@ -248,8 +330,13 @@ export function normaliseContainers(
     }
 
     // Auto-close open containers before major section headings (e.g. #, ##, ###)
+    // ONLY if the container does not have a matching close tag later in the document.
     if (/^\s*#{1,6}\s+/.test(line) && stack.length > 0) {
       while (stack.length > 0) {
+        const topFrame = stack[stack.length - 1];
+        if (hasMatchingCloseAhead(lines, i + 1, topFrame)) {
+          break;
+        }
         const frame = stack.pop()!;
         recordWarning({
           line: i + 1,

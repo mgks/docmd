@@ -70,9 +70,9 @@ function heroRule(state, startLine, endLine, silent) {
     }
 
     if (!fenceMarker) {
-      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|embed|tag)\b/)) {
+      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|embed|tag)\b/i)) {
         depth++;
-      } else if (nextContent.match(/^:::\s*$/)) {
+      } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
         depth--;
         if (depth === 0) {
           found = true;
@@ -98,24 +98,61 @@ function heroRule(state, startLine, endLine, silent) {
     const slides = [];
     let currentSlide = null;
     let currentLines = [];
+    let nestedDepth = 0;
+    let inFence = false;
+    let innerFenceMarker = null;
+    const INLINE_CONTAINERS = /^:::\s*(tag|button|embed)\b/i;
 
     for (let i = 0; i < lines.length; i++) {
         const rawLine = lines[i];
         const trimmed = rawLine.trim();
-        if (/^:::\s*(\/slide|endslide)\b/i.test(trimmed)) {
+
+        if (inFence) {
+            if (innerFenceMarker && trimmed.startsWith(innerFenceMarker)) {
+                inFence = false;
+                innerFenceMarker = null;
+            }
+            if (currentSlide) {
+                currentLines.push(rawLine);
+            }
             continue;
         }
-        if (trimmed.startsWith('== slide') || /^:::\s*slide\b/i.test(trimmed)) {
-            if (currentSlide !== null) {
+
+        const matchFence = trimmed.match(/^(`{3,}|~{3,})/);
+        if (matchFence) {
+            inFence = true;
+            innerFenceMarker = matchFence[1];
+            if (currentSlide) {
+                currentLines.push(rawLine);
+            }
+            continue;
+        }
+
+        if (nestedDepth === 0 && (trimmed === ':::' || /^:::\s*(\/slide|endslide|\/hero|endhero)\b/i.test(trimmed))) {
+            if (currentSlide) {
+                slides.push(smartDedent(currentLines.join('\n')));
+                currentSlide = null;
+                currentLines = [];
+            }
+            continue;
+        }
+
+        if (nestedDepth === 0 && (trimmed.startsWith('== slide') || /^:::\s*slide\b/i.test(trimmed))) {
+            if (currentSlide) {
                 slides.push(smartDedent(currentLines.join('\n')));
             }
             currentSlide = true;
             currentLines = [];
-        } else {
+        } else if (currentSlide) {
+            if (trimmed.match(/^:::\s*[a-zA-Z]/) && !INLINE_CONTAINERS.test(trimmed)) {
+                nestedDepth++;
+            } else if (nestedDepth > 0 && (trimmed === ':::' || /^:::\s*\/[a-zA-Z]/i.test(trimmed))) {
+                nestedDepth--;
+            }
             currentLines.push(rawLine);
         }
     }
-    if (currentSlide !== null) slides.push(smartDedent(currentLines.join('\n')));
+    if (currentSlide) slides.push(smartDedent(currentLines.join('\n')));
 
     const slideCount = slides.length;
     // Build Tokens

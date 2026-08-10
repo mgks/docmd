@@ -64,9 +64,9 @@ function changelogRule(state, startLine, endLine, silent) {
     }
 
     if (!fenceMarker) {
-      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*button/)) {
+      if (nextContent.match(/^:::\s*[a-zA-Z]/) && !nextContent.match(/^:::\s*(button|tag|embed)\b/i)) {
         depth++;
-      } else if (nextContent.match(/^:::\s*$/)) {
+      } else if (nextContent.match(/^:::\s*(?:\/.*|end.*)?$/)) {
         depth--;
         if (depth === 0) {
           found = true;
@@ -91,12 +91,39 @@ function changelogRule(state, startLine, endLine, silent) {
   const entries = [];
   let currentEntry = null;
   let currentContentLines = [];
+  let nestedDepth = 0;
+  let inFence = false;
+  let innerFenceMarker = null;
+  const INLINE_CONTAINERS = /^:::\s*(tag|button|embed)\b/i;
 
   for (let i = 0; i < lines.length; i++) {
     const rawLine = lines[i];
     const trimmedLine = rawLine.trim();
 
-    if (trimmedLine === ':::' || /^:::\s*(\/log|endlog|\/changelog|endchangelog)\b/i.test(trimmedLine)) {
+    if (inFence) {
+      if (innerFenceMarker && trimmedLine.startsWith(innerFenceMarker)) {
+        inFence = false;
+        innerFenceMarker = null;
+      }
+      if (currentEntry) {
+        currentContentLines.push(rawLine);
+      }
+      continue;
+    }
+
+    const matchFence = trimmedLine.match(/^(`{3,}|~{3,})/);
+    if (matchFence) {
+      inFence = true;
+      innerFenceMarker = matchFence[1];
+      if (currentEntry) {
+        currentContentLines.push(rawLine);
+      }
+      continue;
+    }
+
+    const logMatch = trimmedLine.match(/^(?::::\s*log\s+(.*)|==\s+(.*))$/i);
+
+    if (nestedDepth === 0 && (trimmedLine === ':::' || /^:::\s*(\/log|endlog|\/changelog|endchangelog)\b/i.test(trimmedLine))) {
       if (currentEntry) {
         currentEntry.content = smartDedent(currentContentLines.join('\n'));
         entries.push(currentEntry);
@@ -106,9 +133,7 @@ function changelogRule(state, startLine, endLine, silent) {
       continue;
     }
 
-    const logMatch = trimmedLine.match(/^(?::::\s*log\s+(.*)|==\s+(.*))$/i);
-
-    if (logMatch) {
+    if (nestedDepth === 0 && logMatch) {
       if (currentEntry) {
         currentEntry.content = smartDedent(currentContentLines.join('\n'));
         entries.push(currentEntry);
@@ -117,6 +142,11 @@ function changelogRule(state, startLine, endLine, silent) {
       currentEntry = { meta: parseQuotedTitle(rawMeta), content: '' };
       currentContentLines = [];
     } else if (currentEntry) {
+      if (trimmedLine.match(/^:::\s*[a-zA-Z]/) && !INLINE_CONTAINERS.test(trimmedLine)) {
+        nestedDepth++;
+      } else if (nestedDepth > 0 && (trimmedLine === ':::' || /^:::\s*\/[a-zA-Z]/i.test(trimmedLine))) {
+        nestedDepth--;
+      }
       currentContentLines.push(rawLine);
     }
   }

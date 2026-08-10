@@ -130,7 +130,11 @@ export async function stopServer(port: any, force: boolean = false) {
             // We look for 'docmd dev', 'docmd live', or direct bin/docmd.js execution
             const isDocmd = command.includes('docmd dev') ||
                 command.includes('docmd live') ||
-                command.includes('bin/docmd.js');
+                command.includes('docmd-live') ||
+                command.includes('bin/docmd.js') ||
+                command.includes('bin/docmd-live.js') ||
+                command.includes('dev.js live') ||
+                command.includes('dev.js dev');
 
             // With --force, also detect 'serve' processes on common docmd ports
             let isServe = false;

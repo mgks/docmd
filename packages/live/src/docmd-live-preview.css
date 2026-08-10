@@ -14,7 +14,8 @@
 
 .toc-sidebar,
 .page-footer-actions,
-.sidebar-header h1 {
+.sidebar-header h1,
+.heading-anchor {
     display: none !important;
 }
 

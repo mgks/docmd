@@ -218,16 +218,113 @@ body {
     color: var(--primary-color);
 }
 
-textarea#input {
+.editor-container {
+    position: relative;
     flex: 1;
-    border: none;
-    resize: none;
+    display: flex;
+    overflow: hidden;
+}
+
+.editor-highlight,
+textarea#input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
     padding: 20px;
+    box-sizing: border-box;
     font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     font-size: 14px;
     line-height: 1.6;
+    tab-size: 2;
+    word-break: break-word;
+    white-space: pre-wrap;
+    border: none;
     outline: none;
-    background: var(--bg-color)
+}
+
+.editor-highlight {
+    pointer-events: none;
+    overflow: hidden;
+    color: #334155;
+    background: var(--bg-color);
+}
+
+.editor-highlight code {
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+textarea#input {
+    background: transparent !important;
+    color: transparent !important;
+    caret-color: #0f172a;
+    resize: none;
+    z-index: 1;
+    overflow: auto;
+}
+
+/* Docmd & Markdown Editor Syntax Highlighting Styles */
+.editor-highlight .hl-header-hash { color: #3b82f6; font-weight: 700; }
+.editor-highlight .hl-header-text { color: #0f172a; font-weight: 700; }
+.editor-highlight .hl-container { color: #8b5cf6; font-weight: 700; }
+.editor-highlight .hl-container-type { color: #7c3aed; font-weight: 700; }
+.editor-highlight .hl-attr-key { color: #0284c7; font-weight: 600; }
+.editor-highlight .hl-attr-val { color: #059669; }
+.editor-highlight .hl-type-arg { color: #d97706; font-weight: 500; }
+.editor-highlight .hl-string { color: #059669; }
+.editor-highlight .hl-comment { color: #64748b; font-style: italic; }
+.editor-highlight .hl-code-fence { color: #d97706; font-weight: 600; }
+.editor-highlight .hl-code-block { color: #b45309; }
+.editor-highlight .hl-code { color: #d97706; font-weight: 600; background: rgba(217, 119, 6, 0.08); padding: 1px 4px; border-radius: 3px; }
+.editor-highlight .hl-frontmatter { color: #64748b; }
+.editor-highlight .hl-fm-key { color: #2563eb; font-weight: 600; }
+.editor-highlight .hl-fm-val { color: #059669; }
+.editor-highlight .hl-bold { font-weight: 700; color: #1e293b; }
+.editor-highlight .hl-italic { font-style: italic; }
+.editor-highlight .hl-link-text { color: #2563eb; font-weight: 600; }
+.editor-highlight .hl-link-url { color: #64748b; }
+.editor-highlight .hl-quote-marker { color: #3b82f6; font-weight: 700; }
+.editor-highlight .hl-quote-text { color: #475569; font-style: italic; }
+.editor-highlight .hl-list-bullet { color: #0284c7; font-weight: 700; }
+
+.copy-markdown-btn {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--border-color, #e0e0e0);
+    color: #444;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.copy-markdown-btn:hover {
+    opacity: 1;
+    background: #fff;
+    color: var(--primary-color, #007bff);
+    border-color: var(--primary-color, #007bff);
+}
+
+.copy-markdown-btn.copied {
+    opacity: 1;
+    background: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+    color: #10b981;
 }
 
 .preview-pane {

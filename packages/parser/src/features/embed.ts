@@ -13,6 +13,7 @@
  */
 
 import { embed } from 'embed-lite';
+import { ensureLineBreakIfNeeded } from '../utils/container-helper.js';
 
 function unquote(value: string): string {
   if (!value) return '';
@@ -57,8 +58,13 @@ function embedRule(state: any, startLine: number, endLine: number, silent: boole
   const urlStr = match[1] || match[2] || match[3] || match[4] || '';
   if (!urlStr) return false;
 
+  ensureLineBreakIfNeeded(state, startLine);
+
   const token = state.push('html_inline', '', 0);
   token.content = renderEmbedHtml(urlStr);
+
+  if (!state.env) state.env = {};
+  state.env.__lastContainerEndLine = startLine + 1;
 
   state.line = startLine + 1;
   return true;

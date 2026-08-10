@@ -49,10 +49,10 @@
   --summer-slow: 360ms;
   --summer-z-base: 1;
   --summer-z-raised: 10;
-  --summer-z-sticky: 30;
-  --summer-z-dropdown: 50;
-  --summer-z-overlay: 100;
-  --summer-z-modal: 200;
+  --summer-z-sticky: 1100;
+  --summer-z-dropdown: 1300;
+  --summer-z-overlay: 1500;
+  --summer-z-modal: 2000;
   --summer-bg: #ffffff;
   --summer-bg-subtle: #fafafa;
   --summer-surface: #ffffff;
@@ -2941,7 +2941,7 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   border-radius: var(--summer-radius-sm);
   background: var(--summer-accent);
   color: #fff;
-  font-size: 0.85rem;
+  font-size: initial;
   font-weight: 500;
   text-decoration: none;
   border: 1px solid var(--summer-accent);
@@ -3035,7 +3035,7 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   transition: opacity var(--summer-fast) var(--summer-ease), transform var(--summer-fast) var(--summer-ease), visibility var(--summer-fast);
   pointer-events: none;
   box-shadow: var(--summer-shadow, 0 4px 12px rgba(0, 0, 0, 0.15));
-  z-index: 1000;
+  z-index: 900;
 }
 
 .summer-content .docmd-tooltip.docmd-tooltip-link::after,
@@ -3057,7 +3057,14 @@ html[data-theme="dark"] .summer-content .markdown-alert-caution {
   visibility: hidden;
   transition: opacity var(--summer-fast) var(--summer-ease), visibility var(--summer-fast);
   pointer-events: none;
-  z-index: 1000;
+  z-index: 900;
+}
+
+.docmd-container.mermaid-container .mermaid-wrapper,
+.docmd-container.mermaid-container .mermaid {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .summer-content .docmd-tooltip:hover::after,

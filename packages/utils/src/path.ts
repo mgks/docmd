@@ -33,8 +33,10 @@ export function asUserPath(value: string): UserPath {
  * absolute path string, safe to pass to fs.* APIs.
  */
 export function safePath(root: string, relativePath: string): string {
-  const resolved = path.resolve(root, relativePath);
-  if (!resolved.startsWith(root + path.sep) && resolved !== root) {
+  const normRoot = path.resolve(root);
+  const resolved = path.resolve(normRoot, relativePath);
+  const prefix = normRoot.endsWith(path.sep) ? normRoot : normRoot + path.sep;
+  if (!resolved.startsWith(prefix) && resolved !== normRoot) {
     throw new Error(`Path escapes project root: ${relativePath}`);
   }
   return resolved;

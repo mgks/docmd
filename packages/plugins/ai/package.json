@@ -37,7 +37,7 @@
     "@docmd/api": "workspace:*",
     "@docmd/utils": "workspace:*",
     "@types/node": "^24.13.3",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "typescript": "^6.0.3"
   },
   "keywords": [
