@@ -10,6 +10,7 @@ export class DocmdAIAssistantUI {
   private engine: any;
   private container: HTMLElement | null = null;
   private isDrawerOpened = false;
+  private isPending = false;
   private projectId: string;
   private isUnconfigured: boolean;
 
@@ -179,6 +180,7 @@ export class DocmdAIAssistantUI {
 
     barForm?.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (this.isPending) return;
       const query = barInput.value.trim();
       if (!query) return;
       barInput.value = '';
@@ -191,6 +193,7 @@ export class DocmdAIAssistantUI {
 
     drawerForm?.addEventListener('submit', (e) => {
       e.preventDefault();
+      if (this.isPending) return;
       const query = drawerInput.value.trim();
       if (!query) return;
       drawerInput.value = '';
@@ -215,6 +218,7 @@ export class DocmdAIAssistantUI {
     msgsContainer?.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
       if (target && target.classList.contains('docmd-ai-pill-btn')) {
+        if (this.isPending) return;
         const prompt = target.getAttribute('data-prompt');
         if (prompt) {
           this.openDrawer();
@@ -222,6 +226,37 @@ export class DocmdAIAssistantUI {
         }
       }
     });
+  }
+
+  private setPendingState(pending: boolean): void {
+    this.isPending = pending;
+
+    const barInput = document.getElementById('docmd-ai-bar-input') as HTMLInputElement;
+    const barSubmitBtn = document.querySelector('#docmd-ai-bar-form button[type="submit"]') as HTMLButtonElement;
+    const drawerInput = document.getElementById('docmd-ai-drawer-input') as HTMLInputElement;
+    const drawerSubmitBtn = document.querySelector('#docmd-ai-drawer-form button[type="submit"]') as HTMLButtonElement;
+    const pillBtns = document.querySelectorAll('.docmd-ai-pill-btn') as NodeListOf<HTMLButtonElement>;
+
+    if (barInput) barInput.disabled = pending;
+    if (barSubmitBtn) barSubmitBtn.disabled = pending;
+    if (drawerInput) drawerInput.disabled = pending;
+    if (drawerSubmitBtn) drawerSubmitBtn.disabled = pending;
+
+    pillBtns.forEach(btn => {
+      btn.disabled = pending;
+      if (pending) btn.classList.add('disabled');
+      else btn.classList.remove('disabled');
+    });
+
+    const barForm = document.getElementById('docmd-ai-bar-form');
+    const drawerForm = document.getElementById('docmd-ai-drawer-form');
+    if (pending) {
+      barForm?.classList.add('pending');
+      drawerForm?.classList.add('pending');
+    } else {
+      barForm?.classList.remove('pending');
+      drawerForm?.classList.remove('pending');
+    }
   }
 
   private openDrawer(): void {
@@ -259,38 +294,100 @@ export class DocmdAIAssistantUI {
     };
     const siteBaseUrl = getSiteBaseUrl();
 
-    let workspaceContext = '';
-    if (isWorkspace) {
+    // 1. Versioning Context (Dynamically extracted from site config)
+    const versionsObj = cfg.versions || {};
+    const hasVersions = !!(versionsObj && (Array.isArray(versionsObj.all) || versionsObj.current));
+    const allVersions: Array<{ id: string; label: string; dir: string }> = Array.isArray(versionsObj.all)
+      ? versionsObj.all
+      : (versionsObj.current ? [{ id: versionsObj.current, label: versionsObj.current, dir: `v${versionsObj.current}` }] : []);
+
+    const defaultVer = allVersions.find(v => v.id === versionsObj.current) || allVersions[0] || null;
+    let activeVersion = defaultVer;
+    if (typeof location !== 'undefined' && allVersions.length > 0) {
+      for (const v of allVersions) {
+        const vDir = v.dir || v.id;
+        if (location.pathname.includes(`/${vDir}/`)) {
+          activeVersion = v;
+          break;
+        }
+      }
+    }
+
+    // 2. Locale / i18n Context (Dynamically extracted from site config)
+    const i18nObj = cfg.i18n || {};
+    const hasLocales = !!(i18nObj && (Array.isArray(i18nObj.locales) || i18nObj.default));
+    const defaultLocaleId = i18nObj.default || 'en';
+    const allLocales: Array<{ id: string; label: string }> = Array.isArray(i18nObj.locales)
+      ? i18nObj.locales
+      : [{ id: defaultLocaleId, label: 'Default' }];
+
+    const defaultLocale = allLocales.find(l => l.id === defaultLocaleId) || allLocales[0];
+    let activeLocale = defaultLocale;
+    if (typeof location !== 'undefined' && allLocales.length > 0) {
+      const pathParts = location.pathname.split('/');
+      const foundLoc = allLocales.find(l => pathParts.includes(l.id));
+      if (foundLoc) activeLocale = foundLoc;
+    }
+
+    // 3. Active Workspace Project Context (Dynamically extracted from site config)
+    let currentProjectName = 'Main Documentation';
+    let currentProjectPrefix = '/';
+    if (isWorkspace && Array.isArray(cfg.workspaceProjects)) {
+      const matchProj = cfg.workspaceProjects.find((p: any) => {
+        const pPrefix = (p.prefix || '/').replace(/^\/|\/$/g, '');
+        return pPrefix && typeof location !== 'undefined' && location.pathname.includes(`/${pPrefix}`);
+      });
+      if (matchProj) {
+        currentProjectName = matchProj.name || matchProj.prefix;
+        currentProjectPrefix = matchProj.prefix || '/';
+      } else {
+        const rootProj = cfg.workspaceProjects.find((p: any) => p.prefix === '/');
+        if (rootProj) currentProjectName = rootProj.name || 'Main Documentation';
+      }
+    }
+
+    let workspaceContext = `
+SITE & ENVIRONMENT CONTEXT:
+- Site Title: "${siteTitle}"
+- Site Base URL: ${siteBaseUrl}
+- Current Page URL: ${currentUrl}
+- Current Active Project: "${currentProjectName}" (Prefix: "${currentProjectPrefix}")`;
+
+    if (hasVersions && defaultVer && activeVersion) {
+      const versionsListStr = allVersions.map(v => `${v.label}${v.id === defaultVer.id ? ' (latest/default)' : ''}`).join(', ');
+      workspaceContext += `
+- Active Version: ${activeVersion.label} (Directory: "${activeVersion.dir || activeVersion.id}")
+- Default / Latest Version: ${defaultVer.label}
+- Available Versions: ${versionsListStr}`;
+    }
+
+    if (hasLocales && activeLocale) {
+      const localesListStr = allLocales.map(l => `${l.label} ("${l.id}")${l.id === defaultLocaleId ? ' (default)' : ''}`).join(', ');
+      workspaceContext += `
+- Active Locale: ${activeLocale.label} ("${activeLocale.id}")
+- Available Locales: ${localesListStr}`;
+    }
+
+    if (isWorkspace && Array.isArray(cfg.workspaceProjects)) {
       const projectsList = cfg.workspaceProjects.map((p: any, idx: number) => {
         const pName = p.name || p.prefix;
         const pPrefix = p.prefix || '/';
         const pAbsUrl = typeof location !== 'undefined' ? new URL(pPrefix.replace(/^\//, ''), siteBaseUrl).href : pPrefix;
-        return `  ${idx + 1}. Project "${pName}" (Prefix: "${pPrefix}", URL: ${pAbsUrl})`;
+        const isCurrent = pName === currentProjectName ? ' [CURRENT PAGE PROJECT]' : '';
+        return `  ${idx + 1}. Project "${pName}" (Prefix: "${pPrefix}", URL: ${pAbsUrl})${isCurrent}`;
       }).join('\n');
 
-      workspaceContext = `
-WORKSPACE ARCHITECTURE & PROJECT CONTEXT:
-- Site Title: "${siteTitle}"
-- Site Base URL: ${siteBaseUrl}
-- Current Active Page URL: ${currentUrl}
+      workspaceContext += `
 - Multi-Project Workspace Setup: Active (${cfg.workspaceProjects.length} Projects)
 - Available Workspace Projects:
-${projectsList}
-
-CRITICAL RULES FOR MULTI-PROJECT SEARCH & HYPERLINKS:
-1. WORKSPACE AWARENESS: You have full awareness of all workspace projects listed above. Use the \`search_documentation\` tool to query documentation across any or all workspace projects.
-2. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project base URLs. Every page hyperlink MUST be an absolute URL stemming from the Site Base URL (e.g. "${siteBaseUrl}rust/" or "${siteBaseUrl}#section"). NEVER invent, hallucinate, or construct relative subpaths like "/mermaid/default-ui-showcase".
-3. KEYWORD vs SEMANTIC SEARCH: The documentation search tool queries both Keyword (MiniSearch) and Semantic Vector search indexes across all projects. Rely on search results for ground truth.`;
-    } else {
-      workspaceContext = `
-SITE & PAGE CONTEXT:
-- Site Title: "${siteTitle}"
-- Site Base URL: ${siteBaseUrl}
-- Current Page URL: ${currentUrl}
-
-CRITICAL HYPERLINK RULES:
-Ground all page hyperlinks strictly in real search results. All absolute URLs must stem from "${siteBaseUrl}". Never invent relative subpaths.`;
+${projectsList}`;
     }
+
+    workspaceContext += `
+
+CRITICAL SCOPE & NAVIGATION RULES:
+1. SCOPE PRIORITIZATION: Prioritize answers using content from the Current Active Project ("${currentProjectName}")${hasVersions && activeVersion ? `, active version (${activeVersion.label})` : ''}${hasLocales && activeLocale ? `, and active language (${activeLocale.label})` : ''}. Do not cite older historical versions or alternate languages unless the user explicitly requests them.
+${hasVersions && defaultVer ? `2. LATEST VERSION QUERIES: If a user asks what the latest version or release is, refer to the configured latest version (${defaultVer.label}).\n` : ''}3. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.`;
 
     const defaultBasePrompt = `You are docmd assistant — an expert, precise documentation assistant strictly dedicated to answering technical questions about this documentation site.
 
@@ -298,10 +395,10 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. IDENTITY & NAME: Your name is "docmd assistant". If asked who you are or what your name is, introduce yourself strictly as "docmd assistant", an expert AI guide for this documentation site. Never identify yourself simply as "docmd" or "I am docmd".
 2. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. If a user asks off-topic, general knowledge, or unrelated questions, politely refuse and explain that you are strictly trained to assist with this documentation.
 3. TOOL SELECTION & QUERY OPTIMIZATION:
-   - Use \`get_site_structure\` FIRST whenever asked about available documentation versions (current and historical), supported languages/locales, site navigation, page hierarchy, or where topics are located in the docs.
-   - Use \`search_documentation\` to search documentation content for specific technical terms, API parameters, or error messages. Full-text keyword search is ALWAYS active; semantic vector search is conditional (active only when enabled in site config). ALWAYS pass clean, focused search terms (e.g. "containers hero" or "api setup") rather than long conversational questions to guarantee high precision.
-4. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for any referenced pages or sections so users can open and read them directly.
-5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with headers, code blocks, and lists where appropriate. Do not engage in casual off-topic banter.`;
+   - Use \`get_site_structure\` whenever you need extended structural inspection of available documentation versions, supported locales, or navigation trees.
+   - Use \`search_documentation\` to search documentation content for specific technical terms, API parameters, or error messages. Full-text keyword search is ALWAYS active; semantic vector search is conditional. Pass clean, focused search terms (e.g. "containers hero" or "api setup") for highest accuracy.
+4. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for referenced pages.
+5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses. Do not engage in casual off-topic banter.`;
 
     const basePrompt = cfg.systemPrompt || defaultBasePrompt;
     return `${basePrompt}\n\n${workspaceContext}`;
@@ -376,14 +473,35 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
             const docs = indexData.storedFields ? Object.values(indexData.storedFields) : (Array.isArray(indexData) ? indexData : []);
             const terms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
 
+            const versionsObj = cfg.versions || {};
+            const allVerList: Array<{ id: string; dir?: string }> = Array.isArray(versionsObj.all) ? versionsObj.all : [];
+            const currentVerDir = versionsObj.current ? (allVerList.find(v => v.id === versionsObj.current)?.dir || `v${versionsObj.current}`) : '';
+            const i18nObj = cfg.i18n || {};
+            const defaultLocale = i18nObj.default || '';
+            const olderVersionDirs = allVerList
+              .filter(v => v.id !== versionsObj.current)
+              .map(v => v.dir || `v${v.id}`)
+              .filter(Boolean);
+
             const scored = docs.map((doc: any) => {
               const titleStr = String(doc.title || doc.id || '').toLowerCase();
               const textStr = String(doc.text || '').toLowerCase();
+              const rawId = String(doc.id || '');
               let score = 0;
               for (const term of terms) {
                 if (titleStr.includes(term)) score += 5;
                 if (textStr.includes(term)) score += 1;
               }
+
+              if (currentVerDir && rawId.includes(`/${currentVerDir}/`)) score += 10;
+              if (defaultLocale && rawId.includes(`/${defaultLocale}/`)) score += 5;
+
+              for (const oldDir of olderVersionDirs) {
+                if (rawId.includes(`/${oldDir}/`) && !query.toLowerCase().includes(oldDir.toLowerCase())) {
+                  score -= 15;
+                }
+              }
+
               return { doc, score };
             }).filter((h: any) => h.score > 0).sort((a: any, b: any) => b.score - a.score);
 
@@ -463,6 +581,9 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
   }
 
   private async submitQuery(text: string): Promise<void> {
+    if (this.isPending) return;
+    this.setPendingState(true);
+
     this.appendMsg('user', text, true);
     const typing = this.appendMsg('assistant', 'Working...', false);
 
@@ -490,6 +611,8 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
           '**Setup takes under a minute** — just add your `projectId` to `docmd.config.json`.'
         ]
       });
+    } finally {
+      this.setPendingState(false);
     }
   }
 
@@ -527,7 +650,13 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 
   private formatMarkdown(raw: string): string {
     if (!raw) return '';
-    let text = this.escapeHtml(raw);
+    let cleaned = raw
+      .replace(/\]<\]minimax\[>\[[\s\S]*?(?:<\/request>|$)/gi, '')
+      .replace(/<request>[\s\S]*?<\/request>/gi, '')
+      .replace(/<tool\b[^>]*>[\s\S]*?<\/tool>/gi, '')
+      .trim();
+    if (!cleaned) cleaned = raw;
+    let text = this.escapeHtml(cleaned);
 
     const cfg = (window as any).__docmd_ai_config || {};
     const getSiteBaseUrl = (): string => {
