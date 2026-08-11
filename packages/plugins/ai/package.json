@@ -31,7 +31,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "docmd-assistant": "^0.1.11"
+    "docmd-assistant": "^0.1.12"
   },
   "devDependencies": {
     "@docmd/api": "workspace:*",
