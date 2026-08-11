@@ -15,6 +15,9 @@ async function build() {
     target: 'es2022',
     format: 'esm',
     outdir: path.resolve(__dirname, 'dist/client'),
+    alias: {
+      'docmd-assistant': path.resolve(__dirname, '../../../../docmd-assistant/src/index.ts')
+    },
     external: ['aiplug'],
     minify: false,
     sourcemap: 'inline',
