@@ -43,7 +43,11 @@ export class DocmdAIAssistantUI {
     this.engine.registerTool({
       name: 'search_documentation',
       description: `Search documentation pages across all projects in this workspace using full-text keyword matching ${isSemanticUsable ? 'and semantic vector search' : '(keyword search active; semantic search disabled)'}. Always supply concise, targeted search terms for highest accuracy.`,
-      execute: async ({ query, project }: { query: string; project?: string }) => {
+      execute: async (rawArgs: any) => {
+        const query = typeof rawArgs === 'string'
+          ? rawArgs
+          : (rawArgs?.query || rawArgs?.q || rawArgs?.search_query || rawArgs?.text || rawArgs?.input || '');
+        const project = typeof rawArgs === 'object' ? rawArgs?.project : undefined;
         return await this.searchAllWorkspaceIndexes(query, project);
       }
     });
@@ -423,8 +427,15 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
     };
   }
 
-  private async searchAllWorkspaceIndexes(query: string, projectFilter?: string): Promise<any[]> {
+  private async searchAllWorkspaceIndexes(rawQuery: any, projectFilter?: string): Promise<any[]> {
     const hits: Array<{ project: string; title: string; url: string; snippet: string; searchType: 'keyword' | 'semantic' }> = [];
+    const query = typeof rawQuery === 'string'
+      ? rawQuery
+      : (rawQuery?.query || rawQuery?.q || rawQuery?.search_query || rawQuery?.text || rawQuery?.input || '');
+    const cleanQuery = (query || '').trim();
+    if (!cleanQuery) return [];
+
+    const cleanQueryLower = cleanQuery.toLowerCase();
     const cfg = (window as any).__docmd_ai_config || {};
     const getSiteBaseUrl = (): string => {
       const cfg = (window as any).__docmd_ai_config || {};
@@ -458,7 +469,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
         }
       }
     }
-    const isExplicitOlderVerRequest = olderVerTokens.some(tok => query.toLowerCase().includes(tok));
+    const isExplicitOlderVerRequest = olderVerTokens.some(tok => cleanQueryLower.includes(tok));
 
     const i18nObj = cfg.i18n || {};
     const allLocales: Array<{ id: string }> = Array.isArray(i18nObj.locales) ? i18nObj.locales : [];
@@ -469,7 +480,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       if (foundLoc) activeLocaleId = foundLoc.id;
     }
     const nonActiveLocaleIds = allLocales.filter(l => l.id !== activeLocaleId).map(l => l.id.toLowerCase());
-    const isExplicitLocaleRequest = nonActiveLocaleIds.some(locId => query.toLowerCase().includes(locId));
+    const isExplicitLocaleRequest = nonActiveLocaleIds.some(locId => cleanQueryLower.includes(locId));
 
     const isPathExcluded = (rawId: string): boolean => {
       const norm = String(rawId || '').replace(/^\//, '').toLowerCase();
@@ -490,8 +501,8 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       return false;
     };
 
-    const queryTokens = query.toLowerCase().replace(/[\-_.]/g, ' ').split(/\s+/).filter(t => t.length > 0);
-    const versionMatches = query.match(/\d+[\.\-_]\d+[\.\-_]\d+/g);
+    const queryTokens = cleanQueryLower.replace(/[\-_.]/g, ' ').split(/\s+/).filter((t: string) => t.length > 0);
+    const versionMatches = cleanQuery.match(/\d+[\.\-_]\d+[\.\-_]\d+/g);
 
     // 1. Local Active Search Index (via window.docmdSearch)
     try {
@@ -672,37 +683,107 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
     }
   }
 
+  private getStatusSvgIcon(iconName?: string): string {
+    switch (iconName) {
+      case 'search':
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+      case 'folder-tree':
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>`;
+      case 'cog':
+        return `<svg class="docmd-ai-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
+      case 'brain':
+      case 'sparkles':
+      default:
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>`;
+    }
+  }
+
   private async submitQuery(text: string): Promise<void> {
     if (this.isPending) return;
     this.setPendingState(true);
 
     this.appendMsg('user', text, true);
-    const typing = this.appendMsg('assistant', 'Working...', false);
+
+    const msgs = document.getElementById('docmd-ai-messages');
+    const bubble = document.createElement('div');
+    bubble.className = 'docmd-ai-chat-bubble assistant';
+
+    const statusWrap = document.createElement('div');
+    statusWrap.className = 'docmd-ai-status-badge';
+    statusWrap.innerHTML = `${this.getStatusSvgIcon('brain')} <span>Thinking...</span>`;
+    bubble.appendChild(statusWrap);
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'docmd-ai-content';
+    bubble.appendChild(contentDiv);
+
+    if (msgs) {
+      msgs.appendChild(bubble);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+
+    let accumulatedText = '';
 
     try {
       const docContext = await this.fetchLocalSearchContext(text);
       const queryWithContext = docContext ? `${text}${docContext}` : text;
 
-      const res = await this.engine.sendMessage(queryWithContext);
+      let res: any;
+      if (typeof (this.engine as any).sendMessageStream === 'function') {
+        res = await this.engine.sendMessageStream(queryWithContext, {
+          onStatus: (status: any) => {
+            if (statusWrap && status) {
+              statusWrap.style.display = 'inline-flex';
+              statusWrap.innerHTML = `${this.getStatusSvgIcon(status.icon)} <span>${this.escapeHtml(status.text || 'Thinking...')}</span>`;
+              if (msgs) msgs.scrollTop = msgs.scrollHeight;
+            }
+          },
+          onChunk: (delta: string) => {
+            accumulatedText = delta;
+            if (statusWrap) {
+              statusWrap.style.display = 'none';
+            }
+            contentDiv.innerHTML = this.formatMarkdown(accumulatedText);
+            if (msgs) msgs.scrollTop = msgs.scrollHeight;
+          }
+        });
+      } else {
+        res = await this.engine.sendMessage(queryWithContext);
+      }
 
       if (res && res.unconfigured) {
-        typing.remove();
+        bubble.remove();
         this.renderUnconfiguredNotice(res.unconfiguredData || res);
         return;
       }
 
-      typing.innerHTML = this.formatMarkdown(res.message || 'No response generated.');
+      if (statusWrap) {
+        statusWrap.style.display = 'none';
+      }
+      contentDiv.innerHTML = this.formatMarkdown(res.message || accumulatedText || 'No response generated.');
     } catch (err: any) {
-      typing.remove();
-      this.renderUnconfiguredNotice({
-        title: 'Domain Not Authorized',
-        message: err.message || 'Origin is not authorized for the selected docmd Cloud project.',
-        features: [
-          '**Free AI relay** — bring your own API key for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
-          '**Query analytics** — see what your visitors are asking in real time.',
-          '**Setup takes under a minute** — just add your `projectId` to `docmd.config.json`.'
-        ]
-      });
+      const errMsg = err?.message || String(err || '');
+      const isAuthOrConfigError = errMsg.includes('Domain Not Authorized') ||
+        errMsg.includes('Origin is not authorized') ||
+        errMsg.includes('403') ||
+        errMsg.includes('401') ||
+        err?.unconfigured;
+
+      if (isAuthOrConfigError) {
+        bubble.remove();
+        this.renderUnconfiguredNotice({
+          title: 'Domain Not Authorized',
+          message: errMsg || 'Origin is not authorized for the selected docmd Cloud project.',
+          features: [
+            '**Free AI relay** — bring your own API key for OpenAI, Anthropic, Gemini, DeepSeek, or Ollama.',
+            '**Query analytics** — see what your visitors are asking in real time.',
+            '**Setup takes under a minute** — just add your `projectId` to `docmd.config.json`.'
+          ]
+        });
+      } else {
+        if (statusWrap) statusWrap.style.display = 'none';
+        contentDiv.innerHTML = `<span style="color: var(--ai-text-muted);">Sorry, I encountered an issue processing your request: ${this.escapeHtml(errMsg)}</span>`;
+      }
     } finally {
       this.setPendingState(false);
     }
@@ -742,18 +823,23 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 
   private formatMarkdown(raw: string): string {
     if (!raw) return '';
+    // Universal LLM tag and internal marker stripping
     let cleaned = raw
-      .replace(/<mm:think>[\s\S]*?<\/mm:think>/gi, '')
-      .replace(/<think>[\s\S]*?<\/think>/gi, '')
-      .replace(/<\/?(?:mm:)?think>/gi, '')
-      .replace(/\]<\]minimax\[>\[[\s\S]*?(?:<\/request>|$)/gi, '')
-      .replace(/\]<\]minimax\[>\[/gi, '')
-      .replace(/<request>[\s\S]*?<\/request>/gi, '')
-      .replace(/<tool\b[^>]*>[\s\S]*?<\/tool>/gi, '')
-      .replace(/<tool_call>[\s\S]*?<\/tool_call>/gi, '')
+      .replace(/<(?:[a-zA-Z0-9_\-]+:)?(think|thought|reasoning|reflection|plan)\b[^>]*>[\s\S]*?<\/(?:[a-zA-Z0-9_\-]+:)?\1>/gi, '')
+      .replace(/```(?:thought|thinking|reasoning|reflection)\s*\n[\s\S]*?```/gi, '')
+      .replace(/\[(?:thought|thinking|reasoning):\s*[\s\S]*?\]/gi, '')
+      .replace(/\]<\][a-zA-Z0-9_\-]+\[>\[[\s\S]*?(?:<\/(?:request|tool_call|action)>|\]<\][a-zA-Z0-9_\-]+\[>\[|$)/gi, '')
+      .replace(/\]<\][a-zA-Z0-9_\-]+\[>\[/gi, '')
+      .replace(/<\/?(?:[a-zA-Z0-9_\-]+:)?(?:think|thought|reasoning|reflection|plan)\b[^>]*>/gi, '')
+      .replace(/<(?:[a-zA-Z0-9_\-]+:)?(tool_call|function_call|tool|action|request)\b[^>]*>[\s\S]*?<\/(?:[a-zA-Z0-9_\-]+:)?\1>/gi, '')
+      .replace(/```(?:tool_call|function_call|tool|action|json:tool)\s*\n[\s\S]*?```/gi, '')
+      .replace(/\{\s*"(?:name|tool|action|function)"\s*:\s*"[^"]+"\s*,\s*"(?:parameters|arguments|args|input)"\s*:\s*\{[\s\S]*?\}\s*\}/g, '')
+      .replace(/<\/?(?:[a-zA-Z0-9_\-]+:)?(?:tool_call|function_call|tool|action|request)\b[^>]*>/gi, '')
       .trim();
+
     if (!cleaned) cleaned = raw;
     let text = this.escapeHtml(cleaned);
+
 
     const cfg = (window as any).__docmd_ai_config || {};
     const getSiteBaseUrl = (): string => {
@@ -792,10 +878,23 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 
     // Code blocks with syntax highlighting
     const codeBlocks: string[] = [];
-    text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
-      const languageStr = lang ? `<span class="code-lang">${lang}</span>` : '';
+    text = text.replace(/```(\w+)?[ \t]*\r?\n([\s\S]*?)```/g, (_match, lang, code) => {
+      const languageStr = lang ? `<div class="docmd-ai-code-header"><span class="docmd-ai-code-lang">${lang.toLowerCase()}</span></div>` : '';
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-      codeBlocks.push(`<pre>${languageStr}<code>${code.trim()}</code></pre>`);
+      codeBlocks.push(`<div class="docmd-ai-code-wrap">${languageStr}<pre><code>${code.trim()}</code></pre></div>`);
+      return placeholder;
+    });
+    // Fallback: code blocks where lang runs into code on same line (no newline after lang)
+    text = text.replace(/```(\w+)([ \t]+[^\n][\s\S]*?)```/g, (_match, lang, code) => {
+      const languageStr = `<div class="docmd-ai-code-header"><span class="docmd-ai-code-lang">${lang.toLowerCase()}</span></div>`;
+      const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<div class="docmd-ai-code-wrap">${languageStr}<pre><code>${code.trim()}</code></pre></div>`);
+      return placeholder;
+    });
+    // Catch-all: bare ``` blocks with no language
+    text = text.replace(/```\r?\n?([\s\S]*?)```/g, (_match, code) => {
+      const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+      codeBlocks.push(`<div class="docmd-ai-code-wrap"><pre><code>${code.trim()}</code></pre></div>`);
       return placeholder;
     });
 
@@ -881,7 +980,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
     const html = blocks.map(block => {
       const trimmed = block.trim();
       if (!trimmed) return '';
-      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table|hr)/i.test(trimmed)) {
+      if (/^<(?:h3|h4|h5|ul|ol|pre|blockquote|div|table|hr)|__CODE_BLOCK_/i.test(trimmed)) {
         return trimmed.replace(/\n/g, ' ');
       }
       return `<p>${trimmed.replace(/\n/g, '<br/>')}</p>`;

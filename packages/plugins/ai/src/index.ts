@@ -22,7 +22,7 @@ import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
-  version: '0.9.1',
+  version: '0.9.2',
   capabilities: ['init', 'body', 'assets', 'actions', 'translations', 'post-build']
 };
 
@@ -64,12 +64,13 @@ const DEFAULT_SYSTEM_PROMPT = `You are docmd assistant — an expert, precise do
 
 CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. If a user asks off-topic, general knowledge, or unrelated questions, politely refuse and explain that you are strictly trained to assist with this documentation.
-2. AGGRESSIVE TOOL USAGE:
+2. STRICT FACTUALITY & ZERO FABRICATION: Ground all responses, configuration snippets, and code examples STRICTLY in facts and evidence explicitly retrieved from tool data or documentation results. NEVER invent, guess, or fabricate non-existent configuration wrapper keys (e.g. guessing a \`ui: {}\` key), non-existent API parameters, or unverified settings.
+3. AGGRESSIVE TOOL USAGE:
    - Use the \`get_site_structure\` tool FIRST whenever the user asks about available versions (e.g. current vs historical versions), supported languages/locales, site navigation, page hierarchy, or where topics are located.
    - Use the \`search_documentation\` tool to query documentation page content. Full-text keyword search is ALWAYS active; semantic vector search is conditional (active only when enabled in site config). ALWAYS supply concise, high-precision search keywords (e.g. "containers hero" or "api setup") rather than conversational sentences.
-3. ACCURACY & SOURCE CITATIONS: Ground all responses directly in retrieved tool data or documentation results. Reference relevant page titles or section headers when available.
-4. VERSION & LOCALIZATION AWARENESS: Be aware of the active documentation version and locale. Utilize localized and versioned results matching the user's request.
-5. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with code blocks where appropriate. Do not engage in casual off-topic banter.`;
+4. ACCURACY & SOURCE CITATIONS: Ground all responses directly in retrieved tool data or documentation results. Reference relevant page titles or section headers when available.
+5. VERSION & LOCALIZATION AWARENESS: Be aware of the active documentation version and locale. Utilize localized and versioned results matching the user's request.
+6. TECHNICAL & CONCISE: Provide clear, structured Markdown responses with code blocks where appropriate. Do not engage in casual off-topic banter.`;
 
 /** Resolved configuration cache per build */
 let _resolvedOptions: AIPluginOptions = {};
@@ -168,7 +169,7 @@ async function searchDocumentationRAG(
     try {
       const indexRaw = await fs.readFile(searchIndexFile, 'utf8');
       const parsedIndex = JSON.parse(indexRaw);
-      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+      const queryTerms = query.toLowerCase().split(/\s+/).filter((t: string) => t.length > 1);
 
       let docEntries: Array<{ id: string; title?: string; text?: string; headings?: string }> = [];
       if (Array.isArray(parsedIndex)) {
@@ -218,7 +219,7 @@ async function searchDocumentationRAG(
   const srcDir = path.join(projectRoot, 'docs');
   if (!nativeFs.existsSync(srcDir)) return results;
 
-  const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryTerms = query.toLowerCase().split(/\s+/).filter((t: string) => t.length > 2);
 
   async function walk(dir: string) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -258,7 +259,7 @@ async function searchDocumentationRAG(
 function checkRateLimit(clientId: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
   const now = Date.now();
   let timestamps = rateLimitStore.get(clientId) || [];
-  timestamps = timestamps.filter(t => now - t < windowMs);
+  timestamps = timestamps.filter((t: number) => now - t < windowMs);
 
   if (timestamps.length >= maxRequests) {
     return false;

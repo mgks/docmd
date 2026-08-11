@@ -149,6 +149,11 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 
 ## なぜ docmd なのか？
 
+<div align="center">
+  <img width="1000" alt="image" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-comparison.webp" />
+</div>
+
+<!--
 | 機能 | docmd | Docusaurus | MkDocs | VitePress | Mintlify |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **設定の要否** | **不要** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
@@ -165,6 +170,9 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 | **Docker イメージ** | **公式提供** | - | 公式提供 | - | - |
 | **セルフホスト** | **対応** | 対応 | 対応 | 対応 | - |
 | **費用** | **無料 (OSS)** | 無料 (OSS) | 無料 (OSS) | 無料 (OSS) | Freemium |
+-->
+
+**[Docusaurus、Mintlify などとの完全な比較を見る →](https://docs.docmd.io/comparison/)**
 
 ## 主な特徴
 

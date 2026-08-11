@@ -149,6 +149,11 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 
 ## 为什么选择 docmd？
 
+<div align="center">
+  <img width="1000" alt="image" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-comparison.webp" />
+</div>
+
+<!--
 | 功能特性 | docmd | Docusaurus | MkDocs | VitePress | Mintlify |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **必需配置文件** | **无** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
@@ -165,6 +170,9 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 | **Docker 镜像** | **官方提供** | - | 官方提供 | - | - |
 | **私有化自部署** | **支持** | 支持 | 支持 | 支持 | - |
 | **开源免费** | **免费 (OSS)** | 免费 (OSS) | 免费 (OSS) | 免费 (OSS) | Freemium |
+-->
+
+**查看与 Docusaurus、Mintlify 等的 [完整对比 →](https://docs.docmd.io/zh/comparison/)**
 
 ## 核心特性
 
