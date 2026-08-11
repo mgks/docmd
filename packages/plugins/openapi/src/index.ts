@@ -25,7 +25,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const plugin: PluginDescriptor = {
   name: 'openapi',
   version: '0.9.1',
-  capabilities: ['markdown', 'assets']
+  capabilities: ['markdown', 'assets'],
 };
 
 // ---------------------------------------------------------------------------
@@ -42,11 +42,21 @@ interface OASchema {
   required?: string[];
   $ref?: string;
   example?: unknown;
+  examples?: unknown[];
   default?: unknown;
   nullable?: boolean;
   oneOf?: OASchema[];
   anyOf?: OASchema[];
   allOf?: OASchema[];
+  additionalProperties?: boolean | OASchema;
+  discriminator?: { propertyName?: string };
+}
+
+interface OAExample {
+  summary?: string;
+  description?: string;
+  value?: unknown;
+  externalValue?: string;
 }
 
 interface OAParameter {
@@ -56,11 +66,13 @@ interface OAParameter {
   required?: boolean;
   schema?: OASchema;
   example?: unknown;
+  examples?: Record<string, OAExample>;
 }
 
 interface OAMediaType {
   schema?: OASchema;
   example?: unknown;
+  examples?: Record<string, OAExample>;
 }
 
 interface OARequestBody {
@@ -115,15 +127,11 @@ const METHOD_COLORS: Record<string, string> = {
   patch: '#8b5cf6',
   delete: '#ef4444',
   head: '#6b7280',
-  options: '#6b7280'
+  options: '#6b7280',
 };
 
 function esc(str: string): string {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function describe(str: string | undefined, options: any): string {
@@ -149,40 +157,182 @@ function resolveSchema(schema: OASchema | undefined, spec: OASpec, _depth = 0): 
   return schema;
 }
 
+/** Expand a schema by resolving $ref and flattening allOf branches into a single
+ *  schema (merged properties/required). Used wherever the actual field set of a
+ *  schema is needed (table rendering), as opposed to typeLabel's display string. */
+function expandSchema(schema: OASchema | undefined, spec: OASpec, depth = 0): OASchema {
+  if (!schema || depth > 8) return schema || {};
+  const resolved = resolveSchema(schema, spec);
+  if (!resolved.allOf || resolved.allOf.length === 0) return resolved;
+
+  const merged: OASchema = { properties: {}, required: [] };
+  for (const branch of resolved.allOf) {
+    const expanded = expandSchema(branch, spec, depth + 1);
+    if (expanded.properties) Object.assign(merged.properties!, expanded.properties);
+    if (expanded.required) merged.required = [...merged.required!, ...expanded.required];
+  }
+  // Own properties declared alongside allOf (a common inheritance pattern) win last.
+  if (resolved.properties) Object.assign(merged.properties!, resolved.properties);
+  if (resolved.required) merged.required = [...merged.required!, ...resolved.required];
+  merged.description = resolved.description;
+  merged.example = resolved.example;
+  merged.examples = resolved.examples;
+  merged.default = resolved.default;
+  merged.additionalProperties = resolved.additionalProperties;
+  return merged;
+}
+
 /** Render a schema as a compact type string */
 function typeLabel(schema: OASchema | undefined, spec: OASpec): string {
   if (!schema) return 'any';
+  if (schema.$ref) return schema.$ref.split('/').pop() || 'object';
   const resolved = resolveSchema(schema, spec);
-  if (resolved.$ref) return resolved.$ref.split('/').pop() || 'object';
+  if (resolved.allOf && resolved.allOf.length > 0) return resolved.allOf.map((s) => typeLabel(s, spec)).join(' & ');
   if (resolved.type === 'array') return `array[${typeLabel(resolved.items, spec)}]`;
-  if (resolved.oneOf) return resolved.oneOf.map(s => typeLabel(s, spec)).join(' | ');
-  if (resolved.anyOf) return resolved.anyOf.map(s => typeLabel(s, spec)).join(' | ');
-  if (resolved.enum) return resolved.enum.map(v => `"${v}"`).join(' | ');
-  return [resolved.type, resolved.format].filter(Boolean).join(':') || 'any';
+  if (
+    resolved.type === 'object' &&
+    resolved.additionalProperties &&
+    typeof resolved.additionalProperties === 'object'
+  ) {
+    return `map[string, ${typeLabel(resolved.additionalProperties, spec)}]`;
+  }
+  if (resolved.oneOf && resolved.oneOf.length > 0) return resolved.oneOf.map((s) => typeLabel(s, spec)).join(' | ');
+  if (resolved.anyOf && resolved.anyOf.length > 0) return resolved.anyOf.map((s) => typeLabel(s, spec)).join(' | ');
+  if (resolved.enum) return resolved.enum.map((v) => `"${v}"`).join(' | ');
+  const inferredType = resolved.type || (resolved.properties || resolved.additionalProperties ? 'object' : undefined);
+  const base = [inferredType, resolved.format].filter(Boolean).join(':') || 'any';
+  return resolved.nullable ? `${base} | null` : base;
 }
 
-/** Render schema properties as an HTML table */
-function renderSchemaTable(schema: OASchema | undefined, spec: OASpec, options: any): string {
-  if (!schema) return '';
-  const resolved = resolveSchema(schema, spec);
+/** Format a raw example value (string or JSON) as a code block */
+function formatExampleValue(value: unknown): string {
+  if (value === undefined) return '';
+  const str = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+  return `<pre class="oa-example-value"><code>${esc(str)}</code></pre>`;
+}
+
+/** Format a field-level example value inline, without the boxed code block
+ *  used for full-body examples — keeps schema table rows compact. */
+function formatInlineExampleValue(value: unknown): string {
+  if (value === undefined || value === null) return '';
+  if (typeof value === 'string') return esc(value);
+  if (typeof value === 'number') return String(value);
+  return formatExampleValue(value);
+}
+
+/** Render the example(s) for a media type or schema: named `examples` map takes
+ *  priority over a single `example`, falling back to the schema's own example. */
+function renderExamples(
+  media: OAMediaType | undefined,
+  schema: OASchema | undefined,
+  spec: OASpec,
+  options: any,
+): string {
+  let body = '';
+  if (media?.examples && Object.keys(media.examples).length > 0) {
+    const entries = Object.entries(media.examples);
+    body = entries
+      .map(
+        ([name, example]) => `<details class="oa-example">
+      <summary>${esc(example.summary || name)}</summary>
+      ${example.description ? `<p class="oa-example-description">${describe(example.description, options)}</p>` : ''}
+      ${
+        example.value !== undefined
+          ? formatExampleValue(example.value)
+          : example.externalValue
+            ? `<p><a href="${esc(example.externalValue)}" target="_blank" rel="noopener noreferrer">${esc(example.externalValue)}</a></p>`
+            : ''
+      }
+    </details>`,
+      )
+      .join('');
+  } else if (media?.example !== undefined) {
+    body = formatExampleValue(media.example);
+  } else {
+    const resolvedSchema = schema ? expandSchema(schema, spec) : undefined;
+    const schemaExample = resolvedSchema?.example ?? resolvedSchema?.examples?.[0];
+    if (schemaExample !== undefined) body = formatExampleValue(schemaExample);
+  }
+  if (!body) return '';
+  return `<h6 class="oa-examples-title">Example</h6><div class="oa-examples">${body}</div>`;
+}
+
+/** Render a nested object/array-of-object schema inline as a collapsible sub-table */
+function renderNestedSchema(schema: OASchema | undefined, spec: OASpec, options: any, depth: number): string {
+  if (!schema || depth > 6) return '';
+  const resolved = expandSchema(schema, spec);
+  const target = resolved.type === 'array' ? resolved.items : schema;
+  if (!target) return '';
+  const targetResolved = expandSchema(target, spec);
+  const hasFields =
+    (targetResolved.properties && Object.keys(targetResolved.properties).length > 0) ||
+    (targetResolved.oneOf?.length ?? 0) > 0 ||
+    (targetResolved.anyOf?.length ?? 0) > 0;
+  if (!hasFields) return '';
+  const inner = renderSchemaTable(target, spec, options, depth + 1);
+  if (!inner) return '';
+  return `<details class="oa-nested-schema"><summary>Show fields</summary>${inner}</details>`;
+}
+
+/** Render schema properties as an HTML table, expanding allOf/oneOf/anyOf compositions,
+ *  nested object/array fields and per-field examples. */
+function renderSchemaTable(schema: OASchema | undefined, spec: OASpec, options: any, depth = 0): string {
+  if (!schema || depth > 6) return '';
+  const resolved = expandSchema(schema, spec);
+  let html = '';
+
   const props = resolved.properties;
-  if (!props || Object.keys(props).length === 0) return '';
+  if (props && Object.keys(props).length > 0) {
+    const required = new Set(resolved.required || []);
+    const rows = Object.entries(props)
+      .map(([name, prop]) => {
+        const r = expandSchema(prop, spec);
+        const nested = renderNestedSchema(prop, spec, options, depth);
+        const example = r.example ?? r.examples?.[0];
+        return `<tr>
+        <td><code>${esc(name)}</code>${required.has(name) ? ' <span class="oa-required">*</span>' : ''}</td>
+        <td><span class="oa-type">${esc(typeLabel(prop, spec))}</span>${nested}</td>
+        <td>${describe(r.description, options)}</td>
+        <td>${formatInlineExampleValue(example)}</td>
+      </tr>`;
+      })
+      .join('');
 
-  const required = new Set(resolved.required || []);
-  const rows = Object.entries(props).map(([name, prop]) => {
-    const r = resolveSchema(prop, spec);
-    return `<tr>
-      <td><code>${esc(name)}</code>${required.has(name) ? ' <span class="oa-required">*</span>' : ''}</td>
-      <td><span class="oa-type">${esc(typeLabel(prop, spec))}</span></td>
-      <td>${describe(r.description, options)}</td>
-      <td>${r.default !== undefined ? `<code>${esc(String(r.default))}</code>` : ''}</td>
-    </tr>`;
-  }).join('');
+    html += `<table class="oa-schema-table oa-hover">
+    <thead><tr><th>Field</th><th>Type</th><th>Description</th><th>Example</th></tr></thead>
+    <tbody>${rows}</tbody>
+    </table>`;
+  }
 
-  return `<table class="oa-schema-table">
-  <thead><tr><th>Field</th><th>Type</th><th>Description</th><th>Default</th></tr></thead>
-  <tbody>${rows}</tbody>
-</table>`;
+  if (resolved.additionalProperties && typeof resolved.additionalProperties === 'object') {
+    html += `<p class="oa-additional-props">Additional properties: <span class="oa-type">${esc(typeLabel(resolved.additionalProperties, spec))}</span></p>`;
+  }
+
+  // oneOf/anyOf represent alternative schemas, not composed ones, so render them
+  // from the un-flattened schema alongside (rather than instead of) the table above.
+  const raw = resolveSchema(schema, spec);
+  const variantGroups: [string, OASchema[] | undefined][] = [
+    ['One of', raw.oneOf],
+    ['Any of', raw.anyOf],
+  ];
+  for (const [label, variants] of variantGroups) {
+    if (variants && variants.length > 0) {
+      const discriminator = raw.discriminator?.propertyName
+        ? `<p class="oa-discriminator">Discriminator: <code>${esc(raw.discriminator.propertyName)}</code></p>`
+        : '';
+      const items = variants
+        .map(
+          (v) => `<details class="oa-variant">
+        <summary><span class="oa-type">${esc(typeLabel(v, spec))}</span></summary>
+        ${renderSchemaTable(v, spec, options, depth + 1)}
+      </details>`,
+        )
+        .join('');
+      html += `<div class="oa-variants"><p class="oa-variants-label">${esc(label)}:</p>${discriminator}${items}</div>`;
+    }
+  }
+
+  return html;
 }
 
 /** Render a single operation */
@@ -194,17 +344,26 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
   // Parameters
   let paramsHtml = '';
   if (!summaryOnly && op.parameters && op.parameters.length > 0) {
-    const rows = op.parameters.map(p => {
-      return `<tr>
+    const rows = op.parameters
+      .map((p) => {
+        const paramSchema = p.schema ? expandSchema(p.schema, spec) : undefined;
+        const example =
+          p.example ??
+          (p.examples ? Object.values(p.examples)[0]?.value : undefined) ??
+          paramSchema?.example ??
+          paramSchema?.examples?.[0];
+        return `<tr>
         <td><code>${esc(p.name)}</code>${p.required ? ' <span class="oa-required">*</span>' : ''}</td>
         <td><span class="oa-param-in">${esc(p.in)}</span></td>
         <td><span class="oa-type">${esc(typeLabel(p.schema, spec))}</span></td>
         <td>${describe(p.description, options)}</td>
+        <td>${formatInlineExampleValue(example)}</td>
       </tr>`;
-    }).join('');
+      })
+      .join('');
     paramsHtml = `<h5>Parameters</h5>
 <table class="oa-schema-table">
-  <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Description</th></tr></thead>
+  <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Description</th><th>Example</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>`;
   }
@@ -217,27 +376,53 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
     for (const [contentType, media] of entries) {
       requestHtml += `<p class="oa-content-type"><code>${esc(contentType)}</code></p>`;
       requestHtml += renderSchemaTable(media.schema, spec, options);
+      requestHtml += renderExamples(media, media.schema, spec, options);
     }
   }
 
-  // Responses
+  // Responses — each status code is rendered as its own summary row immediately
+  // followed by its body/example row, so examples stay attached to their own
+  // response (in file order) instead of being grouped after all responses.
   let responsesHtml = '';
   if (!summaryOnly && op.responses) {
     const statusCodes = Object.entries(op.responses);
-    const rows = statusCodes.map(([code, resp]) => {
-      const cls = code.startsWith('2') ? 'oa-status-ok' : code.startsWith('4') ? 'oa-status-err' : 'oa-status-other';
-      let schemaInfo = '';
-      if (resp.content) {
-        const firstMedia = Object.values(resp.content)[0];
-        if (firstMedia?.schema) schemaInfo = `<br><span class="oa-type">${esc(typeLabel(firstMedia.schema, spec))}</span>`;
-      }
-      return `<tr>
+    const rows = statusCodes
+      .map(([code, resp]) => {
+        const cls = code.startsWith('2') ? 'oa-status-ok' : /^[45]/.test(code) ? 'oa-status-err' : 'oa-status-other';
+        let schemaInfo = '';
+        if (resp.content) {
+          const firstMedia = Object.values(resp.content)[0];
+          if (firstMedia?.schema)
+            schemaInfo = `<br><span class="oa-type">${esc(typeLabel(firstMedia.schema, spec))}</span>`;
+        }
+        const summaryRow = `<tr>
         <td><span class="oa-status-badge ${cls}">${esc(code)}</span></td>
         <td>${describe(resp.description, options)}${schemaInfo}</td>
       </tr>`;
-    }).join('');
+
+        const sections = resp.content
+          ? Object.entries(resp.content)
+              .map(([contentType, media]) => {
+                const schemaHtml = renderSchemaTable(media.schema, spec, options);
+                const examplesHtml = renderExamples(media, media.schema, spec, options);
+                if (!schemaHtml && !examplesHtml) return '';
+                return `<p class="oa-content-type"><code>${esc(contentType)}</code></p>${schemaHtml}${examplesHtml}`;
+              })
+              .join('')
+          : '';
+
+        const detailRow = sections
+          ? `<tr ><td colspan="2"><details class="oa-response-detail">
+        <summary>${esc(code)} body</summary>
+        ${sections}
+      </details></td></tr>`
+          : '';
+
+        return summaryRow + detailRow;
+      })
+      .join('');
     responsesHtml = `<h5>Responses</h5>
-<table class="oa-schema-table">
+<table class="oa-schema-table oa-no-hover">
   <thead><tr><th>Status</th><th>Description</th></tr></thead>
   <tbody>${rows}</tbody>
 </table>`;
@@ -276,7 +461,9 @@ function parseSpec(specPath: string): OASpec {
     const yaml = require('js-yaml');
     return yaml.load(raw) as OASpec;
   } catch {
-    throw new Error(`OpenAPI plugin: YAML spec at "${specPath}" requires js-yaml to be installed.\nRun: npm install js-yaml`);
+    throw new Error(
+      `OpenAPI plugin: YAML spec at "${specPath}" requires js-yaml to be installed.\nRun: npm install js-yaml`,
+    );
   }
 }
 
@@ -306,7 +493,9 @@ function renderSpec(specPath: string, rootDir: string, options: any): string {
   let html = `<div class="oa-spec">`;
 
   if (options?.info !== false && info.title) {
-    const downloadLink = options?.download ? `<a href="${esc(specPath)}" class="oa-download-link" title="Download OpenAPI Spec" target="_blank">JSON / YAML</a>` : '';
+    const downloadLink = options?.download
+      ? `<a href="${esc(specPath)}" class="oa-download-link" title="Download OpenAPI Spec" target="_blank">JSON / YAML</a>`
+      : '';
     html += `<div class="oa-spec-header">
       <h2 class="oa-spec-title">${esc(info.title)}</h2>
       <div class="oa-spec-meta">
@@ -347,11 +536,11 @@ function renderSpec(specPath: string, rootDir: string, options: any): string {
  * ```
  */
 export function markdownSetup(md: any, options: any): void {
-  const srcDir: string = options?.config?.src
-    ? path.resolve(process.cwd(), options.config.src)
-    : process.cwd();
+  const srcDir: string = options?.config?.src ? path.resolve(process.cwd(), options.config.src) : process.cwd();
 
-  const originalFence = md.renderer.rules.fence || ((tokens: any[], idx: number, opts: any, _env: any, self: any) => self.renderToken(tokens, idx, opts));
+  const originalFence =
+    md.renderer.rules.fence ||
+    ((tokens: any[], idx: number, opts: any, _env: any, self: any) => self.renderToken(tokens, idx, opts));
 
   md.renderer.rules.fence = (tokens: any[], idx: number, opts: any, env: any, self: any) => {
     const token = tokens[idx];
@@ -378,10 +567,12 @@ export function getAssets(_options?: any): any[] {
   // Only inject if our bundled CSS exists
   if (!fs.existsSync(cssPath)) return [];
 
-  return [{
-    src: cssPath,
-    dest: 'assets/css/docmd-openapi.css',
-    type: 'css',
-    location: 'head'
-  }];
+  return [
+    {
+      src: cssPath,
+      dest: 'assets/css/docmd-openapi.css',
+      type: 'css',
+      location: 'head',
+    },
+  ];
 }
