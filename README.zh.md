@@ -150,7 +150,7 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 ## 为什么选择 docmd？
 
 <div align="center">
-  <img width="1000" alt="image" src="https://github.com/user-attachments/assets/f511c723-e740-450b-91bb-1d4cc3e1d791" />
+  <img width="1000" alt="image" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-comparison.webp" />
 </div>
 
 <!--
