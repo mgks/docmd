@@ -526,3 +526,43 @@ body.dark :root {
   height: 16px;
   fill: currentColor;
 }
+
+/* --- Live Streaming Status Badges (Thinking, Searching, Inspecting) --- */
+.docmd-ai-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.12);
+  border: 1px solid var(--docmd-ai-border);
+  color: var(--docmd-ai-muted);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  animation: docmdAiPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.docmd-ai-status-badge svg {
+  color: var(--docmd-ai-primary);
+  flex-shrink: 0;
+}
+
+.docmd-ai-spin {
+  animation: docmdAiSpin 1.2s linear infinite;
+}
+
+@keyframes docmdAiSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes docmdAiPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.docmd-ai-content {
+  word-break: break-word;
+}
+

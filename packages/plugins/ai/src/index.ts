@@ -22,7 +22,7 @@ import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
-  version: '0.9.1',
+  version: '0.9.2',
   capabilities: ['init', 'body', 'assets', 'actions', 'translations', 'post-build']
 };
 
@@ -168,7 +168,7 @@ async function searchDocumentationRAG(
     try {
       const indexRaw = await fs.readFile(searchIndexFile, 'utf8');
       const parsedIndex = JSON.parse(indexRaw);
-      const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+      const queryTerms = query.toLowerCase().split(/\s+/).filter((t: string) => t.length > 1);
 
       let docEntries: Array<{ id: string; title?: string; text?: string; headings?: string }> = [];
       if (Array.isArray(parsedIndex)) {
@@ -218,7 +218,7 @@ async function searchDocumentationRAG(
   const srcDir = path.join(projectRoot, 'docs');
   if (!nativeFs.existsSync(srcDir)) return results;
 
-  const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryTerms = query.toLowerCase().split(/\s+/).filter((t: string) => t.length > 2);
 
   async function walk(dir: string) {
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -258,7 +258,7 @@ async function searchDocumentationRAG(
 function checkRateLimit(clientId: string, maxRequests: number = 10, windowMs: number = 60000): boolean {
   const now = Date.now();
   let timestamps = rateLimitStore.get(clientId) || [];
-  timestamps = timestamps.filter(t => now - t < windowMs);
+  timestamps = timestamps.filter((t: number) => now - t < windowMs);
 
   if (timestamps.length >= maxRequests) {
     return false;

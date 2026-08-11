@@ -356,14 +356,43 @@ body.dark #docmd-ai-plugin-root {
   border-radius: 0 6px 6px 0;
 }
 
-.docmd-ai-chat-bubble pre {
-  background: #1e293b !important;
-  color: #f8fafc !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.docmd-ai-code-wrap {
+  margin: 10px 0;
   border-radius: 8px;
+  background: #1e293b !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.docmd-ai-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.docmd-ai-code-lang {
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--ai-text-muted, #94a3b8);
+  text-transform: lowercase;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.docmd-ai-chat-bubble pre {
+  background: transparent !important;
+  color: #f8fafc !important;
+  border: none !important;
+  border-radius: 0 !important;
   padding: 10px 12px;
-  margin: 8px 0;
+  margin: 0 !important;
   overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
 }
 
 .docmd-ai-chat-bubble code {
@@ -376,8 +405,9 @@ body.dark #docmd-ai-plugin-root {
 
 .docmd-ai-chat-bubble pre code {
   background: transparent !important;
-  padding: 0;
+  padding: 0 !important;
   color: #f8fafc !important;
+  border-radius: 0 !important;
 }
 
 .docmd-ai-chat-bubble hr {
@@ -557,4 +587,43 @@ body.dark #docmd-ai-plugin-root {
 
 .docmd-ai-chat-bubble tr:hover td {
   background: rgba(125, 125, 125, 0.05);
+}
+
+/* --- Live Streaming Status Badges (Thinking, Searching, Inspecting) --- */
+.docmd-ai-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  background: var(--ai-input-bg);
+  border: 1px solid var(--ai-border);
+  color: var(--ai-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  animation: docmdAiPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.docmd-ai-status-badge svg {
+  color: var(--ai-primary);
+  flex-shrink: 0;
+}
+
+.docmd-ai-spin {
+  animation: docmdAiSpin 1.2s linear infinite;
+}
+
+@keyframes docmdAiSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes docmdAiPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+.docmd-ai-content {
+  word-break: break-word;
 }
