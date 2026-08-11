@@ -37,7 +37,7 @@
   <br/>
 
   <a href="https://docs.docmd.io">
-    <img width="820" alt="docmd default theme — light and dark mode preview" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
+    <img width="820" alt="docmd default theme — light and dark mode preview" src="https://github.com/user-attachments/assets/315e1d3c-14cd-48a8-9a9e-3b1558ac33dd" />
   </a>
 
   <br/><br/>
@@ -157,6 +157,11 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 
 ## Why docmd?
 
+<div align="center">
+  <img width="1000" alt="image" src="https://github.com/user-attachments/assets/f511c723-e740-450b-91bb-1d4cc3e1d791" />
+</div>
+
+<!--
 | Feature | docmd | Docusaurus | MkDocs | VitePress | Mintlify |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Config required** | **None** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
@@ -173,6 +178,9 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 | **Docker image** | **Official** | - | Official | - | - |
 | **Self-hosted** | **Yes** | Yes | Yes | Yes | - |
 | **Cost** | **Free (OSS)** | Free (OSS) | Free (OSS) | Free (OSS) | Freemium |
+-->
+
+**See Complete [Comparison with Docusaurus, Mintlify and others →](https://docs.docmd.io/comparison/)**
 
 ## Features
 
