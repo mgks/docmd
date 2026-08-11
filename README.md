@@ -37,7 +37,7 @@
   <br/>
 
   <a href="https://docs.docmd.io">
-    <img width="820" alt="docmd default theme — light and dark mode preview" src="https://github.com/user-attachments/assets/315e1d3c-14cd-48a8-9a9e-3b1558ac33dd" />
+    <img width="820" alt="docmd default theme — light and dark mode preview" src="https://raw.githubusercontent.com/docmd-io/docmd/refs/heads/main/assets/docmd-cover.webp" />
   </a>
 
   <br/><br/>

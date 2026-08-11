@@ -157,6 +157,11 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 
 ## Pourquoi docmd ?
 
+<div align="center">
+  <img width="1000" alt="image" src="https://github.com/user-attachments/assets/f511c723-e740-450b-91bb-1d4cc3e1d791" />
+</div>
+
+<!--
 | Fonctionnalité | docmd | Docusaurus | MkDocs | VitePress | Mintlify |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Config requise** | **Aucune** | `docusaurus.config.js` | `mkdocs.yml` | `config.mts` | `docs.json` |
@@ -173,6 +178,9 @@ docker run -p 3000:3000 ghcr.io/docmd-io/docmd:0.9.0
 | **Image Docker** | **Officielle** | - | Officielle | - | - |
 | **Auto-hébergé** | **Oui** | Oui | Oui | Oui | - |
 | **Coût** | **Gratuit (OSS)** | Gratuit (OSS) | Gratuit (OSS) | Gratuit (OSS) | Freemium |
+-->
+
+**Voir la [Comparaison complète avec Docusaurus, Mintlify et autres →](https://docs.docmd.io/comparison/)**
 
 ## Fonctionnalités
 
