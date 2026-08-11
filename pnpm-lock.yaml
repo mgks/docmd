@@ -25,7 +25,7 @@ importers:
         version: 5.6.2
       docmd-search:
         specifier: ^0.1.3
-        version: 0.1.3(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0))
+        version: 0.1.3(@docmd/engine-js@0.9.2)(@docmd/engine-rust@0.9.2)(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0))
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -259,8 +259,8 @@ importers:
   packages/plugins/ai:
     dependencies:
       docmd-assistant:
-        specifier: ^0.1.11
-        version: 0.1.11
+        specifier: ^0.1.13
+        version: 0.1.13
     devDependencies:
       '@docmd/api':
         specifier: workspace:*
@@ -390,7 +390,7 @@ importers:
     dependencies:
       docmd-search:
         specifier: '>=0.1.3'
-        version: 0.1.3(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3))
+        version: 0.1.3(@docmd/engine-js@0.9.2)(@docmd/engine-rust@0.9.2)(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3))
       markdown-it:
         specifier: ^14.3.0
         version: 14.3.0
@@ -519,6 +519,14 @@ packages:
   '@ctrl/tinycolor@4.2.0':
     resolution: {integrity: sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==}
     engines: {node: '>=14'}
+
+  '@docmd/engine-js@0.9.2':
+    resolution: {integrity: sha512-D3Vo1nNCqUuYBKYJOu7XRnOjBfwxKcOBLYXjNGTzRr6lvvAPBHjpuUIwfMHkKKsbQ9XCVEvDBQ6cqb0B2Pm9aw==}
+    engines: {node: '>=20.0.0'}
+
+  '@docmd/engine-rust@0.9.2':
+    resolution: {integrity: sha512-zpbrSld4UU1WdOuubS76HvFMhbXWrzPQKmV5LW5/aR4eLnFLlgnBAZJ97pzZQ8cvY7o6E+B1u+LgKFRBfj9mhQ==}
+    engines: {node: '>=20.0.0'}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -1159,8 +1167,8 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
-  docmd-assistant@0.1.11:
-    resolution: {integrity: sha512-PKIPzda79SSlKTmbl0Z9BGZCDTqQNSGVKpil20g88xhNzd/WkBlG3IvFu96n0bm/usm52o2Jn3cN2PT/RC34SQ==}
+  docmd-assistant@0.1.13:
+    resolution: {integrity: sha512-NayEhr1pDcKJ/qHmY2Zjjz3EHlN7P/TQCNNQzM/kUlQq+l4dtw6iphUy8x0z8Y3i2VGr6iJxqvRQc5KRsqILOQ==}
     engines: {node: '>=20.0.0'}
 
   docmd-search@0.1.3:
@@ -1649,6 +1657,12 @@ packages:
 snapshots:
 
   '@ctrl/tinycolor@4.2.0': {}
+
+  '@docmd/engine-js@0.9.2':
+    optional: true
+
+  '@docmd/engine-rust@0.9.2':
+    optional: true
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -2199,20 +2213,24 @@ snapshots:
   detect-libc@2.1.2:
     optional: true
 
-  docmd-assistant@0.1.11:
+  docmd-assistant@0.1.13:
     dependencies:
       aiplug: 0.1.2
 
-  docmd-search@0.1.3(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3)):
+  docmd-search@0.1.3(@docmd/engine-js@0.9.2)(@docmd/engine-rust@0.9.2)(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3)):
     optionalDependencies:
+      '@docmd/engine-js': 0.9.2
+      '@docmd/engine-rust': 0.9.2
       '@huggingface/transformers': 4.2.0(@types/node@24.13.3)
       adm-zip: 0.6.0
       onnxruntime-node: 1.27.0
       protobufjs: 7.6.5
       sharp: 0.35.3(@types/node@24.13.3)
 
-  docmd-search@0.1.3(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0)):
+  docmd-search@0.1.3(@docmd/engine-js@0.9.2)(@docmd/engine-rust@0.9.2)(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0)):
     optionalDependencies:
+      '@docmd/engine-js': 0.9.2
+      '@docmd/engine-rust': 0.9.2
       '@huggingface/transformers': 4.2.0(@types/node@26.2.0)
       adm-zip: 0.6.0
       onnxruntime-node: 1.27.0
