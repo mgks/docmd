@@ -1,0 +1,85 @@
+name: Security scan
+
+# Non-blocking secret and code scan of the repository.
+# Deliberately not a merge gate: it fails only on a `critical` finding, so a
+# false positive can never hold a PR. Results land in the Security tab on push
+# and on the weekly run; pull requests get the counts in the job summary,
+# because uploading SARIF needs a write token that a fork PR does not get.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Mondays, 06:17 UTC. Off the hour so it does not queue behind everything
+    # else that runs at :00.
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: security-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  scan:
+    name: Secrets and code (non-blocking)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      - name: Install scanner
+        # Pinned so a rule change upstream never lands as a surprise CI failure.
+        # --ignore-scripts skips a native better-sqlite3 build that only the
+        # scanner's daemon needs; `scan` does not touch it.
+        run: npm install -g --ignore-scripts @profullstack/threatcrush@0.11.0
+
+      - name: Scan the repository
+        # Exits non-zero only on a critical finding. Everything below critical
+        # is reported and never blocks.
+        run: threatcrush scan . --format sarif --output threatcrush.sarif --fail-on critical
+
+      - name: Summarise
+        if: always()
+        run: |
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib, collections
+          report = pathlib.Path("threatcrush.sarif")
+          if not report.exists():
+              print("The scan wrote no report.")
+              raise SystemExit(0)
+          results = json.loads(report.read_text())["runs"][0]["results"]
+          levels = collections.Counter(one.get("level", "none") for one in results)
+          print("## Security scan\n")
+          print(f"{len(results)} finding(s): " + ", ".join(f"{n} {lvl}" for lvl, n in levels.most_common()) + "\n")
+          print("| Level | Rule | Where |")
+          print("| --- | --- | --- |")
+          for one in results[:30]:
+              where = one["locations"][0]["physicalLocation"]
+              path = where["artifactLocation"]["uri"]
+              line = where.get("region", {}).get("startLine", 1)
+              print(f"| {one.get('level', 'none')} | {one.get('ruleId', '')} | `{path}:{line}` |")
+          if len(results) > 30:
+              print(f"\n...and {len(results) - 30} more. The full report is in the Security tab.")
+          PY
+
+      - name: Upload to code scanning
+        # Skipped on pull requests: a fork PR has no token that may write
+        # security events, and the step would fail on somebody's contribution
+        # rather than on anything about their change.
+        if: always() && github.event_name != 'pull_request'
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: threatcrush.sarif
+          category: threatcrush
