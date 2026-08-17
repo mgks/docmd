@@ -232,6 +232,14 @@ export function normalizeMenubarPaths(items: any[]): void {
  */
 export function sanitizeUrl(url: string): string {
   if (!url) return url;
-  // Collapse double+ slashes, but preserve protocol://
-  return url.replace(/([^:])\/\/+/g, '$1/');
+  // Preserve a leading `scheme://` (e.g. `https://`) but collapse every other
+  // run of consecutive slashes. A leading `//` must collapse too: browsers
+  // treat `//host/path` as a protocol-relative URL pointing at a *different
+  // host*, so an accidental `//search/` (from base + `/search`) would resolve
+  // to `https://search/` instead of the intended same-site `/search/`.
+  const scheme = url.match(/^[a-z][a-z0-9+.-]*:\/\//i);
+  if (scheme) {
+    return scheme[0] + url.slice(scheme[0].length).replace(/\/{2,}/g, '/');
+  }
+  return url.replace(/\/{2,}/g, '/');
 }
