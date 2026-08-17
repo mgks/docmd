@@ -166,6 +166,20 @@
   color: var(--text-muted, #4b5563);
 }
 
+/* Add .oa-no-hover to a .oa-schema-table to disable the theme's global
+   tr:hover highlight — useful when the table is reference data, not
+   interactive rows, and the highlight is just visual noise. */
+.oa-schema-table.oa-no-hover tr:hover td {
+  background-color: inherit;
+}
+
+/* Add .oa-hover to a nested .oa-schema-table (rendered inside a td of a
+   .oa-no-hover table) to re-enable the highlight for that inner table only.
+   Same specificity as the rule above, so it must stay declared after it. */
+.oa-schema-table.oa-hover tr:hover td {
+  background-color: var(--sidebar-link-active-bg);
+}
+
 .oa-required {
   color: #ef4444;
   margin-left: 0.25rem;
@@ -195,6 +209,118 @@
 .oa-status-ok { background: #d1fae5; color: #065f46; }
 .oa-status-err { background: #fee2e2; color: #991b1b; }
 .oa-status-other { background: #f3f4f6; color: #4b5563; }
+
+.oa-response-detail-row td {
+  padding: 0;
+  border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.oa-response-detail {
+  margin: 0.5rem 1rem 1rem;
+  border: 1px solid var(--border-color, #eee);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.oa-response-detail summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted, #4b5563);
+}
+
+.oa-nested-schema {
+  margin-top: 0.25rem;
+  padding-left: 1rem;
+}
+
+.oa-nested-schema summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--link-color, #3b82f6);
+}
+
+/* Indentation lives on the .oa-nested-schema wrapper (via padding-left) rather
+   than the table itself, so nested tables keep full-width cells/padding at any
+   depth instead of shrinking further with each level of nesting. */
+.oa-nested-schema table {
+  margin: 0.5rem 0;
+  width: 100%;
+}
+
+.oa-additional-props {
+  padding: 0 1rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, #4b5563);
+}
+
+.oa-variants {
+  padding: 0 1rem;
+  margin: 0.5rem 0;
+}
+
+.oa-variants-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7280);
+}
+
+.oa-discriminator {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #6b7280);
+}
+
+.oa-variant {
+  border: 1px solid var(--border-color, #eee);
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.oa-variant summary {
+  cursor: pointer;
+}
+
+.oa-examples-title {
+  margin: 1.5rem 1rem 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #6b7280);
+  font-weight: 700;
+}
+
+.oa-examples {
+  padding: 0 1rem;
+}
+
+.oa-example {
+  margin-bottom: 0.5rem;
+}
+
+.oa-example summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.oa-example-description {
+  margin: 0.25rem 0;
+  color: var(--text-muted, #4b5563);
+  font-size: 0.85rem;
+}
+
+.oa-example-value {
+  background: var(--code-bg, #f9fafb);
+  border: 1px solid var(--border-color, #eee);
+  border-radius: 6px;
+  padding: 0.75rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+}
 
 /* Dark Mode Overrides */
 :root[data-theme=dark] .oa-type {
