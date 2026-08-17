@@ -1,0 +1,268 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Store & Users API (0.9.3 Preview)",
+    "version": "1.0.0",
+    "description": "Sample OpenAPI 3.0 specification demonstrating docmd 0.9.3 rich schema rendering, nested sub-tables, multiple examples, `allOf`/`oneOf` compositions, and responses."
+  },
+  "paths": {
+    "/users": {
+      "get": {
+        "summary": "List users",
+        "description": "Retrieve a paginated list of registered users with filtering.",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum number of items to return",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "example": 10
+            }
+          },
+          {
+            "name": "role",
+            "in": "query",
+            "description": "Filter by user role",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["admin", "member", "guest"],
+              "example": "admin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfile"
+                  }
+                },
+                "examples": {
+                  "standardList": {
+                    "summary": "Standard User List",
+                    "description": "Sample response with multiple user profiles",
+                    "value": [
+                      {
+                        "id": "usr_991823",
+                        "name": "Alex Johnson",
+                        "email": "alex.johnson@example.com",
+                        "role": "admin",
+                        "profile": {
+                          "bio": "Senior Platform Engineer",
+                          "avatarUrl": "https://images.example.com/avatar1.png",
+                          "preferences": {
+                            "theme": "dark",
+                            "notifications": true
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "code": "INVALID_QUERY_PARAM",
+                  "message": "Limit must be a positive integer between 1 and 100",
+                  "details": {
+                    "param": "limit",
+                    "provided": -5
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a user",
+        "description": "Register a new user in the workspace.",
+        "tags": ["Users"],
+        "requestBody": {
+          "required": true,
+          "description": "User creation payload",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              },
+              "examples": {
+                "newUser": {
+                  "summary": "Standard User Registration",
+                  "value": {
+                    "name": "Sarah Connor",
+                    "email": "sarah@example.com",
+                    "role": "member",
+                    "profile": {
+                      "bio": "Systems Analyst",
+                      "avatarUrl": "https://images.example.com/sarah.png",
+                      "preferences": {
+                        "theme": "system",
+                        "notifications": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "UserBase": {
+        "type": "object",
+        "required": ["name", "email"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Full name of the user",
+            "example": "Jane Doe"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Primary email address",
+            "example": "jane.doe@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": ["admin", "member", "guest"],
+            "default": "member",
+            "example": "member"
+          }
+        }
+      },
+      "UserPreferences": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "enum": ["light", "dark", "system"],
+            "default": "system",
+            "example": "dark"
+          },
+          "notifications": {
+            "type": "boolean",
+            "default": true,
+            "example": true
+          }
+        }
+      },
+      "UserDetails": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "description": "Short bio or tagline",
+            "example": "Open-source contributor and technical writer"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/avatar.jpg"
+          },
+          "preferences": {
+            "$ref": "#/components/schemas/UserPreferences"
+          }
+        }
+      },
+      "CreateUserRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/UserBase" },
+          {
+            "type": "object",
+            "properties": {
+              "profile": {
+                "$ref": "#/components/schemas/UserDetails"
+              }
+            }
+          }
+        ]
+      },
+      "UserProfile": {
+        "allOf": [
+          { "$ref": "#/components/schemas/UserBase" },
+          {
+            "type": "object",
+            "required": ["id", "createdAt"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique system identifier",
+                "example": "usr_7831024"
+              },
+              "profile": {
+                "$ref": "#/components/schemas/UserDetails"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-08-17T12:00:00Z"
+              }
+            }
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "UNPROCESSABLE_ENTITY"
+          },
+          "message": {
+            "type": "string",
+            "example": "The email address is already in use"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      }
+    }
+  }
+}

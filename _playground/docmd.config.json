@@ -1,14 +1,19 @@
 {
-  "title": "_playground",
+  "title": "docmd 0.9.3 Playground",
+  "src": "docs",
   "url": "https://docmd.io",
   "engine": "js",
   "theme": {
     "name": "default"
   },
   "layout": {
-    "sidebar": { "collapsible": true }
+    "sidebar": {
+      "collapsible": true
+    }
   },
   "plugins": {
+    "mermaid": true,
+    "openapi": true,
     "ai": {
       "assistant": true,
       "projectId": "docmd_aiv77jc8ms8qtpvd"

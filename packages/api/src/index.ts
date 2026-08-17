@@ -35,7 +35,8 @@ export { createActionDispatcher } from './rpc.js';
 
 // Path safety helper — canonical implementation lives in @docmd/utils.
 // Re-exported here for backward compatibility with existing plugin imports.
-export { safePath } from '@docmd/utils';
+export { safePath, asUserPath } from '@docmd/utils';
+export type { UserPath } from '@docmd/utils';
 
 // Source editing tools
 export { createSourceTools } from './source.js';

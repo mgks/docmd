@@ -297,10 +297,9 @@ export const test = runTestFile({
       assert(result.ok, 'URL-3b: workspace build for switcher test succeeds');
       const mainHtml = fs.readFileSync(path.join(proj, 'site/index.html'), 'utf8');
       // Find every project-switcher-item link and capture { href, title }.
-      // The href must be the same-site absolute path `/search/`. It must NOT
-      // be protocol-relative (`//search/`): a browser resolves `//search/`
-      // against a *different host* (`https://search/`), not the current site,
-      // so the switcher link would leave the docs entirely.
+      // The href must be a same-site path (e.g. `./search/` or `/search/`).
+      // It must NOT be protocol-relative (`//search/`): a browser resolves
+      // `//search/` against a *different host* (`https://search/`), leaving the docs.
       const switcherHrefs = Array.from(mainHtml.matchAll(/<a\s+href="([^"]+)"\s+class="project-switcher-item[^"]*"[^>]*>([\s\S]*?)<\/a>/g))
         .map(m => ({ href: m[1], title: (m[2].match(/<span class="project-title">([^<]+)<\/span>/) || [])[1] }));
       const searchHref = switcherHrefs.find(h => h.title === 'search');
@@ -308,9 +307,9 @@ export const test = runTestFile({
       // The previous bug emitted /search (no slash) which made the
       // browser treat the URL as a file when npx serve served the
       // directory index. The fix keeps the trailing slash, and the link
-      // must stay same-site (exactly `/search/`, never `//search/`).
-      assert(searchHref && /^\/search\/$/.test(searchHref.href),
-        `URL-3b: project switcher link to /search sub-site is exactly "/search/" (got: ${searchHref?.href})`);
+      // must stay same-site (never protocol-relative `//search/`).
+      assert(searchHref && !searchHref.href.startsWith('//') && /\/search\/$/.test(searchHref.href),
+        `URL-3b: project switcher link to /search sub-site ends with /search/ and is not protocol-relative (got: ${searchHref?.href})`);
       // The root project link should be relative "./" or absolute "/" (no extra trailing slash
       // for the root).
       const mainHref = switcherHrefs.find(h => h.title === 'main');

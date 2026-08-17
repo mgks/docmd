@@ -12,8 +12,7 @@
  * --------------------------------------------------------------------
  */
 
-// @ts-expect-error Deno/Browser compatible CDN import that TypeScript cannot natively resolve
-import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+import mermaid from 'mermaid';
 import { fixSvgNamespaces } from './svg-utils.js';
 
 (async function () {
@@ -35,7 +34,10 @@ import { fixSvgNamespaces } from './svg-utils.js';
         mermaid.registerIconPacks([
           {
             name: 'icon',
-            loader: () => fetch('https://unpkg.com/@iconify-json/lucide@1/icons.json').then((res) => res.json()),
+            loader: () =>
+              fetch('https://unpkg.com/@iconify-json/lucide@1/icons.json')
+                .then((res) => (res.ok ? res.json() : {}))
+                .catch(() => ({})),
           },
         ]);
         iconsRegistered = true;

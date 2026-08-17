@@ -22,7 +22,7 @@ import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
-  version: '0.9.2',
+  version: '0.9.3',
   capabilities: ['init', 'body', 'assets', 'actions', 'translations', 'post-build']
 };
 

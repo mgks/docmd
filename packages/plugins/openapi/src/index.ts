@@ -16,20 +16,19 @@ import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
-import { safePath, asUserPath } from '@docmd/utils';
-import type { PluginDescriptor } from '@docmd/api';
+import { safePath, asUserPath, type PluginDescriptor } from '@docmd/api';
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export const plugin: PluginDescriptor = {
   name: 'openapi',
-  version: '0.9.2',
+  version: '0.9.3',
   capabilities: ['markdown', 'assets']
 };
 
 // ---------------------------------------------------------------------------
-// Types (minimal OpenAPI 3.x subset)
+// Types (OpenAPI 3.x subset)
 // ---------------------------------------------------------------------------
 
 interface OASchema {
@@ -127,11 +126,15 @@ const METHOD_COLORS: Record<string, string> = {
   patch: '#8b5cf6',
   delete: '#ef4444',
   head: '#6b7280',
-  options: '#6b7280',
+  options: '#6b7280'
 };
 
 function esc(str: string): string {
-  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function describe(str: string | undefined, options: any): string {
@@ -187,18 +190,14 @@ function typeLabel(schema: OASchema | undefined, spec: OASpec): string {
   if (!schema) return 'any';
   if (schema.$ref) return schema.$ref.split('/').pop() || 'object';
   const resolved = resolveSchema(schema, spec);
-  if (resolved.allOf && resolved.allOf.length > 0) return resolved.allOf.map((s) => typeLabel(s, spec)).join(' & ');
+  if (resolved.allOf && resolved.allOf.length > 0) return resolved.allOf.map(s => typeLabel(s, spec)).join(' & ');
   if (resolved.type === 'array') return `array[${typeLabel(resolved.items, spec)}]`;
-  if (
-    resolved.type === 'object' &&
-    resolved.additionalProperties &&
-    typeof resolved.additionalProperties === 'object'
-  ) {
+  if (resolved.type === 'object' && resolved.additionalProperties && typeof resolved.additionalProperties === 'object') {
     return `map[string, ${typeLabel(resolved.additionalProperties, spec)}]`;
   }
-  if (resolved.oneOf && resolved.oneOf.length > 0) return resolved.oneOf.map((s) => typeLabel(s, spec)).join(' | ');
-  if (resolved.anyOf && resolved.anyOf.length > 0) return resolved.anyOf.map((s) => typeLabel(s, spec)).join(' | ');
-  if (resolved.enum) return resolved.enum.map((v) => `"${v}"`).join(' | ');
+  if (resolved.oneOf && resolved.oneOf.length > 0) return resolved.oneOf.map(s => typeLabel(s, spec)).join(' | ');
+  if (resolved.anyOf && resolved.anyOf.length > 0) return resolved.anyOf.map(s => typeLabel(s, spec)).join(' | ');
+  if (resolved.enum) return resolved.enum.map(v => `"${v}"`).join(' | ');
   const inferredType = resolved.type || (resolved.properties || resolved.additionalProperties ? 'object' : undefined);
   const base = [inferredType, resolved.format].filter(Boolean).join(':') || 'any';
   return resolved.nullable ? `${base} | null` : base;
@@ -222,12 +221,7 @@ function formatInlineExampleValue(value: unknown): string {
 
 /** Render the example(s) for a media type or schema: named `examples` map takes
  *  priority over a single `example`, falling back to the schema's own example. */
-function renderExamples(
-  media: OAMediaType | undefined,
-  schema: OASchema | undefined,
-  spec: OASpec,
-  options: any,
-): string {
+function renderExamples(media: OAMediaType | undefined, schema: OASchema | undefined, spec: OASpec, options: any): string {
   let body = '';
   if (media?.examples && Object.keys(media.examples).length > 0) {
     const entries = Object.entries(media.examples);
@@ -243,7 +237,7 @@ function renderExamples(
             ? `<p><a href="${esc(example.externalValue)}" target="_blank" rel="noopener noreferrer">${esc(example.externalValue)}</a></p>`
             : ''
       }
-    </details>`,
+    </details>`
       )
       .join('');
   } else if (media?.example !== undefined) {
@@ -288,7 +282,7 @@ function renderSchemaTable(schema: OASchema | undefined, spec: OASpec, options: 
       .map(([name, prop]) => {
         const r = expandSchema(prop, spec);
         const nested = renderNestedSchema(prop, spec, options, depth);
-        const example = r.example ?? r.examples?.[0];
+        const example = r.example ?? r.examples?.[0] ?? (r.default !== undefined ? r.default : undefined);
         return `<tr>
         <td><code>${esc(name)}</code>${required.has(name) ? ' <span class="oa-required">*</span>' : ''}</td>
         <td><span class="oa-type">${esc(typeLabel(prop, spec))}</span>${nested}</td>
@@ -298,10 +292,10 @@ function renderSchemaTable(schema: OASchema | undefined, spec: OASpec, options: 
       })
       .join('');
 
-    html += `<table class="oa-schema-table oa-hover">
+    html += `<div class="oa-table-wrap"><table class="oa-schema-table oa-hover">
     <thead><tr><th>Field</th><th>Type</th><th>Description</th><th>Example</th></tr></thead>
     <tbody>${rows}</tbody>
-    </table>`;
+    </table></div>`;
   }
 
   if (resolved.additionalProperties && typeof resolved.additionalProperties === 'object') {
@@ -325,7 +319,7 @@ function renderSchemaTable(schema: OASchema | undefined, spec: OASpec, options: 
           (v) => `<details class="oa-variant">
         <summary><span class="oa-type">${esc(typeLabel(v, spec))}</span></summary>
         ${renderSchemaTable(v, spec, options, depth + 1)}
-      </details>`,
+      </details>`
         )
         .join('');
       html += `<div class="oa-variants"><p class="oa-variants-label">${esc(label)}:</p>${discriminator}${items}</div>`;
@@ -362,10 +356,10 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
       })
       .join('');
     paramsHtml = `<h5>Parameters</h5>
-<table class="oa-schema-table">
+<div class="oa-table-wrap"><table class="oa-schema-table">
   <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Description</th><th>Example</th></tr></thead>
   <tbody>${rows}</tbody>
-</table>`;
+</table></div>`;
   }
 
   // Request body
@@ -412,7 +406,7 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
           : '';
 
         const detailRow = sections
-          ? `<tr ><td colspan="2"><details class="oa-response-detail">
+          ? `<tr class="oa-response-detail-row"><td colspan="2"><details class="oa-response-detail">
         <summary>${esc(code)} body</summary>
         ${sections}
       </details></td></tr>`
@@ -422,10 +416,10 @@ function renderOperation(method: string, path_: string, op: OAOperation, spec: O
       })
       .join('');
     responsesHtml = `<h5>Responses</h5>
-<table class="oa-schema-table oa-no-hover">
+<div class="oa-table-wrap"><table class="oa-schema-table oa-no-hover">
   <thead><tr><th>Status</th><th>Description</th></tr></thead>
   <tbody>${rows}</tbody>
-</table>`;
+</table></div>`;
   }
 
   const id = `oa-${method}-${path_.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
@@ -462,7 +456,7 @@ function parseSpec(specPath: string): OASpec {
     return yaml.load(raw) as OASpec;
   } catch {
     throw new Error(
-      `OpenAPI plugin: YAML spec at "${specPath}" requires js-yaml to be installed.\nRun: npm install js-yaml`,
+      `OpenAPI plugin: YAML spec at "${specPath}" requires js-yaml to be installed.\nRun: npm install js-yaml`
     );
   }
 }
@@ -479,7 +473,12 @@ function renderSpec(specPath: string, rootDir: string, options: any): string {
   }
 
   if (!fs.existsSync(absPath)) {
-    return `<div class="oa-error">OpenAPI spec not found: <code>${esc(specPath)}</code></div>`;
+    const docsPath = path.join(rootDir, 'docs', specPath);
+    if (fs.existsSync(docsPath)) {
+      absPath = docsPath;
+    } else {
+      return `<div class="oa-error">OpenAPI spec not found: <code>${esc(specPath)}</code></div>`;
+    }
   }
 
   let spec: OASpec;
@@ -536,11 +535,11 @@ function renderSpec(specPath: string, rootDir: string, options: any): string {
  * ```
  */
 export function markdownSetup(md: any, options: any): void {
-  const srcDir: string = options?.config?.src ? path.resolve(process.cwd(), options.config.src) : process.cwd();
+  const srcDir: string = options?.config?.src
+    ? path.resolve(process.cwd(), options.config.src)
+    : process.cwd();
 
-  const originalFence =
-    md.renderer.rules.fence ||
-    ((tokens: any[], idx: number, opts: any, _env: any, self: any) => self.renderToken(tokens, idx, opts));
+  const originalFence = md.renderer.rules.fence || ((tokens: any[], idx: number, opts: any, _env: any, self: any) => self.renderToken(tokens, idx, opts));
 
   md.renderer.rules.fence = (tokens: any[], idx: number, opts: any, env: any, self: any) => {
     const token = tokens[idx];
@@ -567,12 +566,10 @@ export function getAssets(_options?: any): any[] {
   // Only inject if our bundled CSS exists
   if (!fs.existsSync(cssPath)) return [];
 
-  return [
-    {
-      src: cssPath,
-      dest: 'assets/css/docmd-openapi.css',
-      type: 'css',
-      location: 'head',
-    },
-  ];
+  return [{
+    src: cssPath,
+    dest: 'assets/css/docmd-openapi.css',
+    type: 'css',
+    location: 'head'
+  }];
 }
