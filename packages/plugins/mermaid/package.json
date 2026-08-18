@@ -16,7 +16,7 @@
     ]
   },
   "scripts": {
-    "build": "tsc && esbuild src/client.ts --bundle --outfile=dist/init-mermaid.js --format=esm --platform=browser --minify",
+    "build": "tsc && esbuild src/client.ts --bundle --outfile=dist/init-mermaid.js --format=iife --platform=browser --minify",
     "test": "tsx --test tests/*.test.ts",
     "test:watch": "tsx --test --watch tests/*.test.ts"
   },

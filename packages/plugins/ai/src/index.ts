@@ -409,8 +409,7 @@ export function getAssets(_config?: any): Asset[] {
       src: jsPath,
       dest: 'assets/js/docmd-ai.js',
       type: 'js',
-      location: 'body',
-      attributes: { type: 'module' }
+      location: 'body'
     });
   }
   if (nativeFs.existsSync(cssPath)) {

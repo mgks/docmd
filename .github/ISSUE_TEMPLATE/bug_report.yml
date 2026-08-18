@@ -28,8 +28,14 @@ body:
       label: OS/Browser
       options:
         - macOS / Safari
+        - macOS / Chrome
+        - macOS / Firefox
         - Windows / Edge
+        - Windows / Chrome
+        - Windows / Firefox
         - Linux / Chrome
+        - Linux / Firefox
+        - Other
     validations:
       required: true
   - type: textarea

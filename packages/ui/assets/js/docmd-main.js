@@ -1076,7 +1076,7 @@
       // PWA Unregistration Safety Net:
       // If the PWA plugin is removed from docmd.config.js, the <link rel="manifest"> disappears.
       // We explicitly unregister all ghost service workers to safely kill the offline cache.
-      if ('serviceWorker' in navigator && !document.querySelector('link[rel="manifest"]')) {
+      if (window.location.protocol !== 'file:' && 'serviceWorker' in navigator && !document.querySelector('link[rel="manifest"]')) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
           registrations.forEach(reg => reg.unregister().catch(() => { }));
         });

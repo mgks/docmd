@@ -153,7 +153,6 @@ export function getAssets() {
       dest: 'assets/js/init-mermaid.js',
       type: 'js',
       location: 'body',
-      attributes: { type: 'module' },
       condition: { pageHtmlMatches: 'class="mermaid"' }
     }
   ];

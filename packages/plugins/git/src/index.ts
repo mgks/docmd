@@ -581,8 +581,7 @@ export function getAssets(_options?: any): any[] {
       src: path.join(distDir, 'git-widget.js'),
       dest: 'assets/js/docmd-git.js',
       type: 'js',
-      location: 'body',
-      attributes: { type: 'module' }
+      location: 'body'
     },
     {
       src: path.join(distDir, 'git-widget.css'),
