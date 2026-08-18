@@ -44,7 +44,7 @@
 
 </div>
 
-> ## ✦ 0.9.x — KI, Automatisierung & Sicherheit
+> ## ✦ 0.9 Serie — KI, Automatisierung & Sicherheit
 >
 > In der 0.9.x-Serie erweitert sich docmd von einem KI-bereiten Dokumentationsgenerator
 > zu einer Dokumentationsplattform, die sowohl für **Menschen als auch für KI-Agenten**
@@ -59,10 +59,7 @@
 > während die Kernfunktionen für Dokumentation, Suche, Deployment und Entwickler-Workflows
 > kontinuierlich verbessert werden.
 >
-> **Aktuelles Release:** `0.9.1`
->
-> [Release 0.9.1 ansehen →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
-> [Der 0.9.x Roadmap folgen →](https://github.com/orgs/docmd-io/discussions/10)
+> [Der 0.9 Roadmap folgen →](https://github.com/orgs/docmd-io/discussions/10)
 
 ## Schnellstart
 
