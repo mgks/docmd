@@ -44,7 +44,7 @@
 
 </div>
 
-> ## ✦ 0.9.x — IA, Automatisation & Sécurité
+> ## ✦ 0.9 Serie — IA, Automatisation & Sécurité
 >
 > La série 0.9.x marque la transition de docmd d'un générateur de documentation
 > compatible IA vers une plateforme de documentation conçue à la fois pour les
@@ -60,10 +60,7 @@
 > tout en continuant d'améliorer l'expérience documentaire centrale, la recherche,
 > le déploiement et les flux de travail des développeurs.
 >
-> **Version actuelle :** `0.9.1`
->
-> [Consulter la version 0.9.1 →](https://github.com/docmd-io/docmd/releases/tag/0.9.1)·
-> [Suivre la feuille de route 0.9.x →](https://github.com/orgs/docmd-io/discussions/10)
+> [Suivre la feuille de route 0.9 →](https://github.com/orgs/docmd-io/discussions/10)
 
 ## Démarrage rapide
 
