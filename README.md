@@ -44,7 +44,7 @@
 
 </div>
 
-> ## ✦ 0.9.x — AI, Automation & Security
+> ## ✦ 0.9 Series — AI, Automation & Security
 >
 > The 0.9.x series is where docmd expands from an AI-ready documentation
 > generator into a documentation platform designed for both **people and
@@ -60,10 +60,7 @@
 > while continuing to improve the core documentation experience, search,
 > deployment and developer workflows.
 >
-> **Current release:** `0.9.1`
->
-> [View 0.9.1 →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
-> [Follow the 0.9.x roadmap →](https://github.com/orgs/docmd-io/discussions/10)
+> [Follow the 0.9 roadmap →](https://github.com/orgs/docmd-io/discussions/10)
 
 ## Quick Start
 
