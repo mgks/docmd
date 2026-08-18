@@ -44,7 +44,7 @@
 
 </div>
 
-> ## ✦ 0.9.x — AI、自动化与安全
+> ## ✦ 0.9 系列 — AI、自动化与安全
 >
 > 0.9.x 系列是 docmd 从面向 AI 的文档生成器跨越为同时服务于**人类与 AI Agent** 的文档平台的重要阶段。
 >
@@ -52,10 +52,7 @@
 >
 > 在 AI 功能之外，该系列重点关注**安全性、隐私保护与自动化**，同时持续优化核心文档体验、搜索引擎、部署流程与开发者工作流。
 >
-> **当前版本：** `0.9.1`
->
-> [查看 0.9.1 版本发布 →](https://github.com/docmd-io/docmd/releases/tag/0.9.1) ·
-> [关注 0.9.x 路线图 →](https://github.com/orgs/docmd-io/discussions/10)
+> [关注 0.9 路线图 →](https://github.com/orgs/docmd-io/discussions/10)
 
 ## 快速开始
 
