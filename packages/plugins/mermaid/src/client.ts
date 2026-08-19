@@ -35,9 +35,10 @@ import { fixSvgNamespaces } from './svg-utils.js';
           {
             name: 'icon',
             loader: () =>
-              fetch('https://unpkg.com/@iconify-json/lucide@1/icons.json')
-                .then((res) => (res.ok ? res.json() : {}))
-                .catch(() => ({})),
+              fetch('https://unpkg.com/@iconify-json/lucide@1/icons.json').then((res) => {
+                if (!res.ok) throw new Error(`Failed to load icons: ${res.statusText}`);
+                return res.json();
+              }),
           },
         ]);
         iconsRegistered = true;
@@ -57,7 +58,7 @@ import { fixSvgNamespaces } from './svg-utils.js';
 
       try {
         const elemTheme = getThemeForElement(el);
-        mermaid.initialize({ startOnLoad: false, theme: elemTheme, securityLevel: 'loose' });
+        mermaid.initialize({ startOnLoad: false, theme: elemTheme as any, securityLevel: 'loose' });
         const id = `mermaid-svg-${counter++}`;
         const { svg } = await mermaid.render(id, code);
 
