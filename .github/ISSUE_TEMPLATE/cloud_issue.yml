@@ -1,4 +1,4 @@
-name: docmd Cloud Issue Report
+name: ☁️ docmd Cloud Issue Report
 description: Report an issue, bug, or request for docmd Cloud platform (cloud.docmd.io)
 title: "[Cloud]: "
 labels: ["cloud", "triage"]
@@ -7,14 +7,6 @@ body:
     attributes:
       value: |
         Thank you for reporting an issue for docmd Cloud Platform (cloud.docmd.io).
-  - type: input
-    id: project-id
-    attributes:
-      label: Project ID (Optional)
-      description: What is your project ID (e.g. docmd_abc123)?
-      placeholder: docmd_xxx
-    validations:
-      required: false
   - type: dropdown
     id: category
     attributes:
