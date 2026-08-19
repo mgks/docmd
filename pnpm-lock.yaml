@@ -25,7 +25,7 @@ importers:
         version: 5.6.2
       docmd-search:
         specifier: ^0.1.3
-        version: 0.1.3(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0))
+        version: 0.1.3(@docmd/engine-js@0.9.3)(@docmd/engine-rust@0.9.3)(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0))
       esbuild:
         specifier: ^0.28.2
         version: 0.28.2
@@ -33,8 +33,8 @@ importers:
         specifier: ^10.8.1
         version: 10.8.1
       globals:
-        specifier: ^17.9.0
-        version: 17.9.0
+        specifier: ^17.11.0
+        version: 17.11.0
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -345,8 +345,8 @@ importers:
         specifier: ^0.28.2
         version: 0.28.2
       mermaid:
-        specifier: ^11.4.1
-        version: 11.16.1
+        specifier: ^11.17.0
+        version: 11.17.0
       tsx:
         specifier: ^4.23.12
         version: 4.23.12
@@ -393,7 +393,7 @@ importers:
     dependencies:
       docmd-search:
         specifier: '>=0.1.3'
-        version: 0.1.3(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3))
+        version: 0.1.3(@docmd/engine-js@0.9.3)(@docmd/engine-rust@0.9.3)(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3))
       markdown-it:
         specifier: ^14.3.0
         version: 14.3.0
@@ -405,8 +405,8 @@ importers:
         specifier: workspace:*
         version: link:../../api
       '@types/markdown-it':
-        specifier: ^14.1.2
-        version: 14.1.2
+        specifier: ^14.2.0
+        version: 14.2.0
       '@types/node':
         specifier: ^24.13.3
         version: 24.13.3
@@ -531,6 +531,14 @@ packages:
   '@ctrl/tinycolor@4.2.0':
     resolution: {integrity: sha512-kzyuwOAQnXJNLS9PSyrk0CWk35nWJW/zl/6KvnTBMFK65gm7U1/Z5BqjxeapjZCIhQcM/DsrEmcbRwDyXyXK4A==}
     engines: {node: '>=14'}
+
+  '@docmd/engine-js@0.9.3':
+    resolution: {integrity: sha512-BbxgBiJAFvEivpFXW8Rk9hX4ph/AXMRvaBvDII+wQLY4v4VkEbvKt9k5qIgoxbRhITw0N/YL5YxrO6FfYwa05A==}
+    engines: {node: '>=20.0.0'}
+
+  '@docmd/engine-rust@0.9.3':
+    resolution: {integrity: sha512-qBQMAmnViRbIXl9ux6HNe2RAocbK2cbz5HN9IvoeD4mym8ZhWwd3grGeVzmMJ3yncSvkIjoOvyQcATpCGGoFig==}
+    engines: {node: '>=20.0.0'}
 
   '@emnapi/runtime@1.11.3':
     resolution: {integrity: sha512-Xz4Tpyki7XyrpbUK1jR1AhdAdaXyhhY4lZ3neLodmhpuWfy2PAQN5B46sAiU4liOXGLkHypn/qU+jvfWSCYYLA==}
@@ -948,8 +956,8 @@ packages:
   '@lit/reactive-element@2.1.2':
     resolution: {integrity: sha512-pbCDiVMnne1lYUIaYNN5wrwQXDtHaYtg7YEFPeW+hws6U47WeFvISGUWekPGKWOP1ygrs0ef0o1VJMk1exos5A==}
 
-  '@mermaid-js/parser@1.2.0':
-    resolution: {integrity: sha512-oYPyv8A4As1yH5Bx+04iQEQxXuIQDe0GKCNSRgao6z8AM9jixXIfP0vsppRLvGf+nKIOb9/LdpWA4YuJiVvESA==}
+  '@mermaid-js/parser@1.2.1':
+    resolution: {integrity: sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw==}
 
   '@playwright/test@1.62.1':
     resolution: {integrity: sha512-DTcUc8qii+cpHvtOwggMtBRMjKZHXYWdw8syRYu2vtzuq4Wxphqq4NfCs5Zt44L6mA8rfDfj+PHnxFc/FeK6mQ==}
@@ -1101,8 +1109,8 @@ packages:
   '@types/linkify-it@5.0.0':
     resolution: {integrity: sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==}
 
-  '@types/markdown-it@14.1.2':
-    resolution: {integrity: sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==}
+  '@types/markdown-it@14.2.0':
+    resolution: {integrity: sha512-NoQ2yGlLWj4wpxMs+TYmRKk3thDrQ97agr7sFqfLsAlvoS8SNQuTrlObhFqG9iugdTtgOE9jpJ6FNM4ZGsa5xQ==}
 
   '@types/mdurl@2.0.0':
     resolution: {integrity: sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==}
@@ -1421,8 +1429,8 @@ packages:
   dagre-d3-es@7.0.14:
     resolution: {integrity: sha512-P4rFMVq9ESWqmOgK+dlXvOtLwYg0i7u0HBGJER0LZDJT2VHIPAMZ/riPxqJceWMStH5+E61QxFra9kIS3AqdMg==}
 
-  dayjs@1.11.22:
-    resolution: {integrity: sha512-1YRnxzt/AabP3GHxnaB9/b+ZScCKu5TeF+co+BWG+lnWVIwEcTFc1FVE0WLNmNO3sA6GGXL40i5qkHfbLzpwrg==}
+  dayjs@1.11.23:
+    resolution: {integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==}
 
   debug@4.4.3:
     resolution: {integrity: sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA==}
@@ -1483,8 +1491,8 @@ packages:
       sharp:
         optional: true
 
-  dompurify@3.4.13:
-    resolution: {integrity: sha512-2vmYIoqjze2d+kakP8S/nS5shfsl587kzwEjcGlTdiksUVgFHnFCsLYDVj/JNqJVOQZGSYBTmuycv0PodwmnMQ==}
+  dompurify@3.4.14:
+    resolution: {integrity: sha512-dVoH9z+MY+C9IilgGCk3YfFqjLi3fChm2OiKJMzh6axrJ5qwxqWaZamgmHrpv22CN/KdbZJuGEGgfQoL00LTdg==}
 
   embed-lite@0.1.6:
     resolution: {integrity: sha512-iL9W49mLcEAla5U2l5MtwCyp+F4r938Z+HFo+/qruEXfGhpwm+qg0WqbfpsxPlm2rQAuXih7skAtyM3dVLCuXA==}
@@ -1501,8 +1509,8 @@ packages:
     resolution: {integrity: sha512-Zf5H2Kxt2xjTvbJvP2ZWLEICxA6j+hAmMzIlypy4xcBg1vKVnx89Wy0GbS+kf5cwCVFFzdCFh2XSCFNULS6csw==}
     engines: {node: '>= 0.4'}
 
-  es-toolkit@1.50.0:
-    resolution: {integrity: sha512-OyZKhUVvEep9ITEiwHn8GKnMRQIVqoSIX7WnRbkWgJkllCujilqP2rD0u979tkl8wqyc8ICwlc1UBVv/Sl1G6w==}
+  es-toolkit@1.51.0:
+    resolution: {integrity: sha512-zC2lQGkM7QX+Gm6iM3+WIdZJzthsEd14LvRNJneSO2hzyz/zNBENR8+YXWo1cKxgPBtV6ksPYHELbcwBRzmdCw==}
 
   esbuild@0.28.2:
     resolution: {integrity: sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==}
@@ -1564,6 +1572,9 @@ packages:
   fast-levenshtein@2.0.6:
     resolution: {integrity: sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==}
 
+  fastdom@1.0.12:
+    resolution: {integrity: sha512-LB+xjSTEbjHE1cWsxu+tN2Xqr1kpi+V9aADI7sVM5ZMaXyYGPHULQMzpJMYqOTULK/73pUkWVzzObFRBkPr+hg==}
+
   fdir@6.5.0:
     resolution: {integrity: sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==}
     engines: {node: '>=12.0.0'}
@@ -1609,8 +1620,8 @@ packages:
     resolution: {integrity: sha512-KUJEViiuFT3I97t+GYMikLPJS2Lfo/S2F+DQuBWzuzaMPnvt5yyZePzArx36fBzpGTxZjIpDbXLeySLgh+k76g==}
     engines: {node: '>=10.0'}
 
-  globals@17.9.0:
-    resolution: {integrity: sha512-m/MvAW61QVU5VDNF1Vj8axt016h8w7L5TU1e9zlab7XIttAT2YAlCwl75K1fOqvMM9apmD7lbCIRhpfkhmxhCg==}
+  globals@17.11.0:
+    resolution: {integrity: sha512-Z2I8hM+PbJDXQDq3Icgpzv+mPdwr68iZUU9d5WW4FuXfDUQfkZaZuvjMv42/5crNyw154+9+VWXbYrUgDXbxNw==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -1781,8 +1792,8 @@ packages:
   mdurl@2.1.0:
     resolution: {integrity: sha512-1+HBaOx0zi/dQWht8rNv9MYf9qqpqL/kxI0hXImU6Y547zM6Sni8BQibt7ifgMcYtQg41ao3Ivd6cnSM86inpg==}
 
-  mermaid@11.16.1:
-    resolution: {integrity: sha512-TQsq6u22fAn3rek5VOubrhKPo1g5hwC3FXUN9hiyupTckcYiGuuKGkNQrKYwGJkXUxZdojwRG46gsSCFZMDp4g==}
+  mermaid@11.17.0:
+    resolution: {integrity: sha512-Jo9N377Wb4MSnHFPTbLi2SxFpsQl4eVHoxnW5U1Md9EazvgMp3s+4ohDxr81YNTgbn5Kj7HJ3yslrSJ52kwpbA==}
 
   minimatch@10.2.6:
     resolution: {integrity: sha512-vpLQEs+VLCr1nU0BXS07maYoFwlDAH0gngQuuttxIwutDFEMHq2blX+8vpgxDdK3J1PwjCJiep77OitTZ4Ll1A==}
@@ -1920,6 +1931,9 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
+  strictdom@1.0.1:
+    resolution: {integrity: sha512-cEmp9QeXXRmjj/rVp9oyiqcvyocWab/HaoN4+bwFeZ7QzykJD6L3yD4v12K1x0tHpqRqVpJevN3gW7kyM39Bqg==}
+
   stylis@4.4.0:
     resolution: {integrity: sha512-5Z9ZpRzfuH6l/UAvCPAPUo3665Nk2wLaZU3x+TLHKVzIz33+sbJqbtrYoC3KD4/uVOr2Zp+L0LySezP9OHV9yA==}
 
@@ -1990,8 +2004,8 @@ packages:
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
-  uuid@14.0.1:
-    resolution: {integrity: sha512-6ZxzVpzDXDa3bJWaHilVayA+BH/1zmxCJoVgvmqJnid/gPoKHxUrS/aC/T6LGQtNHT+XHG9fXPJB4d+IrU30Ew==}
+  uuid@14.0.2:
+    resolution: {integrity: sha512-xZe/16rV4aa+HGSOCiY2YeLT1OybRLrrkL/Rqaq7p7GMVXjFh+6wN4oMYgjFmnSnhY8t6Xpdl2l9qmnHYuMHwQ==}
     hasBin: true
 
   which@2.0.2:
@@ -2036,6 +2050,12 @@ snapshots:
   '@chevrotain/types@11.1.2': {}
 
   '@ctrl/tinycolor@4.2.0': {}
+
+  '@docmd/engine-js@0.9.3':
+    optional: true
+
+  '@docmd/engine-rust@0.9.3':
+    optional: true
 
   '@emnapi/runtime@1.11.3':
     dependencies:
@@ -2334,7 +2354,7 @@ snapshots:
     dependencies:
       '@lit-labs/ssr-dom-shim': 1.6.0
 
-  '@mermaid-js/parser@1.2.0':
+  '@mermaid-js/parser@1.2.1':
     dependencies:
       '@chevrotain/types': 11.1.2
 
@@ -2516,7 +2536,7 @@ snapshots:
 
   '@types/linkify-it@5.0.0': {}
 
-  '@types/markdown-it@14.1.2':
+  '@types/markdown-it@14.2.0':
     dependencies:
       '@types/linkify-it': 5.0.0
       '@types/mdurl': 2.0.0
@@ -2893,7 +2913,7 @@ snapshots:
       d3: 7.9.0
       lodash-es: 4.18.1
 
-  dayjs@1.11.22: {}
+  dayjs@1.11.23: {}
 
   debug@4.4.3:
     dependencies:
@@ -2926,23 +2946,27 @@ snapshots:
     dependencies:
       aiplug: 0.1.2
 
-  docmd-search@0.1.3(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3)):
+  docmd-search@0.1.3(@docmd/engine-js@0.9.3)(@docmd/engine-rust@0.9.3)(@huggingface/transformers@4.2.0(@types/node@24.13.3))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@24.13.3)):
     optionalDependencies:
+      '@docmd/engine-js': 0.9.3
+      '@docmd/engine-rust': 0.9.3
       '@huggingface/transformers': 4.2.0(@types/node@24.13.3)
       adm-zip: 0.6.0
       onnxruntime-node: 1.27.0
       protobufjs: 7.6.5
       sharp: 0.35.3(@types/node@24.13.3)
 
-  docmd-search@0.1.3(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0)):
+  docmd-search@0.1.3(@docmd/engine-js@0.9.3)(@docmd/engine-rust@0.9.3)(@huggingface/transformers@4.2.0(@types/node@26.2.0))(adm-zip@0.6.0)(onnxruntime-node@1.27.0)(protobufjs@7.6.5)(sharp@0.35.3(@types/node@26.2.0)):
     optionalDependencies:
+      '@docmd/engine-js': 0.9.3
+      '@docmd/engine-rust': 0.9.3
       '@huggingface/transformers': 4.2.0(@types/node@26.2.0)
       adm-zip: 0.6.0
       onnxruntime-node: 1.27.0
       protobufjs: 7.6.5
       sharp: 0.35.3(@types/node@26.2.0)
 
-  dompurify@3.4.13:
+  dompurify@3.4.14:
     optionalDependencies:
       '@types/trusted-types': 2.0.7
 
@@ -2956,7 +2980,7 @@ snapshots:
   es-errors@1.3.0:
     optional: true
 
-  es-toolkit@1.50.0: {}
+  es-toolkit@1.51.0: {}
 
   esbuild@0.28.2:
     optionalDependencies:
@@ -3059,6 +3083,10 @@ snapshots:
 
   fast-levenshtein@2.0.6: {}
 
+  fastdom@1.0.12:
+    dependencies:
+      strictdom: 1.0.1
+
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
@@ -3100,7 +3128,7 @@ snapshots:
       serialize-error: 8.1.0
     optional: true
 
-  globals@17.9.0: {}
+  globals@17.11.0: {}
 
   globalthis@1.0.4:
     dependencies:
@@ -3251,11 +3279,11 @@ snapshots:
 
   mdurl@2.1.0: {}
 
-  mermaid@11.16.1:
+  mermaid@11.17.0:
     dependencies:
       '@braintree/sanitize-url': 7.1.2
       '@iconify/utils': 3.1.4
-      '@mermaid-js/parser': 1.2.0
+      '@mermaid-js/parser': 1.2.1
       '@types/d3': 7.4.3
       '@upsetjs/venn.js': 2.0.0
       cytoscape: 3.34.1
@@ -3264,16 +3292,17 @@ snapshots:
       d3: 7.9.0
       d3-sankey: 0.12.3
       dagre-d3-es: 7.0.14
-      dayjs: 1.11.22
-      dompurify: 3.4.13
-      es-toolkit: 1.50.0
+      dayjs: 1.11.23
+      dompurify: 3.4.14
+      es-toolkit: 1.51.0
+      fastdom: 1.0.12
       katex: 0.16.47
       khroma: 2.1.0
       marked: 16.4.2
       roughjs: 4.6.6
       stylis: 4.4.0
       ts-dedent: 2.3.0
-      uuid: 14.0.1
+      uuid: 14.0.2
 
   minimatch@10.2.6:
     dependencies:
@@ -3473,6 +3502,8 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
+  strictdom@1.0.1: {}
+
   stylis@4.4.0: {}
 
   supports-color@7.2.0:
@@ -3533,7 +3564,7 @@ snapshots:
     dependencies:
       punycode: 2.3.1
 
-  uuid@14.0.1: {}
+  uuid@14.0.2: {}
 
   which@2.0.2:
     dependencies:
