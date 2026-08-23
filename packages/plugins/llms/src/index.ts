@@ -19,7 +19,7 @@ import { outputPathToPathname, sanitizeUrl } from '@docmd/api';
 
 export const plugin: PluginDescriptor = {
   name: 'llms',
-  version: '0.9.5',
+  version: '0.9.4',
   capabilities: ['post-build']
 };
 

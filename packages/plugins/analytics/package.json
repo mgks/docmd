@@ -1,6 +1,6 @@
 {
   "name": "@docmd/plugin-analytics",
-  "version": "0.9.5",
+  "version": "0.9.4",
   "description": "Analytics injection plugin for docmd.",
   "type": "module",
   "main": "dist/index.js",
