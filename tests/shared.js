@@ -29,6 +29,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { tryHit, store as cacheStore } from './_lib/build-cache.mjs';
 
 export const DOCMD = path.resolve(
   import.meta.dirname,
@@ -57,18 +58,39 @@ export function setup(name) {
  * Set `expectFail = true` to invert the meaning of `ok` (the caller
  * is testing a documented failure path).
  */
-export function build(dir, expectFail = false) {
+export function build(dir, expectFail = false, extraArgs = '') {
+  const configPath = path.join(dir, 'docmd.config.json') + (extraArgs ? `#${extraArgs}` : '');
+  if (!expectFail) {
+    const hit = tryHit(dir, configPath);
+    if (hit && hit.ok) {
+      const cachedSite = hit.siteDir;
+      const targetSite = path.join(dir, 'site');
+      fs.rmSync(targetSite, { recursive: true, force: true });
+      try {
+        fs.cpSync(cachedSite, targetSite, { recursive: true, dereference: false });
+      } catch {
+        fs.rmSync(targetSite, { recursive: true, force: true });
+        fs.mkdirSync(targetSite, { recursive: true });
+      }
+      return { ok: true, output: hit.output, stderr: hit.stderr || '', cached: true };
+    }
+  }
+  const cmd = `node ${DOCMD} build${extraArgs ? ' ' + extraArgs : ''}`;
   try {
-    const out = execSync(`node ${DOCMD} build`, {
+    const out = execSync(cmd, {
       cwd: dir,
       stdio: 'pipe',
       encoding: 'utf8'
     });
-    if (expectFail) return { ok: false, output: out };
-    return { ok: true, output: out };
+    if (expectFail) return { ok: false, output: out, stderr: '' };
+    const siteDir = path.join(dir, 'site');
+    if (!expectFail && fs.existsSync(siteDir)) {
+      try { cacheStore(dir, configPath, siteDir, true, out); } catch { /* cache best-effort */ }
+    }
+    return { ok: true, output: out, stderr: '', cached: false };
   } catch (e) {
-    if (expectFail) return { ok: true, output: e.stderr || e.stdout || '' };
-    return { ok: false, output: e.stderr || e.stdout || '' };
+    if (expectFail) return { ok: true, output: e.stderr || e.stdout || '', stderr: e.stderr || '' };
+    return { ok: false, output: e.stderr || e.stdout || '', stderr: e.stderr || '' };
   }
 }
 

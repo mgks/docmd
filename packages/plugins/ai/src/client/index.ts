@@ -15,7 +15,11 @@ export class DocmdAIAssistantUI {
   private isUnconfigured: boolean;
 
   constructor() {
-    const cfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__ || {};
+    const rawCfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__;
+    if (!rawCfg || rawCfg.enabled === false || rawCfg.assistant === false || rawCfg.chat === false) {
+      return;
+    }
+    const cfg = rawCfg;
     this.projectId = cfg.projectId || cfg.siteId || cfg.cloud?.projectId || cfg.cloud?.siteId || 'default';
     this.isUnconfigured = (!cfg.projectId || cfg.projectId === 'default') && !cfg.apiKey && !cfg.baseURL;
 
@@ -98,7 +102,9 @@ export class DocmdAIAssistantUI {
   private mount(): void {
     if (document.getElementById('docmd-ai-plugin-root')) return;
 
-    const cfg = (window as any).__docmd_ai_config || {};
+    const rawCfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__;
+    if (!rawCfg || rawCfg.enabled === false || rawCfg.assistant === false || rawCfg.chat === false) return;
+    const cfg = rawCfg;
     const i18n = (window as any).__DOCMD_AI_I18N__ || {};
 
     const pos = cfg.position || 'bottom-center';
@@ -738,8 +744,16 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
               if (msgs) msgs.scrollTop = msgs.scrollHeight;
             }
           },
-          onChunk: (delta: string) => {
-            accumulatedText = delta;
+          onChunk: (chunk: string) => {
+            if (chunk) {
+              if (!accumulatedText) {
+                accumulatedText = chunk;
+              } else if (chunk.startsWith(accumulatedText)) {
+                accumulatedText = chunk;
+              } else {
+                accumulatedText += chunk;
+              }
+            }
             if (statusWrap) {
               statusWrap.style.display = 'none';
             }

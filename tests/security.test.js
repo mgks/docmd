@@ -46,7 +46,7 @@ function build(dir) {
     } catch {
       fs.mkdirSync(targetSite, { recursive: true });
     }
-    return { ok: true, output: hit.output, stderr: '', cached: true };
+    return { ok: true, output: hit.output, stderr: hit.stderr || '', cached: true };
   }
   // Use spawnSync so we can capture both stdout AND stderr on success too
   // (execSync discards stderr on success). Plugins use console.error to
@@ -64,7 +64,7 @@ function build(dir) {
   if (result.ok) {
     const siteDir = path.join(dir, 'site');
     if (fs.existsSync(siteDir)) {
-      try { cacheStore(dir, configPath, siteDir, true, result.output); } catch { /* best-effort */ }
+      try { cacheStore(dir, configPath, siteDir, true, result.output, result.stderr); } catch { /* best-effort */ }
     }
   }
   return result;

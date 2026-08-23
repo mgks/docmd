@@ -26,6 +26,7 @@ import {
   DOCMD,
   setup,
   writeFile,
+  build,
   runTestFile
 } from '../shared.js';
 import { execSync } from 'node:child_process';
@@ -48,15 +49,15 @@ function assert(condition, message) {
 }
 
 export const test = runTestFile({
-  name: 'llms.txt sanitisation + TUI banner options (Slice F — T-Z10, T-Z11, N-13, N-16)',
-  emoji: '🧹',
+  name: 'LLMS plugin sanitisation + TUI banner suppression (T-Z10, T-Z11, N-13, N-16)',
+  emoji: '🛡️',
   run: () => {
 
-    // T-Z10 — malicious title with markdown injection characters
-    // (backticks, brackets, newline) must NOT break the link form or
-    // render as raw HTML in the llms.txt output.
+    // T-Z10 — Markdown injection in title (links, backticks) is escaped
+    // in llms.txt so an attacker cannot smuggle links or formatting into
+    // LLM prompts.
     {
-      const dir = setup('f-tz10-markdown-injection');
+      const dir = setup('f-tz10-markdown-in-title');
       writeFile(dir, 'docs/index.md', [
         '---',
         'title: "Evil `code` [link](http://attacker.com) title"',
@@ -67,7 +68,7 @@ export const test = runTestFile({
         'Body content.'
       ].join('\n'));
 
-      execSync(`node ${DOCMD} build`, { cwd: dir, stdio: 'pipe' });
+      build(dir);
 
       const llms = fs.readFileSync(path.join(dir, 'site/llms.txt'), 'utf8');
       // The raw malicious chars should be escaped (backslashes added) so
@@ -90,7 +91,7 @@ export const test = runTestFile({
         '# Home'
       ].join('\n'));
 
-      execSync(`node ${DOCMD} build`, { cwd: dir, stdio: 'pipe' });
+      build(dir);
 
       const llms = fs.readFileSync(path.join(dir, 'site/llms.txt'), 'utf8');
       // The leading = should be neutralised by a leading single-quote

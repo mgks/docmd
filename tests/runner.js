@@ -175,21 +175,26 @@ addInProcess(
   'Runtime-deps shared auto-install pipeline (RD-1..RD-CWE, CWE-78 fix)',
   await import('./cli-contracts/runtime-deps.test.js')
 );
+addInProcess(
+  'plugin-ai-disable',
+  'Plugin AI disable flags (Issue #209)',
+  await import('./cli-contracts/plugin-ai-disable.test.js')
+);
 
 // --- Section 2: Container parser (Phase 2 PR 1+2+3) ----------------------
 addExternal(
   'container-normaliser',
   'Container normaliser (F1–F5)',
-  'pnpm',
-  ['--filter', '@docmd/parser', 'test']
+  'node',
+  ['--test', 'packages/parser/test/**/*.test.js']
 );
 
 // --- Section 3: Utils (Path / HTML escape) -------------------------------
 addExternal(
   'utils',
   'Utils (safePath, escHtml, attrEsc, jsonInject, scriptLiteral)',
-  'pnpm',
-  ['--filter', '@docmd/utils', 'test']
+  'node',
+  ['--test', 'packages/utils/test/**/*.test.js']
 );
 
 // --- Section 4: Security (Phase 1 CVE suite) ------------------------------
@@ -212,11 +217,19 @@ addExternal(
 addExternal(
   'okf-plugin',
   'OKF plugin (Open Knowledge Format bundle generator)',
-  'pnpm',
-  ['--filter', '@docmd/plugin-okf', 'test']
+  'node',
+  ['./packages/plugins/okf/node_modules/tsx/dist/cli.mjs', '--test', 'packages/plugins/okf/tests/*.test.ts']
 );
 
-// --- Section 7: LLMS plugin -----------------------------------------------
+// --- Section 7: Mermaid plugin --------------------------------------------
+addExternal(
+  'mermaid-plugin',
+  'Mermaid plugin (diagram rendering and offline bundling)',
+  'node',
+  ['./packages/plugins/mermaid/node_modules/tsx/dist/cli.mjs', '--test', 'packages/plugins/mermaid/tests/*.test.ts']
+);
+
+// --- Section 8: LLMS plugin -----------------------------------------------
 // The LLMS plugin doesn't have a `pnpm test` script yet, so the runner
 // invokes the test runner directly. Default-locale + i18n opt-in tests
 // live at packages/plugins/llms/tests/llms.test.js.
@@ -310,56 +323,17 @@ console.log(DIM(`  ${testFiles.length} test file${testFiles.length === 1 ? '' : 
 console.log('');
 
 (async function main() {
-for (const { id, name, module } of testFiles) {
-  const sectionStart = Date.now();
-  console.log(CYAN(BOLD(name.toUpperCase())));
-  console.log('');
-
-  if (module.external) {
-    const result = await runExternalWithProgress(module);
-    const out = result.output;
-    if (result.status === 0) {
-      // Parse the assertion count. Two output formats are supported:
-      //   1. `tests/feature-integration.test.js` style: "X passed,
-      //      Y failed out of Z"
-      //   2. `node:test` TAP-style:    "pass N" / "fail N" (one per line)
-      let passed = 0;
-      let failed = 0;
-      const bruteMatch = out.match(/(\d+)\s+passed,\s+(\d+)\s+failed/);
-      if (bruteMatch) {
-        passed = parseInt(bruteMatch[1], 10);
-        failed = parseInt(bruteMatch[2], 10);
-      } else {
-        const passLines = out.match(/pass\s+(\d+)/g) || [];
-        const failLines = out.match(/fail\s+(\d+)/g) || [];
-        for (const l of passLines) {
-          const v = parseInt(l.replace(/[^\d]/g, ''), 10);
-          if (!isNaN(v)) passed = Math.max(passed, v);
-        }
-        for (const l of failLines) {
-          const v = parseInt(l.replace(/[^\d]/g, ''), 10);
-          if (!isNaN(v)) failed = Math.max(failed, v);
-        }
-      }
-      totalPassed += passed;
-      totalFailed += failed;
-      const elapsed = Date.now() - sectionStart;
-      console.log(`${GREEN(BOLD('[ PASS ]'))}  ${passed} passed, ${failed} failed  ${DIM('(' + elapsed + 'ms)')}`);
-    } else {
-      totalFailed += 1;
-      allFailures.push({ name, output: out.slice(-2000) });
-      const elapsed = Date.now() - sectionStart;
-      console.log(`${RED(BOLD('[ FAIL ]'))}  exit code ${result.status}  ${DIM('(' + elapsed + 'ms)')}`);
-    }
-  } else {
-    // In-process runner. The test module's `test.run()` callback prints
-    // its own pass/fail per assertion; the module's `results` object
-    // reports the aggregate.
+  // Step 1: Run in-process CLI contract tests in sequence with live output
+  const inProcessFiles = testFiles.filter(f => !f.module.external);
+  for (const { id, name, module } of inProcessFiles) {
+    const sectionStart = Date.now();
+    console.log(CYAN(BOLD(name.toUpperCase())));
+    console.log('');
     try {
       await module.test.run();
       const passed = module.results.passed;
       const failed = module.results.failed;
-      const failures = module.results.failures;
+      const failures = module.results.failures || [];
       totalPassed += passed;
       totalFailed += failed;
       for (const f of failures) allFailures.push({ name, output: f });
@@ -375,27 +349,98 @@ for (const { id, name, module } of testFiles) {
       const elapsed = Date.now() - sectionStart;
       console.log(`${RED(BOLD('[ FAIL ]'))}  threw: ${e.message}  ${DIM('(' + elapsed + 'ms)')}`);
     }
+    console.log('');
   }
-  console.log('');
-}
 
-const totalMs = Date.now() - startTime;
-console.log(CYAN(BOLD('TEST SUMMARY')));
-console.log('');
-console.log(CYAN(BOLD(`${totalPassed} passed, ${totalFailed} failed across ${testFiles.length} files`)));
-console.log(DIM(`Total time: ${totalMs}ms`));
-if (allFailures.length > 0) {
-  console.log('');
-  console.log(RED('Failures:'));
-  for (const f of allFailures) {
-    console.log(RED(`  - ${f.name}`));
-    if (f.output) {
-      const snippet = f.output.split('\n').slice(0, 8).join('\n');
-      console.log(DIM(snippet));
+  // Step 2: Run all external test suites in parallel
+  const externalFiles = testFiles.filter(f => f.module.external);
+  if (externalFiles.length > 0) {
+    const externalResults = await Promise.all(
+      externalFiles.map(async ({ id, name, module }) => {
+        const sectionStart = Date.now();
+        const result = await new Promise((resolve) => {
+          const child = spawn(module.command, module.args, {
+            cwd: path.resolve(import.meta.dirname, '..'),
+            stdio: ['ignore', 'pipe', 'pipe'],
+            encoding: 'utf8'
+          });
+          let outBuf = '';
+          child.stdout.on('data', (c) => { outBuf += c.toString(); });
+          child.stderr.on('data', (c) => { outBuf += c.toString(); });
+          child.on('close', (code) => resolve({ status: code ?? 0, output: outBuf }));
+          child.on('error', (err) => resolve({ status: 1, output: outBuf + '\n' + (err.stack || err.message) }));
+        });
+        const out = result.output;
+        let passed = 0;
+        let failed = 0;
+        if (result.status === 0) {
+          const bruteMatch = out.match(/(\d+)\s+passed,\s+(\d+)\s+failed/);
+          if (bruteMatch) {
+            passed = parseInt(bruteMatch[1], 10);
+            failed = parseInt(bruteMatch[2], 10);
+          } else {
+            const passLines = out.match(/pass\s+(\d+)/g) || [];
+            const failLines = out.match(/fail\s+(\d+)/g) || [];
+            for (const l of passLines) {
+              const v = parseInt(l.replace(/[^\d]/g, ''), 10);
+              if (!isNaN(v)) passed = Math.max(passed, v);
+            }
+            for (const l of failLines) {
+              const v = parseInt(l.replace(/[^\d]/g, ''), 10);
+              if (!isNaN(v)) failed = Math.max(failed, v);
+            }
+          }
+        } else {
+          failed = 1;
+        }
+        const elapsed = Date.now() - sectionStart;
+        return {
+          id,
+          name,
+          passed,
+          failed,
+          failures: failed > 0 ? [{ name, output: out.slice(-2000) }] : [],
+          elapsed,
+          output: out,
+          status: result.status
+        };
+      })
+    );
+
+    for (const r of externalResults) {
+      console.log(CYAN(BOLD(r.name.toUpperCase())));
+      console.log('');
+      if (r.status === 0 && r.failed === 0) {
+        console.log(`${GREEN(BOLD('[ PASS ]'))}  ${r.passed} passed, ${r.failed} failed  ${DIM('(' + r.elapsed + 'ms)')}`);
+      } else {
+        console.log(`${RED(BOLD('[ FAIL ]'))}  ${r.passed} passed, ${r.failed} failed (exit ${r.status})  ${DIM('(' + r.elapsed + 'ms)')}`);
+      }
+      console.log('');
+      totalPassed += r.passed;
+      totalFailed += r.failed;
+      if (r.failures && r.failures.length > 0) {
+        allFailures.push(...r.failures);
+      }
     }
   }
-}
-console.log('');
 
-process.exit(totalFailed > 0 ? 1 : 0);
+  const totalMs = Date.now() - startTime;
+  console.log(CYAN(BOLD('TEST SUMMARY')));
+  console.log('');
+  console.log(CYAN(BOLD(`${totalPassed} passed, ${totalFailed} failed across ${testFiles.length} files`)));
+  console.log(DIM(`Total time: ${totalMs}ms`));
+  if (allFailures.length > 0) {
+    console.log('');
+    console.log(RED('Failures:'));
+    for (const f of allFailures) {
+      console.log(RED(`  - ${f.name}`));
+      if (f.output) {
+        const snippet = f.output.split('\n').slice(0, 8).join('\n');
+        console.log(DIM(snippet));
+      }
+    }
+  }
+  console.log('');
+
+  process.exit(totalFailed > 0 ? 1 : 0);
 })();

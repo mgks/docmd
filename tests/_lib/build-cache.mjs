@@ -19,6 +19,7 @@
  * Invalidating the cache: delete $TMPDIR/docmd-test-cache, or run with
  * DOCMD_TEST_CACHE_OFF=1 to bypass it (tests run normally).
  */
+
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
@@ -34,24 +35,35 @@ const CACHE_OFF = process.env.DOCMD_TEST_CACHE_OFF === '1';
  * regular file under `dir` plus the config text (when present) so
  * changes in the config alone also invalidate the cache.
  */
-function snapshot(dir, configPath) {
+export function snapshot(dir, configPath = '') {
+    let cleanConfigPath = configPath;
+    let flags = '';
+    if (configPath && configPath.includes('#')) {
+        const parts = configPath.split('#');
+        cleanConfigPath = parts[0];
+        flags = parts.slice(1).join('#');
+    }
     const files = {};
     const walk = (d) => {
         for (const entry of fs.readdirSync(d, { withFileTypes: true })) {
-            const p = path.join(d, entry.name);
-            if (entry.isDirectory()) walk(p);
-            else if (entry.isFile()) {
-                try {
-                    files[path.relative(dir, p)] = fs.readFileSync(p);
-                } catch { /* skip unreadable */ }
+            const full = path.join(d, entry.name);
+            if (entry.isDirectory()) {
+                if (entry.name === 'site' || entry.name === '_site' || entry.name === '.docmd' || entry.name === '_docmd-search') continue;
+                walk(full);
+            } else if (entry.isFile()) {
+                const rel = path.relative(dir, full);
+                files[rel] = crypto.createHash('sha256')
+                    .update(fs.readFileSync(full))
+                    .digest('hex');
             }
         }
     };
     walk(dir);
     return {
         files,
-        config: configPath && fs.existsSync(configPath)
-            ? fs.readFileSync(configPath, 'utf8') : ''
+        flags,
+        config: cleanConfigPath && fs.existsSync(cleanConfigPath)
+            ? fs.readFileSync(cleanConfigPath, 'utf8') : ''
     };
 }
 
@@ -62,6 +74,7 @@ function hash(snap) {
         files: Object.fromEntries(
             Object.entries(snap.files).sort(([a], [b]) => a.localeCompare(b))
         ),
+        flags: snap.flags || '',
         config: snap.config
     };
     return crypto.createHash('sha256')
@@ -85,7 +98,7 @@ export function tryHit(dir, configPath) {
     try {
         const out = JSON.parse(fs.readFileSync(entry, 'utf8'));
         if (!out.ok) return null;  // never cache a failure — operator must see fresh runs
-        return { ok: out.ok, output: out.output, siteDir: cachedSite, hit: true, key };
+        return { ok: out.ok, output: out.output, stderr: out.stderr || '', siteDir: cachedSite, hit: true, key };
     } catch { return null; }
 }
 
@@ -94,12 +107,13 @@ export function tryHit(dir, configPath) {
  * The site dir is moved into the cache so the caller can re-use it
  * without copying. Subsequent cache hits will return this same siteDir.
  */
-export function store(dir, configPath, siteDir, ok, output) {
+export function store(dir, configPath, siteDir, ok, output, stderr = '') {
     if (CACHE_OFF) return null;
     if (!ok) return null;
     const snap = snapshot(dir, configPath);
     const key = hash(snap);
     const target = cacheDirFor(key);
+    fs.mkdirSync(target, { recursive: true });
     const targetSite = path.join(target, 'site');
     fs.rmSync(targetSite, { recursive: true, force: true });
     try {
@@ -107,7 +121,7 @@ export function store(dir, configPath, siteDir, ok, output) {
     } catch { /* cache best-effort */ }
     fs.writeFileSync(
         path.join(target, 'output.json'),
-        JSON.stringify({ ok, output })
+        JSON.stringify({ ok, output, stderr })
     );
     return key;
 }

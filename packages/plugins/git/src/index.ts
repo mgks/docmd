@@ -290,7 +290,7 @@ async function getGitFileInfo(filePath: string, maxCommits: number = 6): Promise
 
 export const plugin: PluginDescriptor = {
   name: 'git',
-  version: '0.9.3',
+  version: '0.9.4',
   capabilities: ['build', 'body', 'assets', 'translations', 'init', 'post-build']
 };
 

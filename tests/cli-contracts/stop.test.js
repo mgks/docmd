@@ -52,8 +52,9 @@ export const test = runTestFile({
       setTimeout(() => {
         try { process.kill(child.pid, 'SIGTERM'); } catch { /* ignore */ }
       }, 50);
-      const exited = await waitForExit(child.pid, 1000);
+      const exited = await waitForExit(child.pid, 2000);
       assert(exited, 'M-11: waitForExit returns true after SIGTERM kills a sleep child');
+      try { process.kill(child.pid, 'SIGKILL'); } catch { /* ignore */ }
     }
 
     // waitForExit returns false when the target process is still

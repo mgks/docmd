@@ -22,9 +22,9 @@ import {
   DOCMD,
   setup,
   writeFile,
+  build,
   runTestFile
 } from '../shared.js';
-import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -71,7 +71,7 @@ export const test = runTestFile({
       writeFile(dir, 'docs/index.md', '# Home\n\n[link](/destination.md)\n');
       writeFile(dir, 'docs/destination.md', '# Destination\n');
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -91,7 +91,7 @@ export const test = runTestFile({
       writeFile(dir, 'docs/api/index.md', '# API\n\n[link](/destination.md)\n');
       writeFile(dir, 'docs/destination.md', '# Destination\n');
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/api/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -109,7 +109,7 @@ export const test = runTestFile({
       writeFile(dir, 'docs/index.md', '# Home\n\n[link](/destination.md)\n');
       writeFile(dir, 'docs/destination.md', '# Destination\n');
 
-      execSync(`node ${DOCMD} build`, { cwd: dir, stdio: 'pipe' });
+      build(dir);
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -133,7 +133,7 @@ export const test = runTestFile({
       ].join('\n'));
       writeFile(dir, 'docs/destination.md', '# Destination\n');
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -166,7 +166,7 @@ export const test = runTestFile({
         ]
       }) + '\n');
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -197,7 +197,7 @@ export const test = runTestFile({
         ]
       }) + '\n');
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/api/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -221,7 +221,7 @@ export const test = runTestFile({
         ]
       }) + '\n');
 
-      execSync(`node ${DOCMD} build`, { cwd: dir, stdio: 'pipe' });
+      build(dir);
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 
@@ -242,7 +242,7 @@ export const test = runTestFile({
         '[config](config.json)'
       ].join('\n'));
 
-      execSync(`node ${DOCMD} build --offline`, { cwd: dir, stdio: 'pipe' });
+      build(dir, false, '--offline');
       const html = fs.readFileSync(path.join(dir, 'site/index.html'), 'utf8');
       const hrefs = extractHrefs(html);
 

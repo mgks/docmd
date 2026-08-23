@@ -22,7 +22,7 @@ import { DocmdAssistantEngine } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
-  version: '0.9.3',
+  version: '0.9.4',
   capabilities: ['init', 'body', 'assets', 'actions', 'translations', 'post-build']
 };
 
@@ -398,7 +398,12 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
 }
 
 /** External assets to inject into HTML pages */
-export function getAssets(_config?: any): Asset[] {
+export function getAssets(options?: any): Asset[] {
+  const pluginOptions: AIPluginOptions = options || _resolvedOptions || {};
+  if (pluginOptions.enabled === false || pluginOptions.assistant === false || pluginOptions.chat === false || _resolvedOptions.enabled === false) {
+    return [];
+  }
+
   const distDir = path.resolve(__dirname, '..', 'dist', 'client');
   const jsPath = path.join(distDir, 'index.js');
   const cssPath = path.join(distDir, 'ai.css');
@@ -426,5 +431,7 @@ export function getAssets(_config?: any): Asset[] {
 
 /** Post Build Hook */
 export async function onPostBuild({ log }: any): Promise<void> {
-  if (log) log('AI Assistant plugin ready for site.');
+  if (_resolvedOptions.enabled !== false && log) {
+    log('AI Assistant plugin ready for site.');
+  }
 }

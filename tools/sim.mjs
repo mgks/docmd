@@ -87,20 +87,30 @@ const DIM = (s) => `\x1b[2m${s}\x1b[0m`;
 const GREEN = (s) => `\x1b[32m${s}\x1b[0m`;
 const RED = (s) => `\x1b[31m${s}\x1b[0m`;
 const BOLD = (s) => `\x1b[1m${s}\x1b[0m`;
+const BLUE = (s) => `\x1b[34m${s}\x1b[0m`;
+const CYAN = (s) => `\x1b[36m${s}\x1b[0m`;
+const YELLOW = (s) => `\x1b[33m${s}\x1b[0m`;
+
+const TAG_WAIT = `${BLUE('[ WAIT ]')}`;
+const TAG_DONE = `${GREEN('[ DONE ]')}`;
+const TAG_FAIL = `${RED('[ FAIL ]')}`;
+const TAG_INFO = `${CYAN('[ INFO ]')}`;
+const TAG_WARN = `${YELLOW('[ WARN ]')}`;
 
 function fail(msg, code = 1) {
-  console.error(`\n  ${RED('✗')} ${msg}\n`);
+  console.error(`\n${TAG_FAIL} ${msg}\n`);
   process.exit(code);
 }
 
 function step(label, fn) {
-  process.stdout.write(`  ${DIM('WAIT')} ${label}...`);
+  const text = `${label}`;
+  process.stdout.write(`${TAG_WAIT} ${text}\n`);
   try {
     const result = fn();
-    process.stdout.write(`\r  ${GREEN('DONE')} ${label}      \n`);
+    process.stdout.write(`\x1b[1A\x1b[2K${TAG_DONE} ${text}\n`);
     return result;
   } catch (err) {
-    process.stdout.write(`\r  ${RED('FAIL')} ${label}      \n`);
+    process.stdout.write(`\x1b[1A\x1b[2K${TAG_FAIL} ${text}\n`);
     if (VERBOSE) console.error(err.stderr?.toString() || err.message);
     throw err;
   }
@@ -287,7 +297,6 @@ function npmInstall() {
 
 function runDocmd(command) {
   return new Promise((resolve, reject) => {
-    process.stdout.write(`  ${DIM('WAIT')} docmd ${command} (source)...`);
     const env = { ...process.env };
     delete env.npm_config_npm_globalconfig;
     delete env.npm_config_verify_deps_before_run;
@@ -296,9 +305,8 @@ function runDocmd(command) {
     const executable = fs.existsSync(localBin) ? localBin : 'docmd';
     const child = spawn(executable, [command], { cwd: SOURCE_DIR, stdio: 'inherit', env });
     child.on('exit', (code) => {
-      const tag = code === 0 ? `${GREEN('DONE')}` : `${RED('FAIL')}`;
-      process.stdout.write(`\r  ${tag} docmd ${command} (source)               \n`);
-      code === 0 ? resolve() : reject(new Error(`docmd ${command} exited ${code}`));
+      if (code === 0) resolve();
+      else reject(new Error(`docmd ${command} exited ${code}`));
     });
     child.on('error', reject);
   });
@@ -356,17 +364,18 @@ function runDocmd(command) {
 
     if (REGEN_TARS && !DO_BUILD && !DO_DEV) {
       console.log();
-      console.log(`  ${GREEN('done')} ${DIM('tars written to ' + LOCAL_TARS)}`);
-      console.log(`  ${DIM('next: `pnpm dev` or `pnpm build` to consume them')}`);
+      console.log(`${TAG_DONE} Tarballs written to: ${LOCAL_TARS}`);
+      console.log(`${TAG_INFO} Run \`pnpm dev\` or \`pnpm build\` to consume them.\n`);
     } else if (DO_BUILD) {
       console.log();
-      console.log(`  ${GREEN('done')} ${DIM('site/ is in ' + path.join(SOURCE_DIR, 'site'))}`);
+      console.log(`${TAG_DONE} Consumer build simulation verified.`);
+      console.log(`${TAG_INFO} Site output generated at: ${path.join(SOURCE_DIR, 'site')}\n`);
     }
   } finally {
     cleanup();
   }
 })().catch((err) => {
   restorePkgJson();
-  console.error(`\n  ${RED('failure')}: ${err.message}\n`);
+  console.error(`\n${TAG_FAIL} ${err.message}\n`);
   process.exit(1);
 });

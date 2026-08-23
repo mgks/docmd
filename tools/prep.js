@@ -470,21 +470,22 @@ section('Setup', C.blue);
     finishStep(s);
 }
 {
-    const s = startStep('Cleaning monorepo');
-    const r = run('pnpm -s clean');
+    const isHard = args.includes('--hard') || args.includes('--clean-all');
+    const s = startStep(isHard ? 'Cleaning monorepo (hard reset)' : 'Cleaning monorepo build artifacts');
+    const cleanCmd = isHard
+        ? 'pnpm -s clean'
+        : 'rm -rf packages/*/dist packages/plugins/*/dist packages/engines/*/dist packages/*/public packages/plugins/*/public packages/*/site packages/plugins/*/site packages/engines/rust/native/bin/*.node *.tsbuildinfo temp-* _playground/local-tars >/dev/null 2>&1 || true';
+    const r = run(cleanCmd);
     if (r.ok) finishStep(s);
-    else { finishStep(s, 'fail', `exit ${r.status}`); addIssue('error', 'Setup', `pnpm clean failed (exit ${r.status})`, []); }
+    else { finishStep(s, 'fail', `exit ${r.status}`); addIssue('error', 'Setup', `clean failed (exit ${r.status})`, []); }
 }
 {
-    // pnpm clean wipes node_modules; reinstall before lint so the eslint
-    // binary is on PATH. Without this step the lint section silently exits
-    // 0 with no output because `pnpm exec eslint` can't find the binary.
-    const s = startStep('Installing monorepo dependencies');
-    const r = run('pnpm install --frozen-lockfile');
+    const s = startStep('Verifying monorepo dependencies');
+    const r = run('pnpm install --frozen-lockfile --prefer-offline');
     if (r.ok) finishStep(s);
     else { finishStep(s, 'fail', `exit ${r.status}`); addIssue('error', 'Setup', `pnpm install failed (exit ${r.status})`, []); }
 }
-addStat('Setup', 'cleaned + installed dependencies', 'ok');
+addStat('Setup', 'cleaned + verified dependencies', 'ok');
 footer(C.blue);
 
 // Section 2: Lint — runs after Setup reinstalls deps so eslint is available.
@@ -519,27 +520,13 @@ footer(C.cyan);
         const s = startStep('Categorised test suite (tests/runner.js)');
         finishStep(s, 'done', 'skipped (--skip-tests)');
         addStat('Tests · runner.js', 'skipped (--skip-tests)', 'ok');
-        const s2 = startStep('Per-package unit tests (pnpm -r run test)');
-        finishStep(s2, 'done', 'skipped (--skip-tests)');
-        addStat('Tests · per-package units', 'skipped (--skip-tests)', 'ok');
     } else {
         const only = args.find((a) => a.startsWith('--only='));
         const runnerArgs = only ? ' ' + only : '';
-        // The categorised runner now includes the Mega Integration Test
-        // (workspaces + i18n + versioning + plugins), which used to live
-        // in `tests/failsafe.test.mjs`. The old failsafe was removed because
-        // it duplicated Setup / Build work that `pnpm prep` already does.
-        // runTestStep() collapses to a one-line summary by default; pass
-        // --expand (or --verbose) to stream the full output.
+        // The categorised runner covers all monorepo unit, contract,
+        // security, plugin, and feature integration suites in a single pass.
         await runTestStep('Categorised test suite (tests/runner.js)',
             'node tests/runner.js' + runnerArgs, 'Tests · runner.js');
-
-        // Per-package unit tests (parser, utils, mermaid, okf). Packages
-        // without a `test` script are skipped by `--if-present`. Wired in
-        // here so a regression in any plugin's local suite fails the
-        // release pipeline just like a regression in tests/runner.js.
-        await runTestStep('Per-package unit tests (pnpm -r run test)',
-            'pnpm -r run test --if-present', 'Tests · per-package units');
     }
     footer(C.blue);
     // Continue the rest of the pipeline now that the async test step

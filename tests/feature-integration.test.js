@@ -61,7 +61,7 @@ function build(dir, expectFail = false) {
   // in the test fixtures changed. Cache miss / failure fall back to the
   // original execSync path so the test behaves identically on the first
   // run. To bypass the cache entirely, set DOCMD_TEST_CACHE_OFF=1.
-  const configPath = path.join(dir, 'docmd.config.js');
+  const configPath = path.join(dir, 'docmd.config.json');
   if (!expectFail) {
     const hit = tryHit(dir, configPath);
     if (hit && hit.ok) {
