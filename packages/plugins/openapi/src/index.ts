@@ -492,8 +492,12 @@ function renderSpec(specPath: string, rootDir: string, options: any): string {
   let html = `<div class="oa-spec">`;
 
   if (options?.info !== false && info.title) {
-    const downloadLink = options?.download
-      ? `<a href="${esc(specPath)}" class="oa-download-link" title="Download OpenAPI Spec" target="_blank">JSON / YAML</a>`
+    // Convert the spec path to a root-relative URL so the link resolves
+    // correctly regardless of which page depth it is rendered on.
+    // e.g. "./api-specs/my-api.yaml" -> "/api-specs/my-api.yaml"
+    const downloadHref = '/' + specPath.replace(/^\.\//, '').replace(/^\//, '');
+    const downloadLink = options?.download !== false
+      ? `<a href="${esc(downloadHref)}" class="oa-download-link" title="Download OpenAPI Spec" target="_blank">JSON / YAML</a>`
       : '';
     html += `<div class="oa-spec-header">
       <h2 class="oa-spec-title">${esc(info.title)}</h2>
@@ -550,7 +554,9 @@ export function markdownSetup(md: any, options: any): void {
     }
 
     const specPath = token.content.trim();
-    const pluginOptions = options?.config?.plugins?.openapi || {};
+    // options IS the plugin's own config sub-object (e.g. { download: true });
+    // it is NOT the full site config, so we use it directly.
+    const pluginOptions = (typeof options === 'object' && options !== null) ? options : {};
     return renderSpec(specPath, srcDir, pluginOptions);
   };
 }
