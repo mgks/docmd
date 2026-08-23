@@ -345,6 +345,38 @@
 }
 
 /* Dark Mode Overrides */
+
+:root[data-theme=dark] .oa-operation {
+  background: var(--sidebar-bg, #111113);
+}
+
+:root[data-theme=dark] .oa-schema-table th {
+  background: var(--code-bg, #16161a);
+}
+
+:root[data-theme=dark] .oa-schema-table td {
+  background: transparent;
+}
+
+:root[data-theme=dark] .oa-spec-version,
+:root[data-theme=dark] .oa-param-in {
+  background: var(--code-bg, #16161a);
+}
+
+:root[data-theme=dark] .oa-deprecated {
+  background: rgba(153, 27, 27, 0.35);
+  color: #fca5a5;
+}
+
+:root[data-theme=dark] .oa-example-value {
+  background: var(--code-bg, #16161a);
+}
+
+:root[data-theme=dark] .oa-response-detail,
+:root[data-theme=dark] .oa-variant {
+  background: transparent;
+}
+
 :root[data-theme=dark] .oa-type {
   color: #22d3ee;
 }
