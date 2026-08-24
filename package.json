@@ -2,7 +2,7 @@
   "name": "@docmd/monorepo",
   "version": "0.9.5",
   "private": true,
-  "description": "The minimalist, zero-config documentation generator monorepo.",
+  "description": "Documentation compiler for humans and machines. Monorepo for @docmd/core and ecosystem.",
   "scripts": {
     "dev": "node _playground/dev.js dev",
     "live": "pnpm --filter @docmd/live build && node packages/live/bin/docmd-live.js",
