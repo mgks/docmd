@@ -578,7 +578,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
         
         try {
           const pPrefix = p.prefix || '/';
-          const pBaseUrl = new URL(pPrefix.replace(/^\//, ''), siteBaseUrl).href;
+          const pBaseUrl = new URL(pPrefix.replace(/^\//, ''), siteBaseUrl).href.replace(/\/?$/, '/');
           const searchIndexPath = `${pBaseUrl}_docmd-search/search-index.json`;
           
           const res = await fetch(searchIndexPath);
