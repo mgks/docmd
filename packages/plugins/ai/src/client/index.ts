@@ -4,7 +4,7 @@
  * Features clean modern styling, adaptive light/dark theme, documentation RAG grounding, and Cmd+I shortcut.
  */
 
-import { DocmdAssistantEngine } from 'docmd-assistant';
+import { DocmdAssistantEngine, createStandardTools } from 'docmd-assistant';
 
 export class DocmdAIAssistantUI {
   private engine: any;
@@ -35,6 +35,16 @@ export class DocmdAIAssistantUI {
     });
 
     const isSemanticUsable = cfg.searchCapabilities?.semantic === true;
+
+    // Register standard tools from docmd-assistant (navigate_to_page, copy_code_snippet, read_documentation_page)
+    const standardTools = createStandardTools(
+      async (query: string) => {
+        return await this.searchAllWorkspaceIndexes(query);
+      }
+    );
+    for (const tool of standardTools) {
+      this.engine.registerTool(tool);
+    }
 
     this.engine.registerTool({
       name: 'get_site_structure',

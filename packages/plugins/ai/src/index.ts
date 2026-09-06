@@ -18,7 +18,7 @@ import nativeFs from 'fs';
 import { fileURLToPath } from 'url';
 import type { PluginDescriptor, ActionContext, Asset } from '@docmd/api';
 import { scriptLiteral } from '@docmd/utils';
-import { DocmdAssistantEngine } from 'docmd-assistant';
+import { DocmdAssistantEngine, createStandardTools } from 'docmd-assistant';
 
 export const plugin: PluginDescriptor = {
   name: 'ai',
@@ -330,6 +330,22 @@ export const actions = {
       }
     });
 
+    // Register standard tools from docmd-assistant (navigate_to_page, copy_code_snippet, read_documentation_page, search_documentation)
+    const standardTools = createStandardTools(
+      async (query: string) => {
+        const results = await searchDocumentationRAG(ctx.projectRoot, query, opts.contextLimit || 5);
+        return results.map(r => ({ title: r.title, path: r.url, snippet: r.content }));
+      },
+      async (pagePath: string) => {
+        const results = await searchDocumentationRAG(ctx.projectRoot, pagePath, 1);
+        return results[0] ? { title: results[0].title, content: results[0].content } : { content: `Page not found: ${pagePath}` };
+      }
+    );
+    for (const tool of standardTools) {
+      engine.registerTool(tool);
+    }
+
+    // Override search_documentation with workspace-aware RAG search that includes semantic capability info
     engine.registerTool({
       name: 'search_documentation',
       description: `Search documentation pages across all projects in this workspace using keyword full-text matching ${isSemanticUsable ? 'and semantic vector search' : '(keyword search active; semantic search disabled)'}. Always supply concise, targeted keywords for best results.`,
