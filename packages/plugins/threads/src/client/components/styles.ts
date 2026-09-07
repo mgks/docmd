@@ -929,9 +929,14 @@ export function injectComponentStyles(): void {
       opacity: 0.85;
     }
 
-    /* ========= Sidebar column: hidden by default, shown via body.tc-sidebar-active ========= */
+    /* ========= Sidebar column: hidden by default, shown via body.tc-sidebar-active or body.tc-panel-open ========= */
     .tc-sidebar-column { display: none; }
-    body.tc-sidebar-active .tc-sidebar-column { display: flex; }
+    body.tc-sidebar-active .tc-sidebar-column,
+    body.tc-panel-open .tc-sidebar-column { display: flex; }
+    body.tc-panel-open .tc-sidebar-column {
+      width: 380px;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.18);
+    }
     body.tc-sidebar-active .threads-sidebar { display: none !important; }
     body.tc-sidebar-active .tc-has-sidebar { padding-right: 40px; }
 

@@ -52,10 +52,8 @@ export class ThreadsApp extends LitElement {
     document.addEventListener('mousedown', this.handleOutsidePopoverClick);
     document.addEventListener('docmd:page-mounted', this.handlePageMounted as EventListener);
 
-    // Activate sidebar mode if configured
-    if (this.sidebarEnabled) {
-      this.initSidebarColumn();
-    }
+    // Always initialize sidebar column so the panel is available for FAB toggle
+    this.initSidebarColumn();
 
     this.loadThreads();
     this.injectNewThreadButton();
@@ -664,8 +662,10 @@ export class ThreadsApp extends LitElement {
   private initSidebarColumn(): void {
     if (document.querySelector('.tc-sidebar-column')) return;
 
-    // Activate sidebar mode via body class
-    document.body.classList.add('tc-sidebar-active', 'tc-has-sidebar');
+    if (this.sidebarEnabled) {
+      // Activate permanent sidebar mode via body class
+      document.body.classList.add('tc-sidebar-active', 'tc-has-sidebar');
+    }
 
     // Create sidebar column
     const column = document.createElement('div');
@@ -678,6 +678,7 @@ export class ThreadsApp extends LitElement {
     toggle.appendChild(createSvgElement('chat-dots', 18));
     toggle.addEventListener('click', () => {
       document.body.classList.add('tc-panel-open');
+      this.populateSidebarPanel();
     });
     column.appendChild(toggle);
 
@@ -700,21 +701,34 @@ export class ThreadsApp extends LitElement {
     
     const actionsDiv = document.createElement('div');
     actionsDiv.className = 'tc-panel__header-actions';
+
+    const newThreadBtn = document.createElement('button');
+    newThreadBtn.className = 'tc-panel__new-btn';
+    newThreadBtn.title = t('newThread') || 'Start new discussion';
+    newThreadBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tc-muted-fg);padding:4px;display:inline-flex;align-items:center;margin-right:4px;border-radius:4px;';
+    newThreadBtn.appendChild(createSvgElement('plus', 16));
+    newThreadBtn.addEventListener('click', () => {
+      const content = this.getContentArea();
+      const firstHeading = content?.querySelector('h1, h2, h3, h4, p');
+      if (firstHeading) {
+        firstHeading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        this.startNewThread(firstHeading);
+      }
+    });
+    actionsDiv.appendChild(newThreadBtn);
+
     const cBtn = document.createElement('button');
     cBtn.className = 'tc-panel__close-btn';
     cBtn.title = t('closePanel');
-    cBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tc-muted-fg);padding:4px;';
+    cBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tc-muted-fg);padding:4px;display:inline-flex;align-items:center;border-radius:4px;';
     cBtn.appendChild(createSvgElement('x', 16));
+    cBtn.addEventListener('click', () => {
+      document.body.classList.remove('tc-panel-open');
+    });
     actionsDiv.appendChild(cBtn);
 
     header.appendChild(titleDiv);
     header.appendChild(actionsDiv);
-    const closeBtn = header.querySelector('.tc-panel__close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        document.body.classList.remove('tc-panel-open');
-      });
-    }
     panel.appendChild(header);
 
     // Panel body (thread cards go here)
@@ -736,10 +750,28 @@ export class ThreadsApp extends LitElement {
     // Clear existing panel threads
     panelBody.textContent = '';
 
-    // Move all thread cards into the panel
-    const threadCards = document.querySelectorAll('.threads-sidebar .threads-thread');
+    // Move all thread cards into the panel (avoiding duplicates)
+    const threadCards = document.querySelectorAll('.threads-sidebar .threads-thread, .threads-thread');
+    const addedIds = new Set<string>();
     for (const card of threadCards) {
-      panelBody.appendChild(card);
+      const tid = (card as HTMLElement).dataset.threadId;
+      if (tid && !addedIds.has(tid)) {
+        addedIds.add(tid);
+        panelBody.appendChild(card);
+      }
+    }
+
+    if (addedIds.size === 0) {
+      const emptyState = document.createElement('div');
+      emptyState.className = 'tc-panel__empty';
+      emptyState.innerHTML = `
+        <div style="text-align:center;padding:40px 16px;color:var(--tc-muted-fg);">
+          <div style="margin-bottom:12px;opacity:0.6;display:flex;justify-content:center;">${createSvgElement('chat-dots', 32).outerHTML}</div>
+          <div style="font-weight:600;font-size:14px;margin-bottom:6px;color:var(--tc-fg);">${t('noThreads') || 'No discussions yet'}</div>
+          <div style="font-size:12px;line-height:1.5;">Select any text on this page to leave a comment, or click the <strong>+</strong> button beside any heading.</div>
+        </div>
+      `;
+      panelBody.appendChild(emptyState);
     }
 
     // Update count
@@ -766,13 +798,12 @@ export class ThreadsApp extends LitElement {
     fab.appendChild(badge);
 
     fab.addEventListener('click', () => {
-      const firstThread = document.querySelector('.threads-thread, .threads-sidebar');
-      if (firstThread) {
-        firstThread.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        if (firstThread.classList.contains('threads-thread')) {
-          firstThread.classList.add('threads-thread--flash');
-          setTimeout(() => firstThread.classList.remove('threads-thread--flash'), 2000);
-        }
+      const isOpen = document.body.classList.contains('tc-panel-open');
+      if (isOpen) {
+        document.body.classList.remove('tc-panel-open');
+      } else {
+        document.body.classList.add('tc-panel-open');
+        this.populateSidebarPanel();
       }
     });
 

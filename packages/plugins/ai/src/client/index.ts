@@ -435,7 +435,12 @@ CRITICAL SCOPE & NAVIGATION RULES:
 3. AUTONOMOUS & PROACTIVE TOOL EXECUTION:
    - Always use your tools proactively. NEVER ask the user "Would you like me to search?" or "Should I check?". Directly invoke \`search_documentation\` or \`get_site_structure\` to retrieve facts before answering.
    - For any question about version numbers, latest releases, recent updates, or changelogs, you MUST search the release notes with \`search_documentation\` (query: "release notes" or specific version like "0.9.1") to find the newest release note before giving the final answer. Never state that a release does not exist without searching.
-4. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.`;
+4. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.
+5. TOKEN EFFICIENCY & TARGETED RETRIEVAL:
+   - Never attempt to read entire documentation sets or fetch excessive pages.
+   - Use \`search_documentation\` first to identify the exact single page or section needed.
+   - Only call \`read_documentation_page\` on that specific page when required to fetch precise code snippets or steps.
+   - Keep answers clean, structured, and focused directly on what the user asked.`;
 
     const defaultBasePrompt = `You are docmd assistant — a professional, precise, and concise technical AI assistant for this documentation site.
 
@@ -443,10 +448,17 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
 1. IDENTITY: Your name is "docmd assistant". You are an expert AI guide specifically for this documentation site. Never identify yourself simply as "docmd" or "I am docmd".
 2. STRICT SCOPE & BOUNDARIES: Answer ONLY questions related to the software, APIs, tools, installation, configuration, and documentation provided on this site. Politely decline off-topic queries.
 3. PROFESSIONAL & CONCISE: Provide direct, succinct, and professional answers. Do NOT use excessive emojis (keep emojis to a minimum or none). Avoid conversational fluff, boilerplate apologies, or asking for permission. Get straight to the answer.
-4. TOOL SELECTION & EXECUTION:
+4. TARGETED RETRIEVAL & MINIMAL TOKEN USAGE:
+   - Only retrieve what is strictly necessary. Never attempt to read the entire documentation or fetch excessive pages.
+   - Use \`search_documentation\` first with targeted keywords (e.g. "0.9.1 release notes" or "ai relay config") to locate the exact page.
+   - Only invoke \`read_documentation_page\` when you need specific code blocks or configuration details from that single page.
+5. TOOL SELECTION & EXECUTION:
    - Use \`get_site_structure\` whenever you need extended structural inspection of available documentation versions, supported locales, or navigation trees.
    - Use \`search_documentation\` to search documentation content for specific technical terms, API parameters, error messages, or release notes. Keyword search is always active; pass clean, focused search terms (e.g. "0.9.1 release notes" or "cards container") for highest accuracy.
-5. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for referenced pages.`;
+6. CLEAN WRITING & LIST FORMATTING:
+   - Write cleanly and directly without artificial gaps, repeated quotes, or messy text breaks.
+   - For lists, use standard numbered lists (1., 2., 3.) or bullet points (-). Do not leave blank lines between list items unless separating distinct multi-paragraph steps.
+7. HYPERLINKS & CITATIONS: Always include clickable Markdown hyperlinks \`[Page Title](path)\` in your response for referenced pages.`;
 
     const basePrompt = cfg.systemPrompt || defaultBasePrompt;
     return `${basePrompt}\n\n${workspaceContext}`;
@@ -997,25 +1009,46 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
     text = text.replace(/^## (.*$)/gim, '<h3>$1</h3>');
     text = text.replace(/^# (.*$)/gim, '<h3>$1</h3>');
 
-    // Unordered lists
-    text = text.replace(/(?:^\s*[-*]\s+.*(?:\r?\n|$))+/gm, (match) => {
-      const items = match
-        .trim()
-        .split('\n')
-        .map(line => `<li>${line.replace(/^\s*[-*]\s+/, '')}</li>`)
-        .join('');
-      return `<ul>${items}</ul>`;
-    });
+    const parseListItems = (rawListText: string, isOrdered: boolean): string => {
+      const lines = rawListText.split(/\r?\n/);
+      const items: string[] = [];
+      let currentItemText = '';
+      const itemRegex = isOrdered ? /^\s*(\d+)[\.\)]\s+(.*)$/ : /^\s*[-*+]\s+(.*)$/;
 
-    // Ordered lists
-    text = text.replace(/(?:^\s*\d+\.\s+.*(?:\r?\n|$))+/gm, (match) => {
-      const items = match
-        .trim()
-        .split('\n')
-        .map(line => `<li>${line.replace(/^\s*\d+\.\s+/, '')}</li>`)
-        .join('');
-      return `<ol>${items}</ol>`;
-    });
+      for (const line of lines) {
+        const mainMatch = line.match(itemRegex);
+        if (mainMatch) {
+          if (currentItemText) {
+            items.push(`<li>${currentItemText.trim()}</li>`);
+          }
+          currentItemText = isOrdered ? mainMatch[2] : mainMatch[1];
+        } else if (line.trim().length === 0) {
+          // blank line inside a loose list, skip
+          continue;
+        } else if (currentItemText) {
+          const subBullet = line.match(/^\s+[-*+]\s+(.*)$/);
+          if (subBullet) {
+            currentItemText += `<br/><span class="docmd-ai-sub-item">• ${subBullet[1].trim()}</span>`;
+          } else {
+            currentItemText += ' ' + line.trim();
+          }
+        }
+      }
+      if (currentItemText) {
+        items.push(`<li>${currentItemText.trim()}</li>`);
+      }
+      if (items.length === 0) return rawListText;
+      const tag = isOrdered ? 'ol' : 'ul';
+      return `\n\n<${tag}>${items.join('')}</${tag}>\n\n`;
+    };
+
+    // Ordered lists (supports loose lists with single blank lines between items, and indented continuation lines)
+    const orderedListRegex = /(?:^[ \t]*\d+[\.\)][ \t]+.*(?:\r?\n|$))(?:[ \t]*(?:\r?\n)|[ \t]+\S.*(?:\r?\n|$)|^[ \t]*\d+[\.\)][ \t]+.*(?:\r?\n|$))*/gm;
+    text = text.replace(orderedListRegex, (match) => parseListItems(match, true));
+
+    // Unordered lists (supports loose lists and indented continuation lines)
+    const unorderedListRegex = /(?:^[ \t]*[-*+][ \t]+.*(?:\r?\n|$))(?:[ \t]*(?:\r?\n)|[ \t]+\S.*(?:\r?\n|$)|^[ \t]*[-*+][ \t]+.*(?:\r?\n|$))*/gm;
+    text = text.replace(unorderedListRegex, (match) => parseListItems(match, false));
 
     // Blockquotes
     text = text.replace(/(?:^\s*&gt;\s+.*(?:\r?\n|$))+/gm, (match) => {

@@ -22,6 +22,7 @@
  */
 
 import fs from 'fs';
+import path from 'path';
 import { createSourceTools } from './source.js';
 import { TUI } from '@docmd/tui';
 import { safePath } from '@docmd/utils';
@@ -64,17 +65,34 @@ export function createActionDispatcher(hooks: DispatcherHooks, options: Dispatch
       const sourceTools = createSourceTools({ projectRoot });
       let modified = false;
 
+      const resolveProjectFile = (relativePath: string): string => {
+        const direct = safePath(projectRoot, relativePath);
+        if (fs.existsSync(direct)) return direct;
+
+        // In workspace mode, search project src directories
+        const ws = config?.workspace;
+        if (ws && Array.isArray(ws.projects)) {
+          for (const p of ws.projects) {
+            if (p.src) {
+              const candidate = safePath(projectRoot, path.join(p.src, relativePath));
+              if (fs.existsSync(candidate)) return candidate;
+            }
+          }
+        }
+        return direct;
+      };
+
       const ctx: ActionContext = {
         projectRoot,
         config,
         broadcast,
         source: sourceTools,
         async readFile(relativePath: string): Promise<string> {
-          const resolved = safePath(projectRoot, relativePath);
+          const resolved = resolveProjectFile(relativePath);
           return fs.promises.readFile(resolved, 'utf8');
         },
         async writeFile(relativePath: string, content: string): Promise<void> {
-          const resolved = safePath(projectRoot, relativePath);
+          const resolved = resolveProjectFile(relativePath);
           await fs.promises.writeFile(resolved, content);
           modified = true;
         },
