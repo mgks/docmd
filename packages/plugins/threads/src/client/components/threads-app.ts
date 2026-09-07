@@ -677,6 +677,7 @@ export class ThreadsApp extends LitElement {
     toggle.title = t('openThreadsPanel');
     toggle.appendChild(createSvgElement('chat-dots', 18));
     toggle.addEventListener('click', () => {
+      this.closeAiDrawerIfOpen();
       document.body.classList.add('tc-panel-open');
       this.populateSidebarPanel();
     });
@@ -802,12 +803,22 @@ export class ThreadsApp extends LitElement {
       if (isOpen) {
         document.body.classList.remove('tc-panel-open');
       } else {
+        this.closeAiDrawerIfOpen();
         document.body.classList.add('tc-panel-open');
         this.populateSidebarPanel();
       }
     });
 
     document.body.appendChild(fab);
+  }
+
+  private closeAiDrawerIfOpen(): void {
+    const aiDrawer = document.getElementById('docmd-ai-drawer');
+    const aiBar = document.getElementById('docmd-ai-bar-wrap');
+    if (aiDrawer?.classList.contains('open')) {
+      aiDrawer.classList.remove('open');
+      aiBar?.classList.remove('hidden');
+    }
   }
 
   private updateFabBadge(): void {

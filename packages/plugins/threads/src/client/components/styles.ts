@@ -66,7 +66,7 @@ export function injectComponentStyles(): void {
       right: 0;
       bottom: 0;
       width: 40px;
-      z-index: 100;
+      z-index: 3000;
       display: flex;
       flex-direction: column;
       transition: width 0.2s ease;
@@ -945,7 +945,7 @@ export function injectComponentStyles(): void {
       position: fixed;
       bottom: 24px;
       right: 24px;
-      z-index: 999;
+      z-index: 2100;
       width: 44px;
       height: 44px;
       border-radius: 50%;
@@ -966,7 +966,9 @@ export function injectComponentStyles(): void {
       box-shadow: 0 8px 24px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.1);
     }
     .docmd-ai-trigger-pill.position-right ~ .threads-fab,
-    body:has(.docmd-ai-trigger-pill.position-right) .threads-fab {
+    body:has(.docmd-ai-trigger-pill.position-right) .threads-fab,
+    body:has(#docmd-ai-plugin-root.pos-bottom-right .docmd-ai-bar-wrap:not(.hidden)) .threads-fab,
+    body:has(#docmd-ai-bar-wrap:not(.hidden)) .threads-fab {
       bottom: 80px;
     }
     .threads-fab__badge {

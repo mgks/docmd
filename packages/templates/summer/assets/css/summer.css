@@ -670,7 +670,7 @@ html[data-theme="dark"] .summer-logo__light {
   -webkit-backdrop-filter: blur(2px);
   margin-left: calc(-1 * var(--summer-gutter, 0px));
   margin-right: calc(-1 * var(--summer-gutter, 0px));
-  padding: 20px 10px 5px;
+  padding: 12px 10px 8px;
 }
 
 .summer-pageheader__inner {
@@ -831,11 +831,11 @@ html[data-theme="dark"] .summer-logo__light {
 
 .summer-sidebar {
   position: sticky;
-  top: calc(var(--summer-topbar-height) + var(--summer-subnav-height) + var(--summer-banner-height) + var(--summer-pageheader-height));
+  top: calc(var(--summer-topbar-height) + var(--summer-subnav-height) + var(--summer-banner-height));
   align-self: start;
-  max-height: calc(100vh - var(--summer-topbar-height) - var(--summer-subnav-height) - var(--summer-banner-height) - var(--summer-pageheader-height));
+  max-height: calc(100vh - var(--summer-topbar-height) - var(--summer-subnav-height) - var(--summer-banner-height));
   overflow-y: auto;
-  padding: 0 5px;
+  padding: 1rem 5px 3rem;
   border-right: none;
   background: var(--summer-bg);
 }
@@ -1381,7 +1381,7 @@ html[data-theme="dark"] .summer-logo__light {
 
 .summer-main {
   min-width: 0;
-  padding: 1rem 2rem 3rem;
+  padding: 0 2rem 3rem;
   --summer-gutter: 48px;
   display: flex;
   flex-direction: column;
@@ -1579,11 +1579,11 @@ html[data-theme="dark"] .summer-logo__light {
 
 .summer-toc {
   position: sticky;
-  top: calc(var(--summer-topbar-height) + var(--summer-subnav-height) + var(--summer-banner-height) + var(--summer-pageheader-height));
+  top: calc(var(--summer-topbar-height) + var(--summer-subnav-height) + var(--summer-banner-height));
   align-self: start;
-  max-height: calc(100vh - var(--summer-topbar-height) - var(--summer-subnav-height) - var(--summer-banner-height) - var(--summer-pageheader-height));
+  max-height: calc(100vh - var(--summer-topbar-height) - var(--summer-subnav-height) - var(--summer-banner-height));
   overflow-y: auto;
-  padding: 0 1rem 3rem;
+  padding: 1rem 1rem 3rem;
   font-size: 0.8125rem;
 }
 
@@ -1711,8 +1711,8 @@ html[data-theme="dark"] .summer-logo__light {
 /* TOC scroll-to-top button */
 .summer-totop {
   position: fixed;
-  right: 30px;
-  bottom: 60px;
+  right: 26px;
+  bottom: 24px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -1725,8 +1725,20 @@ html[data-theme="dark"] .summer-logo__light {
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
-  transition: opacity var(--summer-med) var(--summer-ease), transform var(--summer-med) var(--summer-ease);
-  z-index: var(--summer-z-overlay);
+  transition: opacity var(--summer-med) var(--summer-ease), transform var(--summer-med) var(--summer-ease), bottom 0.2s ease;
+  z-index: 2000;
+}
+
+body:has(.threads-fab) .summer-totop {
+  bottom: 80px;
+}
+
+body:has(.threads-fab):has(.docmd-ai-bar-wrap, .docmd-ai-trigger-pill) .summer-totop {
+  bottom: 136px;
+}
+
+body:not(:has(.threads-fab)):has(.docmd-ai-bar-wrap, .docmd-ai-trigger-pill) .summer-totop {
+  bottom: 80px;
 }
 
 .summer-totop.is-visible {

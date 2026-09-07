@@ -7,12 +7,12 @@
 import { DocmdAssistantEngine, createStandardTools } from 'docmd-assistant';
 
 export class DocmdAIAssistantUI {
-  private engine: any;
+  private engine: any = null;
   private container: HTMLElement | null = null;
   private isDrawerOpened = false;
   private isPending = false;
-  private projectId: string;
-  private isUnconfigured: boolean;
+  private projectId = '';
+  private isUnconfigured = false;
 
   constructor() {
     const rawCfg = (window as any).__docmd_ai_config || (window as any).__DOCMD_AI_CONFIG__;
@@ -309,6 +309,9 @@ export class DocmdAIAssistantUI {
     const drawer = document.getElementById('docmd-ai-drawer');
     barWrap?.classList.add('hidden');
     drawer?.classList.add('open');
+    if (typeof document !== 'undefined' && document.body.classList.contains('tc-panel-open')) {
+      document.body.classList.remove('tc-panel-open');
+    }
   }
 
   private closeDrawer(): void {
@@ -437,7 +440,7 @@ CRITICAL SCOPE & NAVIGATION RULES:
    - For any question about version numbers, latest releases, recent updates, or changelogs, you MUST search the release notes with \`search_documentation\` (query: "release notes" or specific version like "0.9.1") to find the newest release note before giving the final answer. Never state that a release does not exist without searching.
 4. ACCURATE HYPERLINKS: ALWAYS ground page hyperlinks strictly in real search results or valid project URLs (${siteBaseUrl}). Never invent or hallucinate invalid subpaths.
 5. TOKEN EFFICIENCY & TARGETED RETRIEVAL:
-   - Never attempt to read entire documentation sets or fetch excessive pages.
+   - Do not read entire documentation sets or fetch excessive pages unless necessary.
    - Use \`search_documentation\` first to identify the exact single page or section needed.
    - Only call \`read_documentation_page\` on that specific page when required to fetch precise code snippets or steps.
    - Keep answers clean, structured, and focused directly on what the user asked.`;
