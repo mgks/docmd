@@ -368,8 +368,8 @@ body.dark #docmd-ai-plugin-root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 12px;
-  background: rgba(0, 0, 0, 0.25);
+  padding: 4px 10px 4px 12px;
+  background: rgba(0, 0, 0, 0.28);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -380,6 +380,40 @@ body.dark #docmd-ai-plugin-root {
   text-transform: lowercase;
   font-weight: 600;
   letter-spacing: 0.03em;
+}
+
+.docmd-ai-code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: var(--ai-text-muted, #94a3b8);
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  line-height: 1.4;
+}
+
+.docmd-ai-code-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.docmd-ai-code-copy-btn.copied {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+}
+
+.docmd-ai-code-copy-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .docmd-ai-chat-bubble pre {

@@ -237,6 +237,29 @@ export class DocmdAIAssistantUI {
     const msgsContainer = document.getElementById('docmd-ai-messages');
     msgsContainer?.addEventListener('click', (e) => {
       const target = e.target as HTMLElement;
+
+      const copyBtn = target.closest('.docmd-ai-code-copy-btn') as HTMLButtonElement | null;
+      if (copyBtn) {
+        const wrap = copyBtn.closest('.docmd-ai-code-wrap');
+        const codeEl = wrap?.querySelector('code');
+        if (codeEl) {
+          const textToCopy = codeEl.textContent || '';
+          const copySvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
+          const checkSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            copyBtn.classList.add('copied');
+            copyBtn.innerHTML = `${checkSvg}<span>Copied</span>`;
+            setTimeout(() => {
+              copyBtn.classList.remove('copied');
+              copyBtn.innerHTML = `${copySvg}<span>Copy</span>`;
+            }, 2000);
+          }).catch((err) => {
+            console.error('[docmd-ai] Failed to copy code snippet:', err);
+          });
+        }
+        return;
+      }
+
       if (target && target.classList.contains('docmd-ai-pill-btn')) {
         if (this.isPending) return;
         const prompt = target.getAttribute('data-prompt');
@@ -705,6 +728,12 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
         return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
       case 'folder-tree':
         return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path><line x1="12" y1="11" x2="12" y2="17"></line><line x1="9" y1="14" x2="15" y2="14"></line></svg>`;
+      case 'book-open':
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>`;
+      case 'navigation':
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"></polygon></svg>`;
+      case 'copy':
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
       case 'cog':
         return `<svg class="docmd-ai-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`;
       case 'brain':
@@ -749,8 +778,33 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
         res = await this.engine.sendMessageStream(queryWithContext, {
           onStatus: (status: any) => {
             if (statusWrap && status) {
+              const statusObj = typeof status === 'string' ? { text: status } : { ...status };
+              let text = statusObj.text || 'Thinking...';
+              let icon = statusObj.icon;
+              if (/^Running\s+([a-z0-9_]+)\.\.\./i.test(text)) {
+                const tool = text.match(/^Running\s+([a-z0-9_]+)\.\.\./i)?.[1] || '';
+                if (tool === 'read_documentation_page') { text = 'Reading documentation...'; icon = icon || 'book-open'; }
+                else if (tool === 'search_documentation') { text = 'Searching documentation...'; icon = icon || 'search'; }
+                else if (tool === 'navigate_to_page') { text = 'Navigating to page...'; icon = icon || 'navigation'; }
+                else if (tool === 'get_site_structure') { text = 'Inspecting site navigation & structure...'; icon = icon || 'folder-tree'; }
+                else if (tool === 'copy_code_snippet') { text = 'Copying code snippet...'; icon = icon || 'copy'; }
+                else {
+                  const readable = tool.replace(/^([a-z])/, (m: string) => m.toUpperCase()).replace(/_/g, ' ');
+                  text = `${readable}...`;
+                }
+              } else if (/^[a-z]+(_[a-z0-9]+)+$/.test(text)) {
+                if (text === 'read_documentation_page') { text = 'Reading documentation...'; icon = icon || 'book-open'; }
+                else if (text === 'search_documentation') { text = 'Searching documentation...'; icon = icon || 'search'; }
+                else if (text === 'navigate_to_page') { text = 'Navigating to page...'; icon = icon || 'navigation'; }
+                else if (text === 'get_site_structure') { text = 'Inspecting site navigation & structure...'; icon = icon || 'folder-tree'; }
+                else if (text === 'copy_code_snippet') { text = 'Copying code snippet...'; icon = icon || 'copy'; }
+                else {
+                  const readable = text.replace(/^([a-z])/, (m: string) => m.toUpperCase()).replace(/_/g, ' ');
+                  text = `${readable}...`;
+                }
+              }
               statusWrap.style.display = 'inline-flex';
-              statusWrap.innerHTML = `${this.getStatusSvgIcon(status.icon)} <span>${this.escapeHtml(status.text || 'Thinking...')}</span>`;
+              statusWrap.innerHTML = `${this.getStatusSvgIcon(icon)} <span>${this.escapeHtml(text)}</span>`;
               if (msgs) msgs.scrollTop = msgs.scrollHeight;
             }
           },
@@ -900,25 +954,39 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       }
     };
 
-    // Code blocks with syntax highlighting
+    // Code blocks with syntax highlighting & quick copy button
     const codeBlocks: string[] = [];
+    const copySvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
+    const renderCodeBlock = (lang: string, code: string) => {
+      const cleanLang = (lang || '').trim().toLowerCase();
+      const langSpan = cleanLang
+        ? `<span class="docmd-ai-code-lang">${cleanLang}</span>`
+        : `<span class="docmd-ai-code-lang">code</span>`;
+      const copyBtn = `<button class="docmd-ai-code-copy-btn" type="button" title="Copy code" aria-label="Copy code">${copySvg}<span>Copy</span></button>`;
+      const headerStr = `<div class="docmd-ai-code-header">${langSpan}${copyBtn}</div>`;
+      const escapedCode = code.trim()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+      return `<div class="docmd-ai-code-wrap">${headerStr}<pre><code>${escapedCode}</code></pre></div>`;
+    };
+
     text = text.replace(/```(\w+)?[ \t]*\r?\n([\s\S]*?)```/g, (_match, lang, code) => {
-      const languageStr = lang ? `<div class="docmd-ai-code-header"><span class="docmd-ai-code-lang">${lang.toLowerCase()}</span></div>` : '';
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-      codeBlocks.push(`<div class="docmd-ai-code-wrap">${languageStr}<pre><code>${code.trim()}</code></pre></div>`);
+      codeBlocks.push(renderCodeBlock(lang || '', code));
       return placeholder;
     });
     // Fallback: code blocks where lang runs into code on same line (no newline after lang)
     text = text.replace(/```(\w+)([ \t]+[^\n][\s\S]*?)```/g, (_match, lang, code) => {
-      const languageStr = `<div class="docmd-ai-code-header"><span class="docmd-ai-code-lang">${lang.toLowerCase()}</span></div>`;
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-      codeBlocks.push(`<div class="docmd-ai-code-wrap">${languageStr}<pre><code>${code.trim()}</code></pre></div>`);
+      codeBlocks.push(renderCodeBlock(lang || '', code));
       return placeholder;
     });
     // Catch-all: bare ``` blocks with no language
     text = text.replace(/```\r?\n?([\s\S]*?)```/g, (_match, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
-      codeBlocks.push(`<div class="docmd-ai-code-wrap"><pre><code>${code.trim()}</code></pre></div>`);
+      codeBlocks.push(renderCodeBlock('', code));
       return placeholder;
     });
 
