@@ -53,6 +53,7 @@ export interface AIPluginOptions {
   position?: 'bottom-center' | 'bottom-right' | 'bottom-left';
   reasoning?: boolean | 'none' | 'low' | 'medium' | 'high';
   contextLimit?: number;
+  contextWindow?: number;
   rateLimit?: {
     maxRequests?: number;
     windowMs?: number;
@@ -406,6 +407,8 @@ export function generateScripts(config: any, _options?: any): { headScriptsHtml:
   };
   if (pluginOptions.provider) clientConfig.provider = pluginOptions.provider;
   if (pluginOptions.model) clientConfig.model = pluginOptions.model;
+  if (pluginOptions.contextWindow !== undefined) clientConfig.contextWindow = pluginOptions.contextWindow;
+  else if (pluginOptions.contextLimit !== undefined) clientConfig.contextWindow = pluginOptions.contextLimit;
 
   return {
     headScriptsHtml: '',

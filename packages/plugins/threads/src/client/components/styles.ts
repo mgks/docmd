@@ -6,19 +6,33 @@ export function injectComponentStyles(): void {
   style.textContent = `
     /* ========= Design tokens ========= */
     :root {
-      --tc-bg: var(--bg-color, hsl(0 0% 100%));
-      --tc-fg: var(--text-color, hsl(0 0% 9%));
-      --tc-muted: var(--sidebar-bg, hsl(0 0% 96.1%));
-      --tc-muted-fg: var(--text-muted, hsl(0 0% 45.1%));
-      --tc-border: var(--border-color, hsl(0 0% 89.8%));
-      --tc-input: var(--border-color, hsl(0 0% 89.8%));
-      --tc-ring: var(--text-color, hsl(0 0% 9%));
-      --tc-accent: var(--sidebar-bg, hsl(0 0% 96.1%));
-      --tc-accent-fg: var(--text-color, hsl(0 0% 9%));
-      --tc-card: var(--bg-color, hsl(0 0% 100%));
-      --tc-card-fg: var(--text-color, hsl(0 0% 9%));
-      --tc-radius: 6px;
-      --tc-font: var(--font-family-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+      --tc-bg: var(--summer-surface, var(--bg-color, hsl(0 0% 100%)));
+      --tc-fg: var(--summer-text, var(--text-color, hsl(0 0% 9%)));
+      --tc-muted: var(--summer-surface-3, var(--sidebar-bg, hsl(0 0% 96.1%)));
+      --tc-muted-fg: var(--summer-text-muted, var(--text-muted, hsl(0 0% 45.1%)));
+      --tc-border: var(--summer-border, var(--border-color, hsl(0 0% 89.8%)));
+      --tc-input: var(--summer-border, var(--border-color, hsl(0 0% 89.8%)));
+      --tc-ring: var(--summer-accent, var(--text-color, hsl(0 0% 9%)));
+      --tc-accent: var(--summer-surface-2, var(--sidebar-bg, hsl(0 0% 96.1%)));
+      --tc-accent-fg: var(--summer-text, var(--text-color, hsl(0 0% 9%)));
+      --tc-card: var(--summer-surface, var(--bg-color, hsl(0 0% 100%)));
+      --tc-card-fg: var(--summer-text, var(--text-color, hsl(0 0% 9%)));
+      --tc-radius: 8px;
+      --tc-font: var(--summer-font-sans, var(--font-family-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif));
+    }
+
+    [data-theme="dark"], html.dark, body.dark {
+      --tc-bg: var(--summer-surface, var(--bg-color, hsl(0 0% 12%)));
+      --tc-fg: var(--summer-text, var(--text-color, hsl(0 0% 95%)));
+      --tc-muted: var(--summer-surface-3, var(--sidebar-bg, hsl(0 0% 18%)));
+      --tc-muted-fg: var(--summer-text-muted, var(--text-muted, hsl(0 0% 65%)));
+      --tc-border: var(--summer-border, var(--border-color, hsl(0 0% 24%)));
+      --tc-input: var(--summer-border, var(--border-color, hsl(0 0% 24%)));
+      --tc-ring: var(--summer-accent, var(--text-color, hsl(0 0% 95%)));
+      --tc-accent: var(--summer-surface-2, var(--sidebar-bg, hsl(0 0% 20%)));
+      --tc-accent-fg: var(--summer-text, var(--text-color, hsl(0 0% 95%)));
+      --tc-card: var(--summer-surface, var(--bg-color, hsl(0 0% 14%)));
+      --tc-card-fg: var(--summer-text, var(--text-color, hsl(0 0% 95%)));
     }
 
     /* ========= Highlight colors (cycling palette) ========= */
@@ -63,20 +77,24 @@ export function injectComponentStyles(): void {
       width: 380px;
     }
 
-    body.tc-has-sidebar main {
+    body.tc-has-sidebar main,
+    body.tc-has-sidebar .summer-main {
       max-width: 1440px;
     }
 
-    body.tc-has-sidebar .main-content-wrapper {
+    body.tc-has-sidebar .main-content-wrapper,
+    body.tc-has-sidebar .summer-layout {
       margin-right: 40px;
       transition: margin-right 0.2s ease;
     }
-    body.tc-panel-open .main-content-wrapper {
+    body.tc-panel-open .main-content-wrapper,
+    body.tc-panel-open .summer-layout {
       margin-right: 380px;
     }
 
     @media (max-width: 1400px) {
-      body.tc-panel-open .toc-sidebar {
+      body.tc-panel-open .toc-sidebar,
+      body.tc-panel-open .summer-toc {
         display: none;
       }
     }
@@ -675,32 +693,41 @@ export function injectComponentStyles(): void {
       display: flex;
       align-items: center;
       flex-wrap: nowrap;
+      gap: 12px;
     }
     .threads-heading-wrap .threads-new-thread-btn {
       margin-left: auto;
       flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.2s ease, background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .threads-heading-wrap:hover .threads-new-thread-btn,
+    .threads-heading-wrap:focus-within .threads-new-thread-btn {
+      opacity: 1;
     }
 
     /* ========= New Thread button ========= */
     .threads-new-thread-btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       padding: 3px 10px;
       font-family: var(--tc-font);
       font-size: 12px;
       font-weight: 500;
       color: var(--tc-muted-fg);
-      background: transparent;
+      background: var(--tc-card);
       border: 1px dashed var(--tc-border);
       border-radius: var(--tc-radius);
       cursor: pointer;
-      transition: color 0.15s, border-color 0.15s, background 0.15s;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+      transition: color 0.15s, border-color 0.15s, background 0.15s, transform 0.15s;
     }
     .threads-new-thread-btn:hover {
       color: var(--tc-fg);
-      border-color: var(--tc-fg);
+      border-color: var(--tc-ring);
       background: var(--tc-muted);
+      transform: translateY(-1px);
     }
 
     /* ========= Delete button (on comment meta) ========= */
@@ -924,14 +951,18 @@ export function injectComponentStyles(): void {
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgb(0 0 0 / 0.12), 0 1px 3px rgb(0 0 0 / 0.08);
-      transition: color 0.15s, border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 14px rgb(0 0 0 / 0.12), 0 1px 3px rgb(0 0 0 / 0.08);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .threads-fab:hover {
       color: var(--tc-fg);
       border-color: var(--tc-ring);
-      transform: scale(1.08);
-      box-shadow: 0 4px 16px rgb(0 0 0 / 0.16), 0 2px 4px rgb(0 0 0 / 0.1);
+      transform: scale(1.08) translateY(-2px);
+      box-shadow: 0 8px 24px rgb(0 0 0 / 0.18), 0 2px 6px rgb(0 0 0 / 0.1);
+    }
+    .docmd-ai-trigger-pill.position-right ~ .threads-fab,
+    body:has(.docmd-ai-trigger-pill.position-right) .threads-fab {
+      bottom: 80px;
     }
     .threads-fab__badge {
       position: absolute;

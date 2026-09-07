@@ -6,6 +6,7 @@ import { initIdentity, getIdentityPayload } from '../lib/identity';
 import { computeAnchor, getSelectionPosition, isWithinContent } from '../lib/selection';
 import { initThemeBridge } from '../lib/theme';
 import { t } from '../lib/i18n';
+import { createSvgElement } from '../lib/icons';
 
 import './threads-popover';
 import './threads-inline-editor';
@@ -74,7 +75,8 @@ export class ThreadsApp extends LitElement {
    * Find the content area of the page.
    */
   private getContentArea(): Element | null {
-    return document.querySelector('[data-docmd-content]')
+    return document.querySelector('.summer-content')
+      || document.querySelector('[data-docmd-content]')
       || document.querySelector('.docmd-content')
       || document.querySelector('.main-content')
       || document.querySelector('article')
@@ -89,7 +91,8 @@ export class ThreadsApp extends LitElement {
     // Avoid duplicates
     if (document.querySelector('threads-identity')) return;
 
-    const target = document.querySelector('.docmd-options-menu')
+    const target = document.querySelector('.summer-topbar__right')
+      || document.querySelector('.docmd-options-menu')
       || document.querySelector('.header-right');
     if (!target) return;
 
@@ -124,10 +127,7 @@ export class ThreadsApp extends LitElement {
 
       const btn = document.createElement('button');
       btn.className = 'threads-new-thread-btn';
-      const icon = document.createElement('sl-icon');
-      icon.setAttribute('name', 'plus-lg');
-      icon.setAttribute('style', 'font-size:14px;');
-      btn.appendChild(icon);
+      btn.appendChild(createSvgElement('plus', 13));
       btn.appendChild(document.createTextNode(' ' + t('newThread')));
       btn.title = t('startThread');
       btn.addEventListener('click', (e) => {
@@ -419,10 +419,7 @@ export class ThreadsApp extends LitElement {
         // Reply button
         const replyBtn = document.createElement('button');
         replyBtn.className = 'threads-comment-reply-btn';
-        const replyIcon = document.createElement('sl-icon');
-        replyIcon.setAttribute('name', 'reply');
-        replyIcon.setAttribute('style', 'font-size:13px;');
-        replyBtn.appendChild(replyIcon);
+        replyBtn.appendChild(createSvgElement('reply', 13));
         replyBtn.appendChild(document.createTextNode(' ' + t('reply')));
         replyBtn.title = t('replyToComment');
         replyBtn.addEventListener('click', (e) => {
@@ -434,10 +431,7 @@ export class ThreadsApp extends LitElement {
         // Delete button
         const delBtn = document.createElement('button');
         delBtn.className = 'threads-delete-btn';
-        const delIcon = document.createElement('sl-icon');
-        delIcon.setAttribute('name', 'trash');
-        delIcon.setAttribute('style', 'font-size:13px;');
-        delBtn.appendChild(delIcon);
+        delBtn.appendChild(createSvgElement('trash', 13));
         delBtn.title = t('deleteComment');
         delBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -470,10 +464,7 @@ export class ThreadsApp extends LitElement {
 
       const btn = document.createElement('button');
       btn.className = 'threads-new-comment-btn';
-      const plusIcon = document.createElement('sl-icon');
-      plusIcon.setAttribute('name', 'plus-lg');
-      plusIcon.setAttribute('style', 'font-size:13px;');
-      btn.appendChild(plusIcon);
+      btn.appendChild(createSvgElement('plus', 13));
       btn.appendChild(document.createTextNode(' ' + t('newComment')));
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -484,19 +475,13 @@ export class ThreadsApp extends LitElement {
       // Collapse/expand toggle button
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'threads-collapse-btn';
-      const upIcon = document.createElement('sl-icon');
-      upIcon.setAttribute('name', 'chevron-up');
-      upIcon.setAttribute('style', 'font-size:14px;');
-      toggleBtn.appendChild(upIcon);
+      toggleBtn.appendChild(createSvgElement('chevron-up', 14));
       toggleBtn.title = t('collapseThread');
       toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         const isCollapsed = threadEl.classList.toggle('threads-thread--collapsed');
         toggleBtn.innerHTML = '';
-        const icon = document.createElement('sl-icon');
-        icon.setAttribute('name', isCollapsed ? 'chevron-down' : 'chevron-up');
-        icon.setAttribute('style', 'font-size:14px;');
-        toggleBtn.appendChild(icon);
+        toggleBtn.appendChild(createSvgElement(isCollapsed ? 'chevron-down' : 'chevron-up', 14));
         toggleBtn.title = isCollapsed ? t('expandThread') : t('collapseThread');
       });
       footer.appendChild(toggleBtn);
@@ -690,10 +675,7 @@ export class ThreadsApp extends LitElement {
     const toggle = document.createElement('button');
     toggle.className = 'tc-sidebar-toggle';
     toggle.title = t('openThreadsPanel');
-    const toggleIcon = document.createElement('sl-icon');
-    toggleIcon.setAttribute('name', 'chat-dots');
-    toggleIcon.setAttribute('style', 'font-size:16px;');
-    toggle.appendChild(toggleIcon);
+    toggle.appendChild(createSvgElement('chat-dots', 18));
     toggle.addEventListener('click', () => {
       document.body.classList.add('tc-panel-open');
     });
@@ -722,11 +704,7 @@ export class ThreadsApp extends LitElement {
     cBtn.className = 'tc-panel__close-btn';
     cBtn.title = t('closePanel');
     cBtn.style.cssText = 'background:none;border:none;cursor:pointer;color:var(--tc-muted-fg);padding:4px;';
-    const closeIcon = document.createElement('sl-icon');
-    closeIcon.setAttribute('name', 'x-lg');
-    closeIcon.setAttribute('variant', 'solid');
-    closeIcon.setAttribute('style', 'font-size:16px;');
-    cBtn.appendChild(closeIcon);
+    cBtn.appendChild(createSvgElement('x', 16));
     actionsDiv.appendChild(cBtn);
 
     header.appendChild(titleDiv);
@@ -780,10 +758,7 @@ export class ThreadsApp extends LitElement {
     const fab = document.createElement('button');
     fab.className = 'threads-fab';
     fab.title = t('jumpToThreads');
-    const fabIcon = document.createElement('sl-icon');
-    fabIcon.setAttribute('name', 'chat-dots');
-    fabIcon.setAttribute('style', 'font-size:20px;');
-    fab.appendChild(fabIcon);
+    fab.appendChild(createSvgElement('chat-dots', 20));
 
     const badge = document.createElement('span');
     badge.className = 'threads-fab__badge';

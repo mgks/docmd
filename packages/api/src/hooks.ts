@@ -572,9 +572,27 @@ export async function loadPlugins(config: any, opts?: { resolvePaths?: string[] 
             );
             continue;
           }
-          rawModule = reloaded;
         } else {
-          continue; // Skip if auto-install failed
+          // Fallback: if auto-install failed (e.g. pre-release version not yet published on npm),
+          // check if the package is available in the local monorepo
+          const shortName = name.replace(/^@docmd\/(plugin|template)-/, '');
+          const localPluginDir = path.join(__monorepoRoot, 'packages/plugins', shortName);
+          const localTemplateDir = path.join(__monorepoRoot, 'packages/templates', shortName);
+          const fallbackDir = nativeFs.existsSync(localPluginDir) ? localPluginDir : (nativeFs.existsSync(localTemplateDir) ? localTemplateDir : null);
+          if (fallbackDir) {
+            const entryPath = path.join(fallbackDir, 'dist/index.js');
+            if (nativeFs.existsSync(entryPath)) {
+              try {
+                rawModule = await import(pathToFileURL(entryPath).href);
+              } catch {
+                continue;
+              }
+            } else {
+              continue;
+            }
+          } else {
+            continue; // Skip if auto-install failed
+          }
         }
       }
 

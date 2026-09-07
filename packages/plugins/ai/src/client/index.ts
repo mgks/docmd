@@ -31,7 +31,8 @@ export class DocmdAIAssistantUI {
       provider: cfg.provider,
       model: cfg.model,
       systemPrompt: initialSystemPrompt,
-      reasoning: cfg.reasoning ?? false
+      reasoning: cfg.reasoning ?? false,
+      contextWindow: cfg.contextWindow
     });
 
     const isSemanticUsable = cfg.searchCapabilities?.semantic === true;
@@ -779,32 +780,32 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
           onStatus: (status: any) => {
             if (statusWrap && status) {
               const statusObj = typeof status === 'string' ? { text: status } : { ...status };
-              let text = statusObj.text || 'Thinking...';
-              let icon = statusObj.icon;
-              if (/^Running\s+([a-z0-9_]+)\.\.\./i.test(text)) {
-                const tool = text.match(/^Running\s+([a-z0-9_]+)\.\.\./i)?.[1] || '';
-                if (tool === 'read_documentation_page') { text = 'Reading documentation...'; icon = icon || 'book-open'; }
-                else if (tool === 'search_documentation') { text = 'Searching documentation...'; icon = icon || 'search'; }
-                else if (tool === 'navigate_to_page') { text = 'Navigating to page...'; icon = icon || 'navigation'; }
-                else if (tool === 'get_site_structure') { text = 'Inspecting site navigation & structure...'; icon = icon || 'folder-tree'; }
-                else if (tool === 'copy_code_snippet') { text = 'Copying code snippet...'; icon = icon || 'copy'; }
+              let statusText = statusObj.text || 'Thinking...';
+              let statusIcon = statusObj.icon;
+              if (/^Running\s+([a-z0-9_]+)\.\.\./i.test(statusText)) {
+                const tool = statusText.match(/^Running\s+([a-z0-9_]+)\.\.\./i)?.[1] || '';
+                if (tool === 'read_documentation_page') { statusText = 'Reading documentation...'; statusIcon = statusIcon || 'book-open'; }
+                else if (tool === 'search_documentation') { statusText = 'Searching documentation...'; statusIcon = statusIcon || 'search'; }
+                else if (tool === 'navigate_to_page') { statusText = 'Navigating to page...'; statusIcon = statusIcon || 'navigation'; }
+                else if (tool === 'get_site_structure') { statusText = 'Inspecting site navigation & structure...'; statusIcon = statusIcon || 'folder-tree'; }
+                else if (tool === 'copy_code_snippet') { statusText = 'Copying code snippet...'; statusIcon = statusIcon || 'copy'; }
                 else {
                   const readable = tool.replace(/^([a-z])/, (m: string) => m.toUpperCase()).replace(/_/g, ' ');
-                  text = `${readable}...`;
+                  statusText = `${readable}...`;
                 }
-              } else if (/^[a-z]+(_[a-z0-9]+)+$/.test(text)) {
-                if (text === 'read_documentation_page') { text = 'Reading documentation...'; icon = icon || 'book-open'; }
-                else if (text === 'search_documentation') { text = 'Searching documentation...'; icon = icon || 'search'; }
-                else if (text === 'navigate_to_page') { text = 'Navigating to page...'; icon = icon || 'navigation'; }
-                else if (text === 'get_site_structure') { text = 'Inspecting site navigation & structure...'; icon = icon || 'folder-tree'; }
-                else if (text === 'copy_code_snippet') { text = 'Copying code snippet...'; icon = icon || 'copy'; }
+              } else if (/^[a-z]+(_[a-z0-9]+)+$/.test(statusText)) {
+                if (statusText === 'read_documentation_page') { statusText = 'Reading documentation...'; statusIcon = statusIcon || 'book-open'; }
+                else if (statusText === 'search_documentation') { statusText = 'Searching documentation...'; statusIcon = statusIcon || 'search'; }
+                else if (statusText === 'navigate_to_page') { statusText = 'Navigating to page...'; statusIcon = statusIcon || 'navigation'; }
+                else if (statusText === 'get_site_structure') { statusText = 'Inspecting site navigation & structure...'; statusIcon = statusIcon || 'folder-tree'; }
+                else if (statusText === 'copy_code_snippet') { statusText = 'Copying code snippet...'; statusIcon = statusIcon || 'copy'; }
                 else {
-                  const readable = text.replace(/^([a-z])/, (m: string) => m.toUpperCase()).replace(/_/g, ' ');
-                  text = `${readable}...`;
+                  const readable = statusText.replace(/^([a-z])/, (m: string) => m.toUpperCase()).replace(/_/g, ' ');
+                  statusText = `${readable}...`;
                 }
               }
               statusWrap.style.display = 'inline-flex';
-              statusWrap.innerHTML = `${this.getStatusSvgIcon(icon)} <span>${this.escapeHtml(text)}</span>`;
+              statusWrap.innerHTML = `${this.getStatusSvgIcon(statusIcon)} <span>${this.escapeHtml(statusText)}</span>`;
               if (msgs) msgs.scrollTop = msgs.scrollHeight;
             }
           },
@@ -916,8 +917,6 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       .trim();
 
     if (!cleaned) cleaned = raw;
-    let text = this.escapeHtml(cleaned);
-
 
     const cfg = (window as any).__docmd_ai_config || {};
     const getSiteBaseUrl = (): string => {
@@ -954,7 +953,7 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       }
     };
 
-    // Code blocks with syntax highlighting & quick copy button
+    // Extract code blocks from RAW cleaned markdown BEFORE escapeHtml to prevent double-escaping
     const codeBlocks: string[] = [];
     const copySvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>`;
     const renderCodeBlock = (lang: string, code: string) => {
@@ -972,23 +971,25 @@ CRITICAL CONSTRAINTS & BEHAVIORAL RULES:
       return `<div class="docmd-ai-code-wrap">${headerStr}<pre><code>${escapedCode}</code></pre></div>`;
     };
 
-    text = text.replace(/```(\w+)?[ \t]*\r?\n([\s\S]*?)```/g, (_match, lang, code) => {
+    // Extract code blocks from raw cleaned text (not yet HTML-escaped)
+    cleaned = cleaned.replace(/```(\w+)?[ \t]*\r?\n([\s\S]*?)```/g, (_match, lang, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
       codeBlocks.push(renderCodeBlock(lang || '', code));
       return placeholder;
     });
-    // Fallback: code blocks where lang runs into code on same line (no newline after lang)
-    text = text.replace(/```(\w+)([ \t]+[^\n][\s\S]*?)```/g, (_match, lang, code) => {
+    cleaned = cleaned.replace(/```(\w+)([ \t]+[^\n][\s\S]*?)```/g, (_match, lang, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
       codeBlocks.push(renderCodeBlock(lang || '', code));
       return placeholder;
     });
-    // Catch-all: bare ``` blocks with no language
-    text = text.replace(/```\r?\n?([\s\S]*?)```/g, (_match, code) => {
+    cleaned = cleaned.replace(/```\r?\n?([\s\S]*?)```/g, (_match, code) => {
       const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
       codeBlocks.push(renderCodeBlock('', code));
       return placeholder;
     });
+
+    // NOW escape HTML on the remaining non-code markdown text
+    let text = this.escapeHtml(cleaned);
 
     // Headings (# h1, ## h2, ### h3, #### h4)
     text = text.replace(/^#### (.*$)/gim, '<h5>$1</h5>');
